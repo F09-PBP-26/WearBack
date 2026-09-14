@@ -2,8 +2,6 @@
 
 **"Wear It Back, Give It Back"**
 
-## Deskripsi Aplikasi
-
 WearBack adalah platform marketplace pakaian preloved yang membantu pengguna menjual pakaian yang masih layak pakai dengan mudah, sekaligus memberi kesempatan kedua bagi fashion item untuk terus dipakai. Lewat WearBack, pakaian yang tadinya menumpuk di lemari bisa berubah jadi penghasilan tambahan bagi penjual, sekaligus jadi opsi belanja yang lebih terjangkau dan ramah lingkungan bagi pembeli.
 
 Proyek ini dibuat untuk memenuhi tugas **Proyek Tengah Semester - Pemrograman Berbasis Platform (CSGE602022)**, Fakultas Ilmu Komputer, Universitas Indonesia, Semester Gasal 2026/2027, dengan tema **Sustainable Living** (sub-tema: **Slow Fashion & Conscious Shopping**).
@@ -36,19 +34,19 @@ Proyek ini dibuat untuk memenuhi tugas **Proyek Tengah Semester - Pemrograman Be
 
 ## Sumber Data
 
-- **Public API eksternal:** [OpenStreetMap](https://www.openstreetmap.org/) — digunakan untuk menampilkan dan mencari titik drop-off/mitra pengiriman pakaian terdekat berdasarkan lokasi pengguna.
+- **Public API eksternal:** [OpenStreetMap](https://www.openstreetmap.org/) digunakan untuk menampilkan dan mencari titik drop-off/mitra pengiriman pakaian terdekat berdasarkan lokasi pengguna.
 - **Data utama (listing pakaian, minimal 50 data):** Dataset sintetis yang dihasilkan menggunakan LLM, di-*seed* secara manual ke database (nama produk, kategori, ukuran, kondisi, harga, deskripsi).
 
 ## Peran Pengguna
 
-1. **Pembeli** — menjelajahi listing pakaian, melakukan transaksi, memberi ulasan/rating, mencari titik drop-off terdekat.
-2. **Penjual** — mengunggah dan mengelola listing pakaian, memproses pesanan yang masuk, melihat ulasan dari pembeli.
-3. **Pengguna Umum (belum login)** — hanya dapat melihat listing pakaian secara terbatas, tanpa akses ke fitur transaksi dan data kontak.
+1. **Pembeli** menjelajahi listing pakaian, melakukan transaksi, memberi ulasan/rating, mencari titik drop-off terdekat.
+2. **Penjual** mengunggah dan mengelola listing pakaian, memproses pesanan yang masuk, melihat ulasan dari pembeli.
+3. **Pengguna Umum (belum login)** hanya dapat melihat listing pakaian secara terbatas, tanpa akses ke fitur transaksi dan data kontak.
 
 ## Tautan Terkait
 
-- Repositori Git: *(isi tautan repo di sini)*
-- Desain Figma: *(isi tautan Figma di sini)*
+- Repositori Git: https://github.com/F09-PBP-26/WearBack
+- Desain Figma: https://ristek.link/PBP2026-F09-Figma
 - Tautan Deployment (PWS): *(isi setelah deploy, minimal saat Checkpoint 2)*
 
 ---
