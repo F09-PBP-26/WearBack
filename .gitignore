@@ -1,0 +1,18 @@
+# Environments & Credentials
+env/
+venv/
+.env*
+
+# Django Database & Cache
+db.sqlite3
+__pycache__/
+*.pyc
+
+# OS & IDE Files
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+.idea/
+
+# Local Workflows
+AGENTS.md
