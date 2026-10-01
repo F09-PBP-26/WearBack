@@ -43,6 +43,80 @@ Proyek ini dibuat untuk memenuhi tugas **Proyek Tengah Semester - Pemrograman Be
 2. **Penjual** mengunggah dan mengelola listing pakaian, memproses pesanan yang masuk, melihat ulasan dari pembeli.
 3. **Pengguna Umum (belum login)** hanya dapat melihat listing pakaian secara terbatas, tanpa akses ke fitur transaksi dan data kontak.
 
+## Cara Menjalankan Proyek
+
+### Prasyarat
+
+- [Python](https://www.python.org/downloads/) 3.10 atau lebih baru
+- `pip` (biasanya sudah termasuk dalam instalasi Python)
+- [Git](https://git-scm.com/)
+
+### Langkah Instalasi
+
+1. **Klon repositori** dan masuk ke direktori proyek.
+
+   ```bash
+   git clone https://github.com/F09-PBP-26/WearBack.git
+   cd WearBack
+   ```
+
+2. **Buat dan aktifkan virtual environment.**
+
+   macOS/Linux:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   ```
+
+   Windows (PowerShell):
+
+   ```powershell
+   python -m venv venv
+   venv\Scripts\activate
+   ```
+
+3. **Pasang dependensi.**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Terapkan migrasi database.**
+
+   ```bash
+   python manage.py migrate
+   ```
+
+5. **Jalankan server pengembangan.**
+
+   ```bash
+   python manage.py runserver
+   ```
+
+Setelah server berjalan, buka [http://127.0.0.1:8000](http://127.0.0.1:8000) pada browser.
+
+> **Catatan:** Secara default proyek menggunakan SQLite sehingga tidak memerlukan konfigurasi database tambahan. Untuk mode produksi (PostgreSQL), atur `PRODUCTION=true` beserta `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, dan `DB_PORT` pada berkas `.env`.
+
+### Pemeriksaan dan Pengujian
+
+```bash
+python manage.py check   # memeriksa konfigurasi proyek
+python manage.py test    # menjalankan test suite
+```
+
+## Mengelola Konten melalui Admin Page
+
+Aktifkan virtual environment terlebih dahulu, lalu jalankan perintah berikut untuk membuat akun admin:
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Buka [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) dan masuk menggunakan akun superuser yang baru dibuat untuk mengelola data melalui halaman admin Django.
+
 ## Tautan Terkait
 
 - Repositori Git: https://github.com/F09-PBP-26/WearBack
