@@ -1,0 +1,49 @@
+{% extends 'auth_base.html' %}
+{% load static %}
+
+{% block title %}WearBack – Register{% endblock title %}
+
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/register.css' %}">{% endblock page_css %}
+
+{% block content %}
+<main class="auth-main">
+  <section class="auth-card" aria-labelledby="register-title">
+    <div class="auth-card-media">
+      <img class="auth-card-bg" src="{% static 'img/auth-card-bg.png' %}" alt="">
+      <img class="auth-card-photo register-photo" src="{% static 'img/auth-card-photo.png' %}" alt="Racks of colorful secondhand clothing hanging in a thrift store">
+    </div>
+
+    <div class="auth-card-content">
+      <div class="register">
+        <h1 class="register-title" id="register-title">Create new account</h1>
+        <p class="register-login">Already a member? <a class="text-link" href="{% url 'main:sign_in' %}">Log In</a></p>
+
+        <form class="register-form" action="{% url 'main:register' %}" method="post">
+          {% csrf_token %}
+          <div class="register-names">
+            <div class="field field-first">
+              <input class="field-input" id="first-name" name="first_name" type="text" autocomplete="given-name" placeholder=" " required>
+              <label class="field-label" for="first-name">First name</label>
+            </div>
+            <div class="field field-last">
+              <input class="field-input" id="last-name" name="last_name" type="text" autocomplete="family-name" placeholder=" " required>
+              <label class="field-label" for="last-name">Last name</label>
+            </div>
+          </div>
+          <div class="field field-email">
+            <input class="field-input" id="email" name="email" type="email" autocomplete="email" placeholder=" " required>
+            <label class="field-label" for="email">Email</label>
+          </div>
+          <div class="field field-password">
+            <input class="field-input" id="password" name="password" type="password" autocomplete="new-password" placeholder=" " required>
+            <label class="field-label" for="password">Password</label>
+          </div>
+          <button class="button button-primary register-submit" type="submit">Register</button>
+          <p class="register-or">or</p>
+          <button class="button button-secondary" type="button">Register with SSO UI</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock content %}

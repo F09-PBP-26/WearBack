@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=Instrument+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
@@ -28,13 +29,7 @@
           <img class="search-icon" src="{% static 'img/search.svg' %}" alt="" width="12" height="12">
         </form>
 
-        <div class="profile">
-          <div class="profile-avatar">
-            <img class="profile-image" src="{% static 'img/profile.png' %}" alt="Profile photo of CK Ben." width="32" height="32">
-            <span class="profile-status" aria-hidden="true"></span>
-          </div>
-          <p class="profile-name">CK Ben.</p>
-        </div>
+        <a class="nav-login" href="{% url 'main:sign_in' %}">Sign In</a>
       </nav>
     </header>
 

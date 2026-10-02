@@ -1,0 +1,163 @@
+/* ==========================================================================
+   WearBack – Sign In page
+   The stage reproduces the 571 × 709 "Frame 34" and is centred in the card's right panel.
+   ========================================================================== */
+
+.sign-in-photo {
+    top: -51px;
+    left: -11px;
+    width: 736px;
+    height: 1104px;
+}
+
+.sign-in {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 571px;
+    height: 709px;
+    transform: translate(-50%, -50%);
+}
+
+.sign-in-logo {
+    position: absolute;
+    top: 98px;
+    left: 237px;
+    width: 89.4px;
+    height: 82.7px;
+}
+
+.sign-in-title {
+    position: absolute;
+    top: 215.5px;
+    left: 285px;
+    transform: translate(-50%, -50%);
+    font-size: var(--fs-title-md);
+    font-weight: 500;
+    letter-spacing: var(--tracking);
+    line-height: normal;
+    text-transform: capitalize;
+    white-space: nowrap;
+}
+
+.sign-in-form {
+    position: absolute;
+    inset: 0;
+}
+
+.sign-in-form .field,
+.sign-in-form .button {
+    position: absolute;
+    left: 122px;
+    width: 327px;
+}
+
+.sign-in-form .field-email {
+    top: 278px;
+}
+
+.sign-in-form .field-password {
+    top: 375px;
+}
+
+.sign-in-submit {
+    top: 502px;
+    --button-pad-right: 21px;
+}
+
+.sign-in-sso {
+    top: 604px;
+    --button-pad-left: 6px;
+}
+
+.sign-in-form .field-input {
+    padding: 0 25px;
+}
+
+.sign-in-form .field-label {
+    top: 50%;
+    left: 25px;
+    transform: translateY(-50%);
+    font-size: var(--fs-body);
+    text-transform: capitalize;
+}
+
+.sign-in-text {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: var(--fs-body);
+    font-weight: 500;
+    letter-spacing: var(--tracking);
+    line-height: normal;
+    white-space: nowrap;
+}
+
+.sign-in-forgot {
+    top: 462.71px;
+    left: 373.68px;
+    text-transform: capitalize;
+}
+
+.sign-in-or {
+    top: 589.71px;
+    left: 277.68px;
+    text-transform: lowercase;
+}
+
+.sign-in-register {
+    top: 695.71px;
+    left: 323.68px;
+}
+
+/* ---------- Tablet ---------- */
+
+@media (max-width: 1024px) {
+    .sign-in {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: auto;
+        transform: none;
+    }
+
+    .sign-in-logo {
+        position: static;
+        flex: none;
+    }
+
+    .sign-in-title {
+        position: static;
+        margin: 8px 0 24px;
+        transform: none;
+    }
+
+    .sign-in-form {
+        position: static;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-20);
+        width: 100%;
+        max-width: 327px;
+    }
+
+    .sign-in-form .field,
+    .sign-in-form .button {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: 100%;
+    }
+
+    .sign-in-text {
+        position: static;
+        transform: none;
+        text-align: center;
+    }
+
+    .sign-in-forgot {
+        align-self: flex-end;
+        margin-top: -8px;
+    }
+}

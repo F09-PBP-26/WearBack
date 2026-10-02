@@ -1,0 +1,205 @@
+/* ==========================================================================
+   WearBack – shared tokens, reset, and cross-page components
+   ========================================================================== */
+
+:root {
+    /* Colors */
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-page: #f6f6f6;
+    --color-body: #faeee8;
+    --color-primary: #28392f;
+    --color-secondary: #b37353;
+    --color-card: #ecb9a0;
+    --color-card-text: #4e2107;
+    --color-card-inset-light: #f5ddd1;
+    --color-button: #13231a;
+    --color-accent: #de9874;
+    --color-accent-border: #864d30;
+    --color-search-bg: #f6f3f2;
+    --color-search-text: #424844;
+    --color-field: #e5ebe6;
+    --color-name: #1c1b1b;
+    --color-status: #caeada;
+    --color-status-border: #fcf9f8;
+
+    /* Font families */
+    --font-serif: "Instrument Serif", serif;
+    --font-sans: "Instrument Sans", sans-serif;
+    --font-search: "Hanken Grotesk", sans-serif;
+
+    /* Fluid font sizes */
+    --fs-brand: clamp(2.5rem, 3.9vw, 3.5rem);
+    --fs-hero: clamp(2.5rem, 4.4vw, 4rem);
+    --fs-hero-sub: clamp(1.125rem, 1.4vw, 1.25rem);
+    --fs-button: clamp(0.9375rem, 1.1vw, 1rem);
+    --fs-card: clamp(2rem, 3.3vw, 3rem);
+    --fs-search: 0.875rem;
+    --fs-name: 0.9375rem;
+    --fs-footer: clamp(0.875rem, 1.4vw, 1.25rem);
+
+    /* Fixed font sizes */
+    --fs-auth-brand: 3.5rem;
+    --fs-title-lg: 2.8125rem;
+    --fs-title-md: 2.25rem;
+    --fs-body: 1rem;
+    --fs-control: 1.125rem;
+    --fs-label-sm: 0.75rem;
+
+    /* Spacing */
+    --space-2: 0.125rem;
+    --space-4: 0.25rem;
+    --space-8: 0.5rem;
+    --space-9: 0.5625rem;
+    --space-12: 0.75rem;
+    --space-16: 1rem;
+    --space-20: 1.25rem;
+    --space-32: 2rem;
+    --space-37: 2.3125rem;
+    --gutter: clamp(1rem, 7.3vw, 6.5rem);
+    --hero-pad: clamp(1.5rem, 2.7vw, 2.4375rem);
+
+    /* Radius */
+    --radius-search: 0.25rem;
+    --radius-avatar: 0.75rem;
+    --radius-button: 1.25rem;
+    --radius-card: 1rem;
+    --radius-item: 2rem;
+    --radius-control: 0.75rem;
+    --radius-panel: 2.5rem;
+
+    /* Shadows */
+    --shadow-search: 0 1px 8px 0 rgba(30, 58, 47, 0.04);
+    --shadow-card: 3px 0 4px 0 rgba(0, 0, 0, 0.25);
+    --shadow-card-inset: inset 8px 8px 4px 0 var(--color-card-inset-light), inset -8px -8px 4px 0 rgba(0, 0, 0, 0.5);
+    --shadow-panel: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
+
+    /* Layout */
+    --page-max-width: 90rem;
+    --navbar-height: 5rem;
+    --auth-navbar-height: 5.25rem;
+    --footer-height: 5.25rem;
+    --control-height: 4.1875rem;
+    --transition-menu: 0.3s ease;
+
+    /* Typography detail */
+    --tracking: 0.6px;
+}
+
+/* ---------- Reset ---------- */
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--color-page);
+    color: var(--color-black);
+    font-family: var(--font-sans);
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    display: block;
+    max-width: none;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+/* ---------- Search control ---------- */
+
+.search-input {
+    display: block;
+    width: 100%;
+    height: 2.1875rem;
+    margin: 0;
+    padding: var(--space-9) var(--space-16) var(--space-9) 2.5rem;
+    border: 0;
+    border-radius: var(--radius-search);
+    background: var(--color-search-bg);
+    box-shadow: var(--shadow-search);
+    color: var(--color-search-text);
+    font-family: var(--font-sans);
+    font-size: var(--fs-search);
+    font-weight: 400;
+    line-height: 1.0625rem;
+    text-overflow: ellipsis;
+}
+
+.search-input::placeholder {
+    color: var(--color-search-text);
+    opacity: 1;
+}
+
+.search-icon {
+    position: absolute;
+    top: 0.75rem;
+    left: 1.125rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    pointer-events: none;
+}
+
+.search-input:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+}
+
+/* ---------- Brand text ---------- */
+
+.brand-wear {
+    color: var(--color-primary);
+}
+
+.brand-back {
+    color: var(--color-secondary);
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--footer-height);
+    padding: var(--space-16) var(--gutter);
+    background: var(--color-white);
+}
+
+.footer-text {
+    max-width: 531px;
+    color: var(--color-card-text);
+    font-family: var(--font-serif);
+    font-size: var(--fs-footer);
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* ---------- Utilities ---------- */
+
+.text-link {
+    font-weight: 700;
+}

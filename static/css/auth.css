@@ -1,0 +1,304 @@
+/* ==========================================================================
+   WearBack – auth pages (navbar, card shell, form controls)
+   ========================================================================== */
+
+/* ---------- Body ---------- */
+
+.auth-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--color-body);
+}
+
+/* ---------- Navbar ---------- */
+
+.auth-navbar {
+    position: relative;
+    flex: none;
+    height: var(--auth-navbar-height);
+    background: var(--color-white);
+}
+
+.auth-brand {
+    position: absolute;
+    top: 6px;
+    left: 27px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.auth-brand-logo {
+    position: relative;
+    width: 108px;
+    height: 72px;
+    flex: none;
+}
+
+.auth-brand-ellipse-box {
+    position: absolute;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 71.998px;
+    height: 71.998px;
+}
+
+.auth-brand-ellipse-box-left {
+    left: 0;
+}
+
+.auth-brand-ellipse-box-right {
+    left: 36px;
+}
+
+.auth-brand-ellipse {
+    flex: none;
+    width: 50.91px;
+    height: 50.91px;
+}
+
+.auth-brand-ellipse-left {
+    transform: rotate(-135deg);
+}
+
+.auth-brand-ellipse-right {
+    transform: rotate(45deg);
+}
+
+.auth-brand-name {
+    height: 62.41px;
+    margin: 5px 0 0 0.25px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-auth-brand);
+    font-weight: 400;
+    line-height: 64.14px;
+    letter-spacing: -1.1271px;
+    white-space: nowrap;
+}
+
+.auth-navbar .search {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 576px;
+    max-width: 576px;
+    height: 36px;
+    transform: translate(-50%, -50%);
+}
+
+.auth-navbar .search-input {
+    font-family: var(--font-search);
+}
+
+/* ---------- Main + auth card ---------- */
+
+.auth-main {
+    flex: 1 0 auto;
+    min-height: 1301px;
+    padding: 192px 76px 241px 77px;
+}
+
+.auth-card {
+    display: flex;
+    width: 100%;
+    max-width: 1287px;
+    height: 868px;
+    margin: 0 auto;
+    overflow: hidden;
+    border: 2px solid var(--color-black);
+    border-radius: var(--radius-panel);
+    background: var(--color-white);
+    box-shadow: var(--shadow-panel);
+}
+
+.auth-card-media {
+    position: relative;
+    flex: 0 0 717px;
+    overflow: hidden;
+    border-right: 2px solid var(--color-black);
+}
+
+.auth-card-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.auth-card-photo {
+    position: absolute;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+.auth-card-content {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* ---------- Shared form parts ---------- */
+
+.field {
+    position: relative;
+    height: var(--control-height);
+}
+
+.field-input {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--color-field);
+    color: var(--color-black);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    font-weight: 500;
+    letter-spacing: var(--tracking);
+}
+
+.field-input::placeholder {
+    color: transparent;
+}
+
+.field-label {
+    position: absolute;
+    opacity: 0.5;
+    font-weight: 500;
+    letter-spacing: var(--tracking);
+    line-height: normal;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.field-input:not(:placeholder-shown) + .field-label {
+    visibility: hidden;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: var(--control-height);
+    padding: 0 var(--button-pad-right, 0) 0 var(--button-pad-left, 0);
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--radius-control);
+    color: var(--color-black);
+    font-family: var(--font-sans);
+    font-size: var(--fs-control);
+    font-weight: 500;
+    letter-spacing: var(--tracking);
+    line-height: normal;
+    text-transform: capitalize;
+    cursor: pointer;
+}
+
+.button-primary {
+    background: var(--color-accent);
+}
+
+.button-secondary {
+    background: var(--color-white);
+}
+
+.field-input:focus-visible,
+.button:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+}
+
+/* ---------- Tablet ---------- */
+
+@media (max-width: 1024px) {
+    .auth-navbar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 0 16px 0 27px;
+    }
+
+    .auth-brand {
+        position: static;
+        flex: none;
+    }
+
+    .auth-navbar .search {
+        position: static;
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        transform: none;
+    }
+
+    .auth-main {
+        min-height: 0;
+        padding: 48px 24px;
+    }
+
+    .auth-card {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .auth-card-media {
+        flex: none;
+        height: 320px;
+        border-right: 0;
+        border-bottom: 2px solid var(--color-black);
+    }
+
+    .auth-card-photo {
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .auth-card-content {
+        padding: 40px 24px 48px;
+    }
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 768px) {
+    :root {
+        --fs-title-lg: 2rem;
+        --fs-title-md: 1.875rem;
+    }
+
+    .auth-navbar {
+        gap: 8px;
+        padding: 0 12px;
+    }
+
+    .auth-brand {
+        zoom: 0.6;
+    }
+
+    .search-input {
+        padding-right: 8px;
+    }
+
+    .auth-main {
+        padding: 24px 12px;
+    }
+
+    .auth-card {
+        border-radius: 1.5rem;
+    }
+
+    .auth-card-media {
+        height: 200px;
+    }
+
+    .auth-card-content {
+        padding: 32px 16px 40px;
+    }
+}

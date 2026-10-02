@@ -1,93 +1,6 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html {
-    -webkit-text-size-adjust: 100%;
-}
-
-:root {
-    /* Colors */
-    --color-white: #ffffff;
-    --color-page: #f6f6f6;
-    --color-body: #faeee8;
-    --color-primary: #28392f;
-    --color-secondary: #b37353;
-    --color-card: #ecb9a0;
-    --color-card-text: #4e2107;
-    --color-card-inset-light: #f5ddd1;
-    --color-button: #13231a;
-    --color-search-bg: #f6f3f2;
-    --color-search-text: #424844;
-    --color-name: #1c1b1b;
-    --color-status: #caeada;
-    --color-status-border: #fcf9f8;
-    --color-black: #000000;
-
-    /* Font families */
-    --font-serif: "Instrument Serif", serif;
-    --font-sans: "Instrument Sans", sans-serif;
-
-    /* Fluid font sizes */
-    --fs-brand: clamp(2.5rem, 3.9vw, 3.5rem);
-    --fs-hero: clamp(2.5rem, 4.4vw, 4rem);
-    --fs-hero-sub: clamp(1.125rem, 1.4vw, 1.25rem);
-    --fs-button: clamp(0.9375rem, 1.1vw, 1rem);
-    --fs-card: clamp(2rem, 3.3vw, 3rem);
-    --fs-search: 0.875rem;
-    --fs-name: 0.9375rem;
-    --fs-footer: clamp(0.875rem, 1.4vw, 1.25rem);
-
-    /* Spacing */
-    --space-2: 0.125rem;
-    --space-4: 0.25rem;
-    --space-8: 0.5rem;
-    --space-9: 0.5625rem;
-    --space-12: 0.75rem;
-    --space-16: 1rem;
-    --space-32: 2rem;
-    --space-37: 2.3125rem;
-    --gutter: clamp(1rem, 7.3vw, 6.5rem);
-    --hero-pad: clamp(1.5rem, 2.7vw, 2.4375rem);
-
-    /* Radius */
-    --radius-search: 0.25rem;
-    --radius-avatar: 0.75rem;
-    --radius-button: 1.25rem;
-    --radius-card: 1rem;
-    --radius-item: 2rem;
-
-    /* Shadows */
-    --shadow-search: 0 1px 8px 0 rgba(30, 58, 47, 0.04);
-    --shadow-card: 3px 0 4px 0 rgba(0, 0, 0, 0.25);
-    --shadow-card-inset: inset 8px 8px 4px 0 var(--color-card-inset-light), inset -8px -8px 4px 0 rgba(0, 0, 0, 0.5);
-
-    /* Layout */
-    --page-max-width: 90rem;
-    --navbar-height: 5rem;
-    --transition-menu: 0.3s ease;
-}
-
-body {
-    margin: 0;
-    background: var(--color-page);
-    font-family: var(--font-sans);
-}
-
-ul {
-    list-style: none;
-}
-
-img {
-    display: block;
-}
-
-a {
-    color: inherit;
-    text-decoration: none;
-}
+/* ==========================================================================
+   WearBack – landing page
+   ========================================================================== */
 
 /* ---------- Page ---------- */
 
@@ -125,14 +38,6 @@ a {
     white-space: nowrap;
 }
 
-.brand-wear {
-    color: var(--color-primary);
-}
-
-.brand-back {
-    color: var(--color-secondary);
-}
-
 .nav-toggle {
     display: none;
 }
@@ -152,80 +57,27 @@ a {
     height: 2.25rem;
 }
 
-.search-input {
-    display: block;
-    width: 100%;
-    height: 2.1875rem;
-    margin: 0;
-    padding: var(--space-9) var(--space-16) var(--space-9) 2.5rem;
-    border: 0;
-    border-radius: var(--radius-search);
-    outline-offset: 2px;
-    background: var(--color-search-bg);
-    box-shadow: var(--shadow-search);
-    color: var(--color-search-text);
-    font-family: var(--font-sans);
-    font-size: var(--fs-search);
-    font-weight: 400;
-    line-height: 1.0625rem;
-    text-overflow: ellipsis;
-}
+/* ---------- Nav login ---------- */
 
-.search-input::placeholder {
-    color: var(--color-search-text);
-    opacity: 1;
-}
-
-.search-icon {
-    position: absolute;
-    top: 0.75rem;
-    left: 1.125rem;
-    width: 0.75rem;
-    height: 0.75rem;
-    pointer-events: none;
-}
-
-/* ---------- Profile ---------- */
-
-.profile {
-    display: flex;
+.nav-login {
+    display: inline-flex;
     align-items: center;
-    gap: var(--space-8);
-    padding-left: var(--space-4);
-}
-
-.profile-avatar {
-    position: relative;
-    flex: none;
-    width: 2rem;
-    height: 2rem;
-}
-
-.profile-image {
-    width: 2rem;
-    height: 2rem;
-    border-radius: var(--radius-avatar);
-    object-fit: cover;
-}
-
-.profile-status {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 0.625rem;
-    height: 0.625rem;
-    border: 1px solid var(--color-status-border);
-    border-radius: var(--radius-avatar);
-    background: var(--color-status);
-}
-
-.profile-name {
-    color: var(--color-name);
-    font-family: var(--font-sans);
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0 1.25rem;
+    border: 1px solid var(--color-button);
+    border-radius: var(--radius-button);
+    background: var(--color-white);
+    color: var(--color-button);
     font-size: var(--fs-name);
     font-weight: 500;
-    line-height: 1.25rem;
+    line-height: 1;
+    letter-spacing: 0.6px;
     white-space: nowrap;
+}
+
+.nav-login:focus-visible {
+    outline: 2px solid var(--color-secondary);
 }
 
 /* ---------- Main ---------- */
@@ -302,8 +154,7 @@ a {
 }
 
 .hero-button:focus-visible,
-.nav-toggle:focus-visible,
-.search-input:focus-visible {
+.nav-toggle:focus-visible {
     outline: 2px solid var(--color-secondary);
 }
 
@@ -367,26 +218,6 @@ a {
     aspect-ratio: 275.2 / 256;
     border-radius: var(--radius-item);
     background: var(--color-white);
-}
-
-/* ---------- Footer ---------- */
-
-.footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 5.25rem;
-    padding: var(--space-16) var(--gutter);
-    background: var(--color-white);
-}
-
-.footer-text {
-    color: var(--color-card-text);
-    font-size: var(--fs-footer);
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: 0.5px;
-    text-align: center;
 }
 
 /* ---------- Responsive ---------- */
