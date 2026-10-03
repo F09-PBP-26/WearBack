@@ -121,7 +121,6 @@ Buka [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) dan masuk menggu
 
 - Repositori Git: https://github.com/F09-PBP-26/WearBack
 - Desain Figma: https://ristek.link/PBP2026-F09-Figma
-- Tautan Deployment (PWS): *(isi setelah deploy, minimal saat Checkpoint 2)*
-
+- Tautan Deployment (PWS): https://hudzaifah51-wearback.pws.cs.ui.ac.id
 ---
 *Proyek Tengah Semester PBP Gasal 2026/2027 - Fakultas Ilmu Komputer Universitas Indonesia*
