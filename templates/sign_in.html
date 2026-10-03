@@ -1,9 +1,12 @@
-{% extends 'auth_base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}WearBack – Sign In{% endblock title %}
 
-{% block page_css %}<link rel="stylesheet" href="{% static 'css/sign-in.css' %}">{% endblock page_css %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+  <link rel="stylesheet" href="{% static 'css/sign-in.css' %}">{% endblock page_css %}
+
+{% block nav_action %}<a class="nav-login" href="{% url 'main:register' %}">Register</a>{% endblock nav_action %}
 
 {% block content %}
 <main class="auth-main">

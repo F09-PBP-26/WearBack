@@ -1,12 +1,11 @@
 /* ==========================================================================
-   WearBack – shared tokens, reset, and cross-page components
+   WearBack – shared tokens, reset, chrome, and cross-page components
    ========================================================================== */
 
 :root {
     /* Colors */
     --color-white: #ffffff;
     --color-black: #000000;
-    --color-page: #f6f6f6;
     --color-body: #faeee8;
     --color-primary: #28392f;
     --color-secondary: #b37353;
@@ -39,7 +38,6 @@
     --fs-footer: clamp(0.875rem, 1.4vw, 1.25rem);
 
     /* Fixed font sizes */
-    --fs-auth-brand: 3.5rem;
     --fs-title-lg: 2.8125rem;
     --fs-title-md: 2.25rem;
     --fs-body: 1rem;
@@ -75,9 +73,7 @@
     --shadow-panel: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
 
     /* Layout */
-    --page-max-width: 90rem;
-    --navbar-height: 5rem;
-    --auth-navbar-height: 5.25rem;
+    --navbar-height: 5.25rem;
     --footer-height: 5.25rem;
     --control-height: 4.1875rem;
     --transition-menu: 0.3s ease;
@@ -101,8 +97,11 @@ html {
 }
 
 body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     margin: 0;
-    background: var(--color-page);
+    background: var(--color-body);
     color: var(--color-black);
     font-family: var(--font-sans);
 }
@@ -126,7 +125,94 @@ input {
     font: inherit;
 }
 
-/* ---------- Search control ---------- */
+/* ---------- Navbar ---------- */
+
+.navbar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-16);
+    min-height: var(--navbar-height);
+    padding: 0 var(--gutter);
+    background: var(--color-white);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: flex-start;
+    flex: none;
+}
+
+.nav-brand-logo {
+    position: relative;
+    width: 108px;
+    height: 72px;
+    flex: none;
+}
+
+.nav-brand-ellipse-box {
+    position: absolute;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 71.998px;
+    height: 71.998px;
+}
+
+.nav-brand-ellipse-box-left {
+    left: 0;
+}
+
+.nav-brand-ellipse-box-right {
+    left: 36px;
+}
+
+.nav-brand-ellipse {
+    flex: none;
+    width: 50.91px;
+    height: 50.91px;
+}
+
+.nav-brand-ellipse-left {
+    transform: rotate(-135deg);
+}
+
+.nav-brand-ellipse-right {
+    transform: rotate(45deg);
+}
+
+.nav-brand-name {
+    margin: 5px 0 0 0.25px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-brand);
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+}
+
+.nav-toggle {
+    display: none;
+}
+
+.nav-menu {
+    display: contents;
+}
+
+/* ---------- Search ---------- */
+
+.search {
+    position: relative;
+    flex: 0 1 36rem;
+    width: 100%;
+    max-width: 36rem;
+    min-width: 0;
+    height: 2.25rem;
+    margin-inline: auto;
+}
 
 .search-input {
     display: block;
@@ -139,7 +225,7 @@ input {
     background: var(--color-search-bg);
     box-shadow: var(--shadow-search);
     color: var(--color-search-text);
-    font-family: var(--font-sans);
+    font-family: var(--font-search);
     font-size: var(--fs-search);
     font-weight: 400;
     line-height: 1.0625rem;
@@ -163,6 +249,30 @@ input {
 .search-input:focus-visible {
     outline: 2px solid var(--color-secondary);
     outline-offset: 2px;
+}
+
+/* ---------- Nav login ---------- */
+
+.nav-login {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0 1.25rem;
+    border: 1px solid var(--color-button);
+    border-radius: var(--radius-button);
+    background: var(--color-white);
+    color: var(--color-button);
+    font-size: var(--fs-name);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+.nav-toggle:focus-visible,
+.nav-login:focus-visible {
+    outline: 2px solid var(--color-secondary);
 }
 
 /* ---------- Brand text ---------- */
@@ -202,4 +312,87 @@ input {
 
 .text-link {
     font-weight: 700;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 768px) {
+    .nav-toggle {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        flex: none;
+        width: 2.75rem;
+        height: 2.75rem;
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-search);
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .nav-toggle-bar {
+        display: block;
+        width: 1.5rem;
+        height: 2px;
+        border-radius: 2px;
+        background: var(--color-primary);
+        transition: transform var(--transition-menu), opacity var(--transition-menu);
+    }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .nav-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--space-16);
+        max-height: 0;
+        padding: 0 var(--gutter);
+        overflow: hidden;
+        visibility: hidden;
+        background: var(--color-white);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+        transition: max-height var(--transition-menu), padding var(--transition-menu), visibility 0s linear var(--transition-menu);
+    }
+
+    .nav-menu.is-open {
+        max-height: 12.5rem;
+        padding: var(--space-8) var(--gutter) var(--space-16);
+        visibility: visible;
+        transition: max-height var(--transition-menu), padding var(--transition-menu), visibility 0s;
+    }
+
+    .nav-brand {
+        zoom: 0.7;
+    }
+
+    .search {
+        flex: none;
+        width: 100%;
+        max-width: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-menu,
+    .nav-toggle-bar {
+        transition: none;
+    }
 }

@@ -7,38 +7,42 @@
   <title>{% block title %}WearBack{% endblock title %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=Instrument+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400&family=Instrument+Sans:wdth,wght@75..100,400..700&family=Instrument+Serif&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block page_css %}{% endblock page_css %}
 </head>
 <body>
-  <div class="page">
-    <header class="navbar">
-      <a class="nav-brand" href="{% url 'main:show_main' %}" aria-label="WearBack home"><span class="brand-wear">Wear</span><span class="brand-back">Back</span></a>
+  <header class="navbar">
+    <a class="nav-brand" href="{% url 'main:show_main' %}" aria-label="WearBack home">
+      <span class="nav-brand-logo">
+        <span class="nav-brand-ellipse-box nav-brand-ellipse-box-left"><img class="nav-brand-ellipse nav-brand-ellipse-left" src="{% static 'img/brand-ellipse-left.png' %}" alt="" width="51" height="51"></span>
+        <span class="nav-brand-ellipse-box nav-brand-ellipse-box-right"><img class="nav-brand-ellipse nav-brand-ellipse-right" src="{% static 'img/brand-ellipse-right.png' %}" alt="" width="51" height="51"></span>
+      </span>
+      <span class="nav-brand-name"><span class="brand-wear">Wear</span><span class="brand-back">Back</span></span>
+    </a>
 
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navbar-menu" aria-label="Toggle navigation menu">
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-      </button>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navbar-menu" aria-label="Toggle navigation menu">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </button>
 
-      <nav class="nav-menu" id="navbar-menu" aria-label="Main navigation">
-        <form class="search" role="search" onsubmit="return false">
-          <label class="search-label" for="site-search" hidden>Search items</label>
-          <input class="search-input" id="site-search" type="search" placeholder="Search 90s leather, jacket, batik, vintage denim...">
-          <img class="search-icon" src="{% static 'img/search.svg' %}" alt="" width="12" height="12">
-        </form>
+    <nav class="nav-menu" id="navbar-menu" aria-label="Main navigation">
+      <form class="search" role="search" onsubmit="return false">
+        <label class="search-label" for="site-search" hidden>Search items</label>
+        <input class="search-input" id="site-search" type="search" placeholder="Search 90s leather, Stüssy, Acne Studios, vintage denim...">
+        <img class="search-icon" src="{% static 'img/search.svg' %}" alt="" width="12" height="12">
+      </form>
 
-        <a class="nav-login" href="{% url 'main:sign_in' %}">Sign In</a>
-      </nav>
-    </header>
+      {% block nav_action %}<a class="nav-login" href="{% url 'main:sign_in' %}">Sign In</a>{% endblock nav_action %}
+    </nav>
+  </header>
 
-    {% block content %}{% endblock content %}
+  {% block content %}{% endblock content %}
 
-    <footer class="footer">
-      <p class="footer-text">© 2026 WearBack. Kelompok F09 Kelas PBP F Gasal 2026/2027</p>
-    </footer>
-  </div>
+  <footer class="footer">
+    <p class="footer-text">© 2026 WearBack. Kelompok F09 Kelas PBP F Gasal 2026/2027</p>
+  </footer>
 
   <script src="{% static 'js/main.js' %}"></script>
 </body>

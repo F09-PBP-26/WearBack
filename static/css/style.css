@@ -2,88 +2,11 @@
    WearBack – landing page
    ========================================================================== */
 
-/* ---------- Page ---------- */
-
-.page {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: var(--page-max-width);
-    margin-inline: auto;
-    min-height: 100vh;
-    background: var(--color-page);
-}
-
-/* ---------- Navbar ---------- */
-
-.navbar {
-    position: relative;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-16);
-    min-height: var(--navbar-height);
-    padding: 0 var(--gutter);
-    background: var(--color-white);
-}
-
-.nav-brand {
-    display: block;
-    font-family: var(--font-serif);
-    font-size: var(--fs-brand);
-    font-weight: 400;
-    line-height: 1.12;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-}
-
-.nav-toggle {
-    display: none;
-}
-
-.nav-menu {
-    display: contents;
-}
-
-/* ---------- Search ---------- */
-
-.search {
-    position: relative;
-    flex: 0 1 36rem;
-    width: 100%;
-    max-width: 36rem;
-    min-width: 0;
-    height: 2.25rem;
-}
-
-/* ---------- Nav login ---------- */
-
-.nav-login {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 2.25rem;
-    padding: 0 1.25rem;
-    border: 1px solid var(--color-button);
-    border-radius: var(--radius-button);
-    background: var(--color-white);
-    color: var(--color-button);
-    font-size: var(--fs-name);
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: 0.6px;
-    white-space: nowrap;
-}
-
-.nav-login:focus-visible {
-    outline: 2px solid var(--color-secondary);
-}
-
 /* ---------- Main ---------- */
 
 .main {
     display: flex;
+    flex: 1 0 auto;
     flex-direction: column;
     gap: var(--space-12);
     overflow: hidden;
@@ -153,8 +76,7 @@
     text-align: center;
 }
 
-.hero-button:focus-visible,
-.nav-toggle:focus-visible {
+.hero-button:focus-visible {
     outline: 2px solid var(--color-secondary);
 }
 
@@ -223,82 +145,7 @@
 /* ---------- Responsive ---------- */
 
 @media (max-width: 768px) {
-    .nav-toggle {
-        display: inline-flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        flex: none;
-        width: 2.75rem;
-        height: 2.75rem;
-        padding: 0;
-        border: 0;
-        border-radius: var(--radius-search);
-        background: transparent;
-        cursor: pointer;
-    }
-
-    .nav-toggle-bar {
-        display: block;
-        width: 1.5rem;
-        height: 2px;
-        border-radius: 2px;
-        background: var(--color-primary);
-        transition: transform var(--transition-menu), opacity var(--transition-menu);
-    }
-
-    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
-        transform: translateY(7px) rotate(45deg);
-    }
-
-    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) {
-        opacity: 0;
-    }
-
-    .nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) {
-        transform: translateY(-7px) rotate(-45deg);
-    }
-
-    .nav-menu {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        left: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--space-16);
-        max-height: 0;
-        padding: 0 var(--gutter);
-        overflow: hidden;
-        visibility: hidden;
-        background: var(--color-white);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
-        transition: max-height var(--transition-menu), padding var(--transition-menu), visibility 0s linear var(--transition-menu);
-    }
-
-    .nav-menu.is-open {
-        max-height: 12.5rem;
-        padding: var(--space-8) var(--gutter) var(--space-16);
-        visibility: visible;
-        transition: max-height var(--transition-menu), padding var(--transition-menu), visibility 0s;
-    }
-
-    .search {
-        flex: none;
-        width: 100%;
-        max-width: none;
-    }
-
     .highlights {
         grid-template-columns: 1fr;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .nav-menu,
-    .nav-toggle-bar {
-        transition: none;
     }
 }

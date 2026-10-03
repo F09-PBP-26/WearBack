@@ -1,96 +1,6 @@
 /* ==========================================================================
-   WearBack – auth pages (navbar, card shell, form controls)
+   WearBack – auth pages (card shell, form controls)
    ========================================================================== */
-
-/* ---------- Body ---------- */
-
-.auth-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background: var(--color-body);
-}
-
-/* ---------- Navbar ---------- */
-
-.auth-navbar {
-    position: relative;
-    flex: none;
-    height: var(--auth-navbar-height);
-    background: var(--color-white);
-}
-
-.auth-brand {
-    position: absolute;
-    top: 6px;
-    left: 27px;
-    display: flex;
-    align-items: flex-start;
-}
-
-.auth-brand-logo {
-    position: relative;
-    width: 108px;
-    height: 72px;
-    flex: none;
-}
-
-.auth-brand-ellipse-box {
-    position: absolute;
-    top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 71.998px;
-    height: 71.998px;
-}
-
-.auth-brand-ellipse-box-left {
-    left: 0;
-}
-
-.auth-brand-ellipse-box-right {
-    left: 36px;
-}
-
-.auth-brand-ellipse {
-    flex: none;
-    width: 50.91px;
-    height: 50.91px;
-}
-
-.auth-brand-ellipse-left {
-    transform: rotate(-135deg);
-}
-
-.auth-brand-ellipse-right {
-    transform: rotate(45deg);
-}
-
-.auth-brand-name {
-    height: 62.41px;
-    margin: 5px 0 0 0.25px;
-    font-family: var(--font-serif);
-    font-size: var(--fs-auth-brand);
-    font-weight: 400;
-    line-height: 64.14px;
-    letter-spacing: -1.1271px;
-    white-space: nowrap;
-}
-
-.auth-navbar .search {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 576px;
-    max-width: 576px;
-    height: 36px;
-    transform: translate(-50%, -50%);
-}
-
-.auth-navbar .search-input {
-    font-family: var(--font-search);
-}
 
 /* ---------- Main + auth card ---------- */
 
@@ -217,26 +127,6 @@
 /* ---------- Tablet ---------- */
 
 @media (max-width: 1024px) {
-    .auth-navbar {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 0 16px 0 27px;
-    }
-
-    .auth-brand {
-        position: static;
-        flex: none;
-    }
-
-    .auth-navbar .search {
-        position: static;
-        flex: 1 1 auto;
-        width: auto;
-        min-width: 0;
-        transform: none;
-    }
-
     .auth-main {
         min-height: 0;
         padding: 48px 24px;
@@ -271,19 +161,6 @@
     :root {
         --fs-title-lg: 2rem;
         --fs-title-md: 1.875rem;
-    }
-
-    .auth-navbar {
-        gap: 8px;
-        padding: 0 12px;
-    }
-
-    .auth-brand {
-        zoom: 0.6;
-    }
-
-    .search-input {
-        padding-right: 8px;
     }
 
     .auth-main {
