@@ -1,48 +1,36 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_css %}<link rel="stylesheet" href="{% static 'css/style.css' %}">{% endblock page_css %}
+{% block body_class %}catalog-page{% endblock body_class %}
+{% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/style.css' %}?v=39">{% endblock page_css %}
+{% block nav_links %}
+{% include 'components/guest-nav.html' with active_page='catalog' %}
+{% endblock nav_links %}
 
 {% block content %}
 <main class="main">
   <section class="hero" aria-labelledby="hero-title">
-    <img class="hero-image" src="{% static 'img/hero.png' %}" alt="Folded dark indigo denim jacket laid flat on a light linen fabric">
+    <img class="hero-image" src="{% static 'img/hero.jpg' %}" alt="Neutral knitwear hanging on a clothing rack">
     <div class="hero-content">
       <h1 class="hero-title" id="hero-title">Sustainable Living.<br>On WearBack.</h1>
       <p class="hero-subtitle">Wear it. Give it back.</p>
-      <a class="hero-button" href="#catalog">Start Shopping</a>
     </div>
   </section>
 
-  <section class="highlights" aria-label="Highlights">
-    <article class="highlight-card">
-      <h2 class="highlight-text">Buy secondhand clothings</h2>
-    </article>
-    <article class="highlight-card">
-      <h2 class="highlight-text">Reject fast fashion trend</h2>
-    </article>
-    <article class="highlight-card">
-      <h2 class="highlight-text">Auction for special price</h2>
-    </article>
-  </section>
-
-  <section class="catalog" id="catalog" aria-label="Catalog">
+  <section class="catalog" id="catalog" aria-labelledby="catalog-title">
+    <h2 class="catalog-title" id="catalog-title">Catalog</h2>
+    {% include 'components/catalog-filters.html' %}
     <ul class="catalog-grid">
       {% for item in catalog_items %}
-        <li class="catalog-item"></li>
+        {% include 'components/catalog-item.html' %}
       {% empty %}
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
-        <li class="catalog-item"></li>
+        {% for placeholder in '0123456789' %}
+          {% include 'components/catalog-item.html' %}
+        {% endfor %}
       {% endfor %}
     </ul>
+    <p class="catalog-empty" role="status" hidden>No items match your filters.</p>
   </section>
 </main>
 {% endblock content %}

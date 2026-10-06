@@ -1,0 +1,36 @@
+{% load static %}
+<div class="login register" data-auth-panel="register" hidden>
+  <button class="login-close" type="button" data-login-close aria-label="Close registration">&times;</button>
+  <img class="login-logo" src="{% static 'img/brand.svg' %}" alt="WearBack" width="232" height="73">
+  <h2 class="login-title register-title" id="register-title">Create an account</h2>
+  <p class="login-description" id="register-description">Join WearBack and give clothing a second life.</p>
+  <form class="login-form register-form" action="{% url 'main:register' %}" method="post">
+    {% csrf_token %}
+    <div class="register-names">
+      <div class="field">
+        <label class="field-label" for="register-first-name">First name</label>
+        <input class="field-input" id="register-first-name" name="first_name" type="text" autocomplete="given-name" required>
+      </div>
+      <div class="field">
+        <label class="field-label" for="register-last-name">Last name</label>
+        <input class="field-input" id="register-last-name" name="last_name" type="text" autocomplete="family-name" required>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label" for="register-email">Email address</label>
+      <input class="field-input" id="register-email" name="email" type="email" autocomplete="email" required>
+    </div>
+    <div class="field">
+      <label class="field-label" for="register-password">Password</label>
+      <input class="field-input" id="register-password" name="password" type="password" autocomplete="new-password" required>
+    </div>
+    <div class="field">
+      <label class="field-label" for="register-password-confirm">Confirm password</label>
+      <input class="field-input" id="register-password-confirm" name="password_confirm" type="password" autocomplete="new-password" required>
+    </div>
+    <button class="button button-primary login-submit register-submit" type="submit">Register</button>
+    <p class="login-status" role="status" hidden></p>
+    {% if sso_enabled %}<a class="login-sso" href="{% url 'main:sso_login' %}" data-sso-login>Continue with SSO UI</a>{% endif %}
+    <p class="login-register">Already a member? <button class="text-link login-link" type="button" data-login-open>Log in</button></p>
+  </form>
+</div>

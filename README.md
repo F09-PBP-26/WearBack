@@ -105,6 +105,10 @@ python manage.py check   # memeriksa konfigurasi proyek
 python manage.py test    # menjalankan test suite
 ```
 
+### Autentikasi dan SSO UI
+
+Login, registrasi, logout, dan penautan akun SSO UI tersedia melalui popup. Konfigurasi SSO menggunakan `https://sso.ui.ac.id/cas2/`. Lihat [panduan autentikasi](docs/authentication.md) untuk konfigurasi callback deployment dan langkah migrasi database lama sebelum menjalankan `migrate` pada instalasi yang sudah memiliki akun pengguna.
+
 ## Mengelola Konten melalui Admin Page
 
 Aktifkan virtual environment terlebih dahulu, lalu jalankan perintah berikut untuk membuat akun admin:

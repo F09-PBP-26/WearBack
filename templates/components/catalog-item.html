@@ -1,0 +1,32 @@
+{% load static %}
+<li class="catalog-item" data-catalog-name="{{ item.name|default:'Item Name' }}" data-category="{{ item.category|default:'Legwear'|lower }}">
+  <div class="catalog-image">
+    {% if item.image_url %}
+      <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy">
+    {% else %}
+      <img src="{% static 'img/catalog-socks.png' %}" alt="Gray socks" loading="lazy">
+    {% endif %}
+  </div>
+  <div class="catalog-details">
+    <h3 class="catalog-name">{{ item.name|default:'Item Name' }}</h3>
+    <p class="catalog-price">{{ item.price_display|default:'Rp100.000' }}</p>
+    <div class="catalog-meta">
+      <p class="catalog-size">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="1"/><path d="M7 7h5M7 11h3M7 15h5M7 19h3"/></svg>
+        <span title="Size: {{ item.size|default:'Small' }}">{{ item.size|default:'Small' }}</span>
+      </p>
+      <p class="catalog-condition">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/></svg>
+        <span title="Condition: {{ item.condition|default:'Like New' }}">{{ item.condition|default:'Like New' }}</span>
+      </p>
+      <p class="catalog-category">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3h8l10 10-8 8L3 11Z"/><circle cx="7.5" cy="7.5" r="1"/></svg>
+        <span title="Category: {{ item.category|default:'Legwear' }}">{{ item.category|default:'Legwear' }}</span>
+      </p>
+      <p class="catalog-location">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/></svg>
+        <span>{{ item.location|default:'Depok, Indonesia' }}</span>
+      </p>
+    </div>
+  </div>
+</li>

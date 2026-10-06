@@ -1,0 +1,25 @@
+{% if request.user.is_authenticated %}
+<div class="login" data-auth-panel="profile" hidden>
+  <button class="login-close" type="button" data-login-close aria-label="Close profile">&times;</button>
+  <h2 class="login-title" id="profile-title">Complete your profile</h2>
+  <p class="login-description" id="profile-description">Add your details to finish setting up your WearBack account.</p>
+  <form class="login-form" action="{% url 'main:profile' %}" method="post">
+    {% csrf_token %}
+    <div class="field">
+      <label class="field-label" for="profile-first-name">First name</label>
+      <input class="field-input" id="profile-first-name" name="first_name" autocomplete="given-name" maxlength="150" value="{{ request.user.first_name }}" required>
+    </div>
+    <div class="field">
+      <label class="field-label" for="profile-last-name">Last name</label>
+      <input class="field-input" id="profile-last-name" name="last_name" autocomplete="family-name" maxlength="150" value="{{ request.user.last_name }}" required>
+    </div>
+    <div class="field">
+      <label class="field-label" for="profile-email">Email address</label>
+      <input class="field-input" id="profile-email" name="email" type="email" autocomplete="email" maxlength="254" value="{{ request.user.email|default:'' }}" required>
+    </div>
+    <button class="login-submit" type="submit">Save profile</button>
+    <p class="login-status" role="status" hidden></p>
+    <p class="login-description">If your email is already registered, log out and log in to that account to link SSO UI.</p>
+  </form>
+</div>
+{% endif %}

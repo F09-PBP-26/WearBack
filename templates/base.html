@@ -8,17 +8,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400&family=Instrument+Sans:wdth,wght@75..100,400..700&family=Instrument+Serif&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}?v=9">
+  <link rel="stylesheet" href="{% static 'css/login.css' %}?v=11">
   {% block page_css %}{% endblock page_css %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock body_class %}">
   <header class="navbar">
     <a class="nav-brand" href="{% url 'main:show_main' %}" aria-label="WearBack home">
-      <span class="nav-brand-logo">
-        <span class="nav-brand-ellipse-box nav-brand-ellipse-box-left"><img class="nav-brand-ellipse nav-brand-ellipse-left" src="{% static 'img/brand-ellipse-left.png' %}" alt="" width="51" height="51"></span>
-        <span class="nav-brand-ellipse-box nav-brand-ellipse-box-right"><img class="nav-brand-ellipse nav-brand-ellipse-right" src="{% static 'img/brand-ellipse-right.png' %}" alt="" width="51" height="51"></span>
-      </span>
-      <span class="nav-brand-name"><span class="brand-wear">Wear</span><span class="brand-back">Back</span></span>
+      <img src="{% static 'img/brand.svg' %}" alt="" width="232" height="73">
     </a>
 
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navbar-menu" aria-label="Toggle navigation menu">
@@ -28,14 +25,38 @@
     </button>
 
     <nav class="nav-menu" id="navbar-menu" aria-label="Main navigation">
+      {% block nav_links %}{% endblock nav_links %}
       <form class="search" role="search" onsubmit="return false">
         <label class="search-label" for="site-search" hidden>Search items</label>
-        <input class="search-input" id="site-search" type="search" placeholder="Search 90s leather, Stüssy, Acne Studios, vintage denim...">
+        <input class="search-input" id="site-search" type="search" placeholder="{% block search_placeholder %}Search 90s leather, Stüssy, Acne Studios, vintage denim...{% endblock search_placeholder %}">
         <img class="search-icon" src="{% static 'img/search.svg' %}" alt="" width="12" height="12">
       </form>
 
-      {% block nav_action %}<a class="nav-login" href="{% url 'main:sign_in' %}">Sign In</a>{% endblock nav_action %}
+      {% block nav_action %}
+      {% if request.user.is_authenticated %}
+      <div class="nav-account">
+        <button class="nav-list-item" type="button" data-list-item-open>List an item</button>
+        <button class="nav-list-item nav-cart" type="button" data-cart-open aria-label="Open shopping cart" title="Shopping cart">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21 7H6"/>
+            <circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>
+          </svg>
+        </button>
+        <span class="nav-profile-wrap">
+        <button class="nav-profile" type="button" popovertarget="profile-menu" aria-label="Open profile menu" title="My account">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+          </svg>
+        </button>
+        </span>
+      </div>
+      {% else %}
+      <button class="nav-login" type="button" data-login-open>Log in</button>
+      {% endif %}
+      {% endblock nav_action %}
     </nav>
+    <button class="search-cancel" type="button" aria-label="Cancel search" hidden>Cancel</button>
   </header>
 
   {% block content %}{% endblock content %}
@@ -44,6 +65,12 @@
     <p class="footer-text">© 2026 WearBack. Kelompok F09 Kelas PBP F Gasal 2026/2027</p>
   </footer>
 
-  <script src="{% static 'js/main.js' %}"></script>
+  {% include 'components/login.html' %}
+  {% if request.user.is_authenticated %}
+    {% include 'components/list-item.html' %}
+    {% include 'components/cart.html' %}
+    {% include 'components/profile-menu.html' %}
+  {% endif %}
+  <script src="{% static 'js/main.js' %}?v=17"></script>
 </body>
 </html>

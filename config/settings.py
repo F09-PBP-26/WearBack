@@ -26,14 +26,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^ya9b59ac-o0s)2m3d(vd2#89&!s8@$ufn!ln6(txv6u^rl1n6'
+PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-wearback-local-development-only')
+if PRODUCTION and SECRET_KEY == 'django-insecure-wearback-local-development-only':
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured('Set SECRET_KEY in .env for production.')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', str(not PRODUCTION)).lower() == 'true'
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "hudzaifah51-wearback.pws.cs.ui.ac.id"]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,hudzaifah51-wearback.pws.cs.ui.ac.id').split(',')
 
-PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
+SESSION_COOKIE_SECURE = PRODUCTION
+CSRF_COOKIE_SECURE = PRODUCTION
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SECURE_SSL_REDIRECT = PRODUCTION
+if os.getenv('TRUST_PROXY_HTTPS', 'false').lower() == 'true':
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
@@ -59,6 +69,18 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+# For an already-migrated deployment, use this flag only for the initial adoption
+# command described in docs/authentication.md, then unset it.
+AUTH_USER_MODEL = 'auth.User' if os.getenv('WEARBACK_ADOPT_AUTH', 'false').lower() == 'true' else 'main.User'
+AUTHENTICATION_BACKENDS = ['main.backends.EmailBackend', 'django.contrib.auth.backends.ModelBackend']
+LOGIN_URL = '/login/'
+AUTH_RATE_LIMIT = 10
+AUTH_RATE_WINDOW = 600
+SSO_ENABLED = os.getenv('SSO_ENABLED', 'true').lower() == 'true'
+SSO_SERVER_URL = os.getenv('SSO_SERVER_URL', 'https://sso.ui.ac.id/cas2/')
+SSO_SERVICE_URL = os.getenv('SSO_SERVICE_URL', '')
+SSO_CAS_VERSION = os.getenv('SSO_CAS_VERSION', '2')
+SSO_TIMEOUT = 8
 
 TEMPLATES = [
     {
