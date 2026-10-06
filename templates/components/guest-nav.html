@@ -1,0 +1,5 @@
+<div class="nav-links" data-active-page="{{ active_page }}">
+  <span class="nav-slider" aria-hidden="true"></span>
+  <a class="nav-link{% if active_page == 'catalog' %} is-active{% endif %}" href="{% url 'main:show_main' %}"{% if active_page == 'catalog' %} aria-current="page"{% endif %}>Catalog</a>
+  <a class="nav-link{% if active_page == 'auction' %} is-active{% endif %}" href="{% url 'main:auction' %}"{% if active_page == 'auction' %} aria-current="page"{% endif %}>Auction</a>
+</div>

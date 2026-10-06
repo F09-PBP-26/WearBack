@@ -1,0 +1,13 @@
+<div class="profile-menu" id="profile-menu" popover aria-labelledby="profile-menu-name">
+  <p class="profile-menu-name" id="profile-menu-name">{{ request.user.get_full_name|default:'My account' }}</p>
+  {% if sso_enabled and not sso_linked %}
+  <form action="{% url 'main:sso_link' %}" method="post">
+    {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+    <button class="profile-menu-action" type="submit">Link SSO UI</button>
+  </form>
+  {% endif %}
+  <form action="{% url 'main:logout' %}" method="post">
+    {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+    <button class="profile-menu-action" type="submit">Log out</button>
+  </form>
+</div>

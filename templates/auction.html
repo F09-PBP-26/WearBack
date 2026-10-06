@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}WearBack – Auction{% endblock title %}
+{% block body_class %}catalog-page auction-page{% endblock body_class %}
+{% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}?v=39">
+<link rel="stylesheet" href="{% static 'css/auction.css' %}">
+{% endblock page_css %}
+{% block nav_links %}
+{% include 'components/guest-nav.html' with active_page='auction' %}
+{% endblock nav_links %}
+
+{% block content %}
+<main class="auction-main">
+  <section class="auction" aria-labelledby="auction-title">
+    <p class="auction-status">Coming soon</p>
+    <h1 class="auction-title" id="auction-title">A second life.<br>A special find.</h1>
+    <p class="auction-description">WearBack auctions are on their way. Check back soon to discover unique secondhand pieces and place your bids.</p>
+    <a class="auction-button" href="{% url 'main:show_main' %}#catalog">Explore the catalog</a>
+  </section>
+</main>
+{% endblock content %}

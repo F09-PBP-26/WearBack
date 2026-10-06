@@ -1,0 +1,171 @@
+/* WearBack – shared login and registration popup */
+.login-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(28rem, calc(100% - 2rem));
+    max-height: calc(100dvh - 2rem);
+    margin: auto;
+    padding: 0;
+    overflow-y: auto;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-panel);
+    background: var(--color-white);
+    color: var(--color-black);
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.2);
+}
+.login-dialog::backdrop { background: rgba(19, 35, 26, 0.45); }
+html.login-open { overflow-y: hidden; }
+.login {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem clamp(1.25rem, 5vw, 2.5rem);
+}
+.login[hidden] { display: none; }
+.register-names { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.register-title { text-align: center; font-size: 2.25rem; }
+.login-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-primary);
+    font-size: 1.75rem;
+    cursor: pointer;
+}
+.login-close:hover { background: var(--color-field); }
+.login-logo { zoom: 0.8; }
+.login-title {
+    margin-top: 1rem;
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    font-weight: 400;
+    color: var(--color-primary);
+}
+.login-description { margin: 0.5rem 0 1.5rem; color: var(--color-search-text); text-align: center; line-height: 1.5; }
+.login-form { display: flex; flex-direction: column; gap: 1.25rem; width: 100%; }
+.login .field { position: static; height: auto; }
+.login .field-label { position: static; display: block; margin-bottom: 0.5rem; opacity: 1; font-size: 0.875rem; font-weight: 500; }
+.login .field-input {
+    width: 100%;
+    height: 3rem;
+    padding: 0 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    background: var(--color-field);
+    color: var(--color-black);
+    font-size: 1rem;
+}
+.login .login-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 3rem;
+    padding: 0 1rem;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--color-button);
+    color: var(--color-white);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.login-status { font-size: 0.875rem; line-height: 1.5; color: var(--color-primary); }
+.login-status:empty { display: none; }
+.field-error { margin-top: 0.375rem; color: #962e20; font-size: 0.8125rem; line-height: 1.4; }
+.login .field-input[aria-invalid="true"] { border-color: #962e20; }
+.login-submit:disabled { opacity: 0.6; cursor: wait; }
+.login-sso { display: flex; align-items: center; justify-content: center; min-height: 3rem; padding: 0.5rem 1rem; border: 1px solid var(--color-primary); border-radius: var(--radius-control); color: var(--color-primary); font-weight: 600; text-align: center; }
+.login-sso:focus-visible { outline: 2px solid var(--color-secondary); outline-offset: 3px; }
+.nav-account { display: flex; align-items: center; gap: 0; flex: none; }
+.nav-list-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    height: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0 0.75rem;
+    border: 0;
+    border-radius: var(--radius-button);
+    background: transparent;
+    color: var(--color-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.nav-list-item:hover { color: var(--color-secondary); }
+.nav-list-item:focus-visible { outline: 2px solid var(--color-secondary); outline-offset: 3px; }
+.nav-cart { flex: none; width: 3rem; height: 2.5rem; padding: 0 0.75rem; }
+.nav-profile-wrap { display: flex; align-items: center; padding: 0 0.75rem; }
+.nav-profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--color-primary);
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-white);
+    cursor: pointer;
+}
+.nav-profile:hover { background: var(--color-button); }
+.nav-profile:focus-visible { outline: 2px solid var(--color-secondary); outline-offset: 3px; }
+.profile-menu {
+    position: fixed;
+    inset: auto;
+    width: min(16rem, calc(100vw - 1rem));
+    max-height: calc(100dvh - 1rem);
+    margin: 0;
+    padding: 0.75rem;
+    overflow-y: auto;
+    border: 1px solid var(--color-field);
+    border-radius: var(--radius-card);
+    background: var(--color-white);
+    color: var(--color-primary);
+    box-shadow: 0 0.5rem 1.5rem rgba(19, 35, 26, 0.16);
+}
+.profile-menu-name { padding: 0.5rem 0.5rem 0.75rem; font-weight: 700; overflow-wrap: anywhere; }
+.profile-menu-action {
+    display: block;
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.5rem;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.profile-menu-action:hover { background: var(--color-field); }
+.profile-menu-action:focus-visible { outline: 2px solid var(--color-secondary); }
+@media (max-width: 768px) {
+    .nav-account { flex-wrap: wrap; }
+}
+.login-register { font-size: 0.875rem; text-align: center; line-height: 1.5; }
+.login-link { padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer; }
+.nav-login { cursor: pointer; }
+.login-close:focus-visible,
+.login .field-input:focus-visible,
+.login-submit:focus-visible,
+.login-link:focus-visible { outline: 2px solid var(--color-secondary); outline-offset: 3px; }
+.login-dialog[open] { animation: login-enter 180ms ease-out; }
+@keyframes login-enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .login-dialog[open] { animation: none; }
+}

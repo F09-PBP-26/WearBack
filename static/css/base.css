@@ -28,7 +28,6 @@
     --font-search: "Hanken Grotesk", sans-serif;
 
     /* Fluid font sizes */
-    --fs-brand: clamp(2.5rem, 3.9vw, 3.5rem);
     --fs-hero: clamp(2.5rem, 4.4vw, 4rem);
     --fs-hero-sub: clamp(1.125rem, 1.4vw, 1.25rem);
     --fs-button: clamp(0.9375rem, 1.1vw, 1rem);
@@ -73,8 +72,8 @@
     --shadow-panel: 0 4px 4px 0 rgba(0, 0, 0, 0.25);
 
     /* Layout */
-    --navbar-height: 5.25rem;
-    --footer-height: 5.25rem;
+    --navbar-height: 4rem;
+    --footer-height: 4rem;
     --control-height: 4.1875rem;
     --transition-menu: 0.3s ease;
 
@@ -94,6 +93,9 @@
 
 html {
     -webkit-text-size-adjust: 100%;
+    /* Keep the same content width on short and long pages. */
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
 }
 
 body {
@@ -128,70 +130,29 @@ input {
 /* ---------- Navbar ---------- */
 
 .navbar {
-    position: relative;
+    position: sticky;
+    top: 0;
     z-index: 10;
     display: flex;
     flex: none;
     align-items: center;
     gap: var(--space-16);
-    min-height: var(--navbar-height);
+    height: var(--navbar-height);
     padding: 0 var(--gutter);
     background: var(--color-white);
 }
 
 .nav-brand {
-    display: flex;
-    align-items: flex-start;
+    display: block;
     flex: none;
+    line-height: 0;
+    zoom: 0.64655;
 }
 
-.nav-brand-logo {
-    position: relative;
-    width: 108px;
-    height: 72px;
-    flex: none;
-}
-
-.nav-brand-ellipse-box {
-    position: absolute;
-    top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 71.998px;
-    height: 71.998px;
-}
-
-.nav-brand-ellipse-box-left {
-    left: 0;
-}
-
-.nav-brand-ellipse-box-right {
-    left: 36px;
-}
-
-.nav-brand-ellipse {
-    flex: none;
-    width: 50.91px;
-    height: 50.91px;
-}
-
-.nav-brand-ellipse-left {
-    transform: rotate(-135deg);
-}
-
-.nav-brand-ellipse-right {
-    transform: rotate(45deg);
-}
-
-.nav-brand-name {
-    margin: 5px 0 0 0.25px;
-    font-family: var(--font-serif);
-    font-size: var(--fs-brand);
-    font-weight: 400;
-    line-height: 1.12;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
+.nav-brand img {
+    display: block;
+    width: 232px;
+    height: auto;
 }
 
 .nav-toggle {
@@ -210,14 +171,14 @@ input {
     width: 100%;
     max-width: 36rem;
     min-width: 0;
-    height: 2.25rem;
+    height: 2.5rem;
     margin-inline: auto;
 }
 
 .search-input {
     display: block;
     width: 100%;
-    height: 2.1875rem;
+    height: 100%;
     margin: 0;
     padding: var(--space-9) var(--space-16) var(--space-9) 2.5rem;
     border: 0;
@@ -239,7 +200,7 @@ input {
 
 .search-icon {
     position: absolute;
-    top: 0.75rem;
+    top: calc(50% - 0.375rem);
     left: 1.125rem;
     width: 0.75rem;
     height: 0.75rem;
@@ -257,12 +218,12 @@ input {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.25rem;
-    padding: 0 1.25rem;
-    border: 1px solid var(--color-button);
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    border: 1px solid var(--color-accent-border);
     border-radius: var(--radius-button);
-    background: var(--color-white);
-    color: var(--color-button);
+    background: var(--color-accent);
+    color: var(--color-card-text);
     font-size: var(--fs-name);
     font-weight: 500;
     line-height: 1;
@@ -275,16 +236,6 @@ input {
     outline: 2px solid var(--color-secondary);
 }
 
-/* ---------- Brand text ---------- */
-
-.brand-wear {
-    color: var(--color-primary);
-}
-
-.brand-back {
-    color: var(--color-secondary);
-}
-
 /* ---------- Footer ---------- */
 
 .footer {
@@ -292,18 +243,18 @@ input {
     flex: none;
     align-items: center;
     justify-content: center;
-    min-height: var(--footer-height);
-    padding: var(--space-16) var(--gutter);
+    height: var(--footer-height);
+    padding: var(--space-8) var(--gutter);
     background: var(--color-white);
 }
 
 .footer-text {
-    max-width: 531px;
+    max-width: 100%;
     color: var(--color-card-text);
-    font-family: var(--font-serif);
-    font-size: var(--fs-footer);
+    font-family: var(--font-sans);
+    font-size: 1rem;
     font-weight: 400;
-    line-height: normal;
+    line-height: 1.25;
     letter-spacing: 0.5px;
     text-align: center;
 }
@@ -380,13 +331,17 @@ input {
     }
 
     .nav-brand {
-        zoom: 0.7;
+        zoom: 0.64655;
     }
 
     .search {
         flex: none;
         width: 100%;
         max-width: none;
+    }
+
+    .footer-text {
+        font-size: 0.875rem;
     }
 }
 

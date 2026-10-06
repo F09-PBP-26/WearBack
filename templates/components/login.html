@@ -1,0 +1,26 @@
+{% load static %}
+<dialog class="login-dialog" id="login-dialog" aria-labelledby="login-title" aria-describedby="login-description" data-initial-mode="{{ auth_initial_mode }}" data-auth-notice="{{ auth_notice }}">
+  <div class="login" data-auth-panel="login">
+    <button class="login-close" type="button" data-login-close aria-label="Close login">&times;</button>
+    <img class="login-logo" src="{% static 'img/brand.svg' %}" alt="WearBack" width="232" height="73">
+    <h2 class="login-title" id="login-title">Welcome back</h2>
+    <p class="login-description" id="login-description">Log in to your WearBack account.</p>
+    <form class="login-form" action="{% url 'main:login' %}" method="post">
+      {% csrf_token %}
+      <div class="field field-email">
+        <label class="field-label" for="login-email">Email address</label>
+        <input class="field-input" id="login-email" name="email" type="email" autocomplete="email" required autofocus>
+      </div>
+      <div class="field field-password">
+        <label class="field-label" for="login-password">Password</label>
+        <input class="field-input" id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button class="button button-primary login-submit" type="submit">Log in</button>
+      <p class="login-status" role="status" hidden></p>
+      {% if sso_enabled %}<a class="login-sso" href="{% url 'main:sso_login' %}" data-sso-login>Continue with SSO UI</a>{% endif %}
+      <p class="login-register">Don’t have an account? <button class="text-link login-link" type="button" data-register-open>Register</button></p>
+    </form>
+  </div>
+  {% include 'components/register.html' %}
+  {% include 'components/profile.html' %}
+</dialog>
