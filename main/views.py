@@ -6,11 +6,13 @@ from xml.etree.ElementTree import ParseError
 from cas import CASError
 from django.conf import settings
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.crypto import constant_time_compare
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
@@ -20,8 +22,8 @@ from requests import RequestException
 
 from main.auth_utils import throttled
 from main.forms import LoginForm, ProfileForm, RegisterForm
+from main.models import TransactionHistory
 from main.sso import cas_client, resolve_identity
-
 
 def safe_next(request, value):
     if value and url_has_allowed_host_and_scheme(value, {request.get_host()}, require_https=request.is_secure()):
@@ -194,3 +196,16 @@ def sso_callback(request):
     if not link_user:
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect(safe_next(request, destination))
+
+# Transaction 
+@login_required
+@never_cache
+def transaction_history(request):
+    now = timezone.now()
+    TransactionHistory.objects.filter(buyer=request.user, status="ongoing", payment_deadline__isnull=False, payment_deadline__lte=now).update(
+            status="cancelled",
+            status_message="Payment time expired",
+            updated_at=now,
+    )
+    transactions = TransactionHistory.objects.filter(buyer=request.user).order_by("-created_at")
+    return render(request, "transactions.html",{**page_context(request),"transactions": transactions,})

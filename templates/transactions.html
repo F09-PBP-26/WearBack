@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Transactions | WearBack{% endblock title %}
+{% block body_class %}catalog-page transaction-history-page{% endblock body_class %}
+{% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/transactions.css' %}">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+{% endblock page_css %}
+
+{% block nav_links %}
+{% include 'components/guest-nav.html' with active_page='transactions' %}
+{% endblock nav_links %}
+
+{% block content %}
+<main class="transaction-history">
+    <a class="browse-link" href="{% url 'main:show_main' %}"> ← Browse items </a>
+
+    <header class="transaction-header">
+        <h1>Transactions</h1>
+        <p>Track your ongoing and completed purchases.</p>
+    </header>
+
+    <section class="transaction-list" aria-label="Your transactions">
+        {% for transaction in transactions %}
+        <article class="transaction-card">
+            <header class="transaction-order-header">
+                <div>
+                    <h2>Order #{{ transaction.order_number|default:transaction.pk }}</h2>
+                    <p>{{ transaction.created_at|date:"j F Y" }}</p>
+                </div>
+
+                {% if transaction.status == "completed" %}
+                    <span class="transaction-status status-completed">
+                        ✓ Completed
+                    </span>
+                {% elif transaction.status == "delivered" %}
+                    <span class="transaction-status status-delivered">
+                        ✓ Delivered
+                    </span>
+                {% elif transaction.status == "cancelled" %}
+                    <span class="transaction-status status-cancelled">
+                        Cancelled
+                    </span>
+                {% else %}
+                    <span class="transaction-status status-ongoing">
+                        ● Ongoing
+                    </span>
+                {% endif %}
+            </header>
+
+            <div class="transaction-item">
+                <div class="transaction-image">
+                    {% if transaction.item_image_url %}
+                    <img src="{{ transaction.item_image_url }}" alt="{{ transaction.item_name }}">
+                    {% else %}
+                    <span aria-hidden="true">◇</span>
+                    {% endif %}
+                </div>
+
+                <div class="transaction-item-info">
+                    <h3>{{ transaction.item_summary|default:transaction.item_name }}</h3>
+                    <p>
+                        {{ transaction.item_count }}
+                        item{% if transaction.item_count != 1 %}s{% endif %}
+                    </p>
+                    {% if transaction.seller_name %}
+                    <p>{{ transaction.seller_name }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="transaction-total">
+                    <span>Total purchase</span>
+                    <strong>Rp{{ transaction.price|intcomma }}</strong>
+                </div>
+            </div>
+
+            <div class="transaction-card-footer">
+                <p>
+                    {% if transaction.status == "ongoing" %}
+                        Awaiting payment
+                        {% if transaction.payment_deadline %}
+                            · <span class="payment-countdown" data-deadline="{{ transaction.payment_deadline|date:'c' }}">Calculating...</span>
+                        {% endif %}
+                    {% elif transaction.status == "completed" %}
+                        Purchase completed
+                    {% elif transaction.status == "delivered" %}
+                        Item delivered
+                    {% elif transaction.status == "cancelled" %}
+                        {% if transaction.status_message == "Payment time expired" %}
+                            Awaiting payment · <span class="payment-expired">Payment time expired</span>
+                        {% else %}
+                            This transaction was cancelled
+                        {% endif %}
+                    {% else %}
+                        {{ transaction.status_message|default:"Transaction in progress" }}
+                    {% endif %}
+                </p>
+                
+                {% if transaction.status == "ongoing" %}
+                <button class="continue-payment" type="button" onclick="alert('Payment feature is coming soon!')">
+                    Continue payment
+                </button>
+                {% elif transaction.status == "delivered" %}
+                <button class="check-details" type="button" onclick="alert('Review feature is coming soon!')">
+                    Check details
+                </button>
+                {% endif %}
+            </div>
+        </article>
+        {% empty %}
+        <div class="transaction-empty">
+            <h2>No transactions yet</h2>
+            <p>Your purchases will appear here.</p>
+            <a href="{% url 'main:show_main' %}">Browse items</a>
+        </div>
+        {% endfor %}
+    </section>
+
+    <p class="transaction-count">
+        Showing {{ transactions|length }}
+        purchase{% if transactions|length != 1 %}s{% endif %}
+    </p>
+</main>
+
+{% block extra_js %} <script src="{% static 'js/transactions.js' %}" defer></script> {% endblock extra_js %}
+{% endblock content %}
