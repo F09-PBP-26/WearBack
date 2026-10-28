@@ -95,12 +95,20 @@
           }
         });
       }
-      bindNavbarPopup('list-item-dialog', '[data-list-item-open]', '[data-list-item-close]');
       bindNavbarPopup('cart-dialog', '[data-cart-open]', '[data-cart-close]');
       if (loginDialog) {
         var loginTrigger = null;
         var authPanels = loginDialog.querySelectorAll('[data-auth-panel]');
         var authForms = loginDialog.querySelectorAll('.login-form');
+
+        function authNext() {
+          if (loginDialog.dataset.next) return loginDialog.dataset.next;
+          var destination = new URL(window.location.href);
+          destination.searchParams.delete('login');
+          destination.searchParams.delete('register');
+          destination.searchParams.delete('next');
+          return destination.pathname + destination.search + destination.hash;
+        }
 
         function clearErrors(form) {
           form.querySelectorAll('.field-error').forEach(function (error) { error.remove(); });
@@ -199,7 +207,7 @@
             submit.disabled = true;
             submit.textContent = 'Please wait…';
             var body = new FormData(form);
-            body.set('next', window.location.pathname + window.location.search + window.location.hash);
+            body.set('next', authNext());
             try {
               var response = await fetch(form.action, {
                 method: 'POST', body: body, credentials: 'same-origin',
@@ -227,7 +235,7 @@
 
         document.querySelectorAll('[data-sso-login]').forEach(function (link) {
           var url = new URL(link.href);
-          url.searchParams.set('next', window.location.pathname + window.location.search + window.location.hash);
+          url.searchParams.set('next', authNext());
           link.href = url.pathname + url.search;
         });
 
@@ -237,6 +245,7 @@
           openLogin(document.querySelector('.nav-login'), initialMode);
           pageUrl.searchParams.delete('login');
           pageUrl.searchParams.delete('register');
+          pageUrl.searchParams.delete('next');
           window.history.replaceState(null, '', pageUrl.pathname + pageUrl.search + pageUrl.hash);
           if (loginDialog.dataset.authNotice) {
             var notice = loginDialog.querySelector('[data-auth-panel="' + initialMode + '"] .login-status');

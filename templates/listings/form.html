@@ -1,0 +1,22 @@
+{% extends 'listings/base.html' %}
+
+{% block title %}{% if listing %}Edit listing{% else %}List an item{% endif %} – WearBack{% endblock title %}
+{% block listing_content %}
+  <h1>{% if listing %}Edit listing{% else %}List an item{% endif %}</h1>
+  <form class="listing-card listing-form" method="post" action="{% if listing %}{% url 'listings:update' listing.pk %}{% else %}{% url 'listings:create' %}{% endif %}">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class="listing-field">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}<p class="listing-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="listing-actions">
+      <button class="listing-button" type="submit">{% if listing %}Save changes{% else %}Create listing{% endif %}</button>
+      <a href="{% if listing %}{% url 'listings:detail' listing.pk %}{% else %}{% url 'listings:mine' %}{% endif %}">Cancel</a>
+    </div>
+  </form>
+{% endblock listing_content %}

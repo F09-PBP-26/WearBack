@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils.html import escape
 from requests import Response, Timeout
 
 from main.models import SSOIdentity
@@ -332,3 +333,102 @@ class SSOTests(TestCase):
         response = self.client.get(reverse('main:sso_login'), secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(self.client.session['sso_attempt']['service'].startswith('https://wearback.example/sso/callback/?state='))
+
+
+@override_settings(SSO_ENABLED=True, SSO_SERVER_URL='https://sso.ui.ac.id/cas2/',
+                   SSO_CAS_VERSION='2', SSO_SERVICE_URL='', PRODUCTION=False)
+class AuthReturnTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='return-member', email='return@example.com',
+                                            first_name='Return', last_name='Member', password=PASSWORD)
+
+    def test_auth_entry_preserves_listing_destination_and_escapes_dialog_attribute(self):
+        destination = reverse('listings:create') + '?source=menu&note="example"#form'
+        for mode in ('login', 'register'):
+            with self.subTest(mode=mode):
+                response = self.client.get(reverse('main:' + mode), {'next': destination}, follow=True)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.context['auth_next'], destination)
+                self.assertEqual(parse_qs(urlparse(response.redirect_chain[-1][0]).query)[mode], ['1'])
+                self.assertContains(response, 'data-next="' + escape(destination) + '"')
+
+    def test_plain_auth_entry_still_opens_the_expected_popup(self):
+        for mode in ('login', 'register'):
+            with self.subTest(mode=mode):
+                response = self.client.get(reverse('main:' + mode))
+                self.assertEqual(response.url, '/?' + mode + '=1')
+                self.assertEqual(self.client.get(response.url).context['auth_next'], '')
+
+    def test_external_auth_entry_and_direct_popup_destinations_are_rejected(self):
+        for unsafe in ('https://evil.example/', '//evil.example/', 'javascript:alert(1)'):
+            for mode in ('login', 'register'):
+                with self.subTest(unsafe=unsafe, mode=mode):
+                    response = self.client.get(reverse('main:' + mode), {'next': unsafe}, follow=True)
+                    self.assertEqual(response.context['auth_next'], '/')
+                    self.assertContains(response, 'data-next="/"')
+                    self.assertNotContains(response, unsafe)
+                    response = self.client.get('/', {mode: '1', 'next': unsafe})
+                    self.assertEqual(response.context['auth_next'], '/')
+
+    def test_ordinary_pages_do_not_override_login_destination_from_unrelated_query(self):
+        response = self.client.get('/', {'next': reverse('listings:create')})
+        self.assertEqual(response.context['auth_next'], '')
+
+    def test_guest_can_return_to_create_page_after_password_login(self):
+        destination = reverse('listings:create')
+        response = self.client.get(destination, follow=True)
+        self.assertEqual(response.context['auth_next'], destination)
+        response = self.client.post(reverse('main:login'), {
+            'email': self.user.email, 'password': PASSWORD, 'next': response.context['auth_next'],
+        })
+        self.assertEqual(response.json()['redirect'], destination)
+        self.assertContains(self.client.get(response.json()['redirect']), 'Create listing')
+
+    def test_registration_can_return_to_create_page(self):
+        destination = reverse('listings:create')
+        page = self.client.get(reverse('main:register'), {'next': destination}, follow=True)
+        response = self.client.post(reverse('main:register'), {
+            'first_name': 'New', 'last_name': 'Member', 'email': 'new-return@example.com',
+            'password': PASSWORD, 'password_confirm': PASSWORD, 'next': page.context['auth_next'],
+        })
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['redirect'], destination)
+        self.assertContains(self.client.get(destination), 'Create listing')
+
+    def test_registration_rejects_an_external_return_destination(self):
+        response = self.client.post(reverse('main:register'), {
+            'first_name': 'New', 'last_name': 'Member', 'email': 'unsafe-return@example.com',
+            'password': PASSWORD, 'password_confirm': PASSWORD, 'next': 'https://evil.example/',
+        })
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['redirect'], '/')
+
+    @patch('main.views.cas_client')
+    def test_sso_from_popup_returns_to_create_page(self, mocked):
+        destination = reverse('listings:create')
+        page = self.client.get(destination, follow=True)
+        mocked.return_value.get_login_url.return_value = 'https://sso.ui.ac.id/cas2/login?service=demo'
+        mocked.return_value.verify_ticket.return_value = (
+            'return-sso-member', {'mail': 'return-sso@example.com', 'givenName': 'SSO', 'sn': 'Member'}, None,
+        )
+        self.client.get(reverse('main:sso_login'), {'next': page.context['auth_next']})
+        attempt = self.client.session['sso_attempt']
+        self.assertEqual(attempt['next'], destination)
+        response = self.client.get(reverse('main:sso_callback'), {'state': attempt['state'], 'ticket': 'ST-test'})
+        self.assertRedirects(response, destination)
+        self.assertContains(self.client.get(destination), 'Create listing')
+
+    @patch('main.views.cas_client')
+    def test_failed_sso_retains_notice_and_destination_through_login_redirect(self, mocked):
+        destination = reverse('listings:create')
+        mocked.return_value.get_login_url.return_value = 'https://sso.ui.ac.id/cas2/login?service=demo'
+        mocked.return_value.verify_ticket.side_effect = Timeout('network')
+        self.client.get(reverse('main:sso_login'), {'next': destination})
+        attempt = self.client.session['sso_attempt']
+        response = self.client.get(reverse('main:sso_callback'), {
+            'state': attempt['state'], 'ticket': 'ST-test',
+        }, follow=True)
+        self.assertEqual(response.context['auth_next'], destination)
+        self.assertEqual(response.context['auth_initial_mode'], 'login')
+        self.assertIn('could not complete', response.context['auth_notice'])

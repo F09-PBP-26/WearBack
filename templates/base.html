@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400&family=Instrument+Sans:wdth,wght@75..100,400..700&family=Instrument+Serif&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/base.css' %}?v=9">
-  <link rel="stylesheet" href="{% static 'css/login.css' %}?v=16">
+  <link rel="stylesheet" href="{% static 'css/login.css' %}?v=17">
   {% block page_css %}{% endblock page_css %}
 </head>
 <body class="{% block body_class %}{% endblock body_class %}">
@@ -35,7 +35,7 @@
       {% block nav_action %}
       {% if request.user.is_authenticated %}
       <div class="nav-account">
-        <button class="nav-list-item" type="button" data-list-item-open>List an item</button>
+        <a class="nav-list-item" href="{% url 'listings:create' %}">List an item</a>
         <button class="nav-list-item nav-cart" type="button" data-cart-open aria-label="Open shopping cart" title="Shopping cart">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21 7H6"/>
@@ -70,10 +70,9 @@
 
   {% include 'components/login.html' %}
   {% if request.user.is_authenticated %}
-    {% include 'components/list-item.html' %}
     {% include 'components/cart.html' %}
     {% include 'components/profile-menu.html' %}
   {% endif %}
-  <script src="{% static 'js/main.js' %}?v=17"></script>
+  <script src="{% static 'js/main.js' %}?v=18"></script>
 </body>
 </html>

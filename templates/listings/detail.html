@@ -1,0 +1,25 @@
+{% extends 'listings/base.html' %}
+
+{% block title %}{{ listing.name }} – WearBack{% endblock title %}
+{% block listing_content %}
+  <article class="listing-card">
+    <h1>{{ listing.name }}</h1>
+    <p>Listed by {{ listing.seller.get_full_name|default:'a WearBack member' }}</p>
+    <div class="listing-description">{{ listing.description|linebreaks }}</div>
+    {% if request.user.is_authenticated %}
+      {% if contact_email %}
+        <p>Contact seller: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+      {% else %}
+        <p>The seller hasn’t shared a contact email.</p>
+      {% endif %}
+    {% else %}
+      <p><a href="{% url 'main:login' %}?next={{ request.get_full_path|urlencode }}">Sign in to see seller contact information</a></p>
+    {% endif %}
+    {% if can_manage %}
+      <nav class="listing-actions" aria-label="Manage this listing">
+        <a href="{% url 'listings:update' listing.pk %}">Edit listing</a>
+        <a href="{% url 'listings:delete' listing.pk %}">Delete listing</a>
+      </nav>
+    {% endif %}
+  </article>
+{% endblock listing_content %}
