@@ -36,12 +36,12 @@
       {% if request.user.is_authenticated %}
       <div class="nav-account">
         <button class="nav-list-item" type="button" data-list-item-open>List an item</button>
-        <button class="nav-list-item nav-cart" type="button" data-cart-open aria-label="Open shopping cart" title="Shopping cart">
+        <a class="nav-list-item nav-cart" href="{% url 'main:cart' %}" data-cart-open aria-label="Open shopping cart" title="Shopping cart">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21 7H6"/>
             <circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>
           </svg>
-        </button>
+        </a>
         <span class="nav-profile-wrap">
         <button class="nav-profile" type="button" popovertarget="profile-menu" aria-label="Open profile menu" title="My account">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false">
@@ -71,7 +71,6 @@
   {% include 'components/login.html' %}
   {% if request.user.is_authenticated %}
     {% include 'components/list-item.html' %}
-    {% include 'components/cart.html' %}
     {% include 'components/profile-menu.html' %}
   {% endif %}
   <script src="{% static 'js/main.js' %}?v=17"></script>

@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare
@@ -22,7 +22,7 @@ from requests import RequestException
 
 from main.auth_utils import throttled
 from main.forms import LoginForm, ProfileForm, RegisterForm
-from main.models import TransactionHistory
+from main.models import CartItem, TransactionHistory
 from main.sso import cas_client, resolve_identity
 
 def safe_next(request, value):
@@ -208,4 +208,22 @@ def transaction_history(request):
             updated_at=now,
     )
     transactions = TransactionHistory.objects.filter(buyer=request.user).order_by("-created_at")
-    return render(request, "transactions.html",{**page_context(request),"transactions": transactions,})
+    return render(request, "transactions.html", {**page_context(request), "transactions": transactions})
+
+# Carts
+@login_required
+@never_cache
+def cart(request):
+    cart_items = CartItem.objects.filter(buyer=request.user).order_by("-created_at")
+    return render(request, "carts.html", {**page_context(request), "cart_items": cart_items})
+
+@login_required
+@require_POST
+def remove_cart_item(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id, buyer=request.user)
+    item.delete()
+
+    return JsonResponse({
+        "success": True,
+        "message": "Item removed successfully."
+    })
