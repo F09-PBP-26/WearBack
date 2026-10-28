@@ -111,20 +111,19 @@
                 {% endif %}
             </div>
         </article>
-        {% empty %}
-        <div class="transaction-empty">
-            <h2>No transactions yet</h2>
-            <p>Your purchases will appear here.</p>
-            <a href="{% url 'main:show_main' %}">Browse items</a>
-        </div>
         {% endfor %}
     </section>
 
-    <p class="transaction-count">
-        Showing {{ transactions|length }}
-        purchase{% if transactions|length != 1 %}s{% endif %}
-    </p>
-</main>
+    <div class="transaction-empty" hidden>
+        <h2>No transactions yet</h2>
+        <p>Your purchases will appear here.</p>
+        <a class="browse-link" href="{% url 'main:show_main' %}"> ← Browse items </a>
+    </div>
 
-{% block extra_js %} <script src="{% static 'js/transactions.js' %}" defer></script> {% endblock extra_js %}
+    <p class="transaction-count">
+    Showing <span id="transaction-count">{{ transactions|length }}</span> purchase<span id="transaction-plural">{% if transactions|length != 1 %}s{% endif %}</span>
+</p>
+</main>
 {% endblock content %}
+
+{% block extra_js %} <script src="{% static 'js/transactions.js' %}?v=2"></script> {% endblock extra_js %}
