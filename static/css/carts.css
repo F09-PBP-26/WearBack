@@ -286,7 +286,7 @@
 }
 
 .cart-empty {
-    padding: 30px;
+    padding: 36px 32px 16px;
     border: 1px solid var(--color-primary);
     border-radius: 12px;
     background: var(--color-white);
@@ -294,10 +294,21 @@
 
 .cart-empty h2 {
     margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.cart-empty p {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: var(--color-muted)
 }
 
 .cart-empty a {
     color: var(--color-primary);
+}
+
+.cart-empty .browse-link {
+    margin-top: 4px;
 }
 
 .cart-checkout-message {

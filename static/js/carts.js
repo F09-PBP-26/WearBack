@@ -161,13 +161,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    buyButton.addEventListener("click", function () {
-        checkoutMessage.hidden = false;
-        checkoutMessage.textContent = "Checkout is not connected yet";
+    const cartCheckout = document.querySelector("#cart-checkout");
+    const selectedCartIds = document.querySelector("#selected-cart-ids");
+
+    cartCheckout.addEventListener("submit", function (event) {
+        const selectedItems = getItems().filter((item) => {
+            return item.querySelector(".cart-select-item").checked;
+        });
+        if (selectedItems.length === 0) {
+            event.preventDefault();
+            return;
+        }
+        selectedCartIds.value = selectedItems.map((item) => item.dataset.cartId).join(",");
     });
-
-    
-
     updateCart();
 });
 

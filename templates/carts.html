@@ -113,9 +113,13 @@
                 Shipping and applicable taxes are calculated at checkout.
             </p>
 
-            <button class="cart-buy-button" id="cart-buy-button" type="button" disabled>
-                Buy (0 items)
-            </button>
+            <form id="cart-checkout" method="post" action="{% url 'main:checkout_cart' %}">
+                {% csrf_token %}
+                <input type="hidden" id="selected-cart-ids" name="selected_cart_ids">
+                <button class="cart-buy-button" id="cart-buy-button" type="submit" disabled>
+                    Buy (0 items)
+                </button>
+            </form>
 
             <p class="cart-checkout-message" id="cart-checkout-message" role="status" hidden>
             </p>

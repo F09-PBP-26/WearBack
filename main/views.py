@@ -1,3 +1,4 @@
+from datetime import timedelta
 import secrets
 import time
 from urllib.parse import urlencode, urlparse
@@ -227,3 +228,34 @@ def remove_cart_item(request, item_id):
         "success": True,
         "message": "Item removed successfully."
     })
+
+@login_required
+@require_POST
+def checkout_cart(request):
+    selected_ids = request.POST.get("selected_cart_ids", "")
+
+    if not selected_ids:
+        return redirect("main:cart")
+
+    item_ids = [int(item_id) for item_id in selected_ids.split(",") if item_id]
+    cart_items = CartItem.objects.filter(buyer=request.user, id__in=item_ids)
+
+    if not cart_items.exists():
+        return redirect("main:cart")
+
+    deadline = timezone.now() + timedelta(minutes=10)
+
+    for item in cart_items:
+        TransactionHistory.objects.create(
+            buyer=request.user,
+            item_name=item.item_name,
+            item_image_url=item.item_image_url,
+            price=item.price * item.quantity,
+            status="ongoing",
+            item_count=item.quantity,
+            seller_name=item.seller_name,
+            payment_deadline=deadline,
+        )
+
+    cart_items.delete()
+    return redirect("main:transaction_history")

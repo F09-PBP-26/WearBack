@@ -86,6 +86,7 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     selected = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    seller_name = models.CharField(max_length=150, default="Unknown Seller")
 
     def __str__(self):
         return f"{self.item_name} - {self.buyer}"
