@@ -1,0 +1,32 @@
+{% load static %}
+<article class="review-panel review-card" data-review-card aria-labelledby="item-{{ item.id }}">
+  <div class="review-card-product">
+    <img src="{% static item.image %}" alt="{{ item.name }}" width="56" height="64">
+    <div><h3 id="item-{{ item.id }}">{{ item.name }}</h3><p>{{ item.details }}</p><p>Bought for {{ item.price }}</p></div>
+  </div>
+  <fieldset class="review-rating">
+    <legend>Your rating <span class="review-sr-only">for {{ item.name }}</span></legend>
+    <div class="review-stars">
+      {% for value in rating_values %}
+      <label class="review-star">
+        <input type="radio" name="rating-{{ item.id }}" value="{{ value }}" aria-label="{{ value }} star{{ value|pluralize }}">
+        <span aria-hidden="true">★</span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <fieldset class="review-highlights">
+    <legend>What stood out?</legend>
+    <div class="review-tags">
+      {% for tag in review_tags %}
+      <label><input type="checkbox" name="tags-{{ item.id }}" value="{{ tag }}"><span>{{ tag }}</span></label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <div class="review-comment">
+    <label class="review-sr-only" for="comment-{{ item.id }}">Your review of {{ item.name }}</label>
+    <textarea id="comment-{{ item.id }}" maxlength="500" placeholder="Share a few words about this item..." aria-describedby="count-{{ item.id }}"></textarea>
+    <span id="count-{{ item.id }}" data-review-count>0 / 500</span>
+  </div>
+  <button class="review-submit" type="button" disabled title="Saving reviews will be available in the next stage">Submit review</button>
+</article>
