@@ -21,6 +21,12 @@
     --color-name: #1c1b1b;
     --color-status: #caeada;
     --color-status-border: #fcf9f8;
+    --color-listing-body: #f5f5f1;
+    --color-listing-border: #e1e6df;
+    --color-listing-ink: #263d30;
+    --color-listing-muted: #69756b;
+    --color-listing-danger: #a5322b;
+    --color-listing-notice: #edf2ec;
 
     /* Font families */
     --font-serif: "Instrument Serif", serif;

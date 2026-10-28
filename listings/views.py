@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
@@ -23,7 +24,8 @@ def detail(request, pk):
     context = page_context(request)
     context.update(listing=listing,
                    contact_email=listing.contact_email if request.user.is_authenticated else '',
-                   can_manage=request.user.is_authenticated and listing.seller_id == request.user.pk)
+                   can_manage=request.user.is_authenticated and listing.seller_id == request.user.pk,
+                   seller_listing_count=Listing.objects.filter(seller_id=listing.seller_id).count())
     return render(request, 'listings/detail.html', context)
 
 
@@ -33,7 +35,7 @@ def detail(request, pk):
 def mine(request):
     context = page_context(request)
     context.update(listings=Listing.objects.filter(seller=request.user), own_listings=True)
-    return render(request, 'listings/list.html', context)
+    return render(request, 'listings/dashboard.html', context)
 
 
 @never_cache
@@ -45,6 +47,7 @@ def create(request):
         listing = form.save(commit=False)
         listing.seller = request.user
         listing.save()
+        messages.success(request, 'Your item is now listed.')
         return redirect('listings:detail', pk=listing.pk)
     context = page_context(request)
     context.update(form=form, listing=None)
@@ -59,6 +62,7 @@ def update(request, pk):
     form = ListingForm(request.POST if request.method == 'POST' else None, instance=listing)
     if request.method == 'POST' and form.is_valid():
         form.save()
+        messages.success(request, 'Your changes have been saved.')
         return redirect('listings:detail', pk=listing.pk)
     context = page_context(request)
     context.update(form=form, listing=listing)
@@ -72,6 +76,7 @@ def delete(request, pk):
     listing = get_object_or_404(Listing, pk=pk, seller=request.user)
     if request.method == 'POST':
         listing.delete()
+        messages.success(request, 'Listing deleted.')
         return redirect('listings:mine')
     context = page_context(request)
     context['listing'] = listing

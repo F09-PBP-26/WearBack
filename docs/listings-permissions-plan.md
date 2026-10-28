@@ -1,6 +1,6 @@
 # Listing Permissions Plan
 
-Status: implemented. The app has a small `Listing` model, `ListingForm`, admin registration, working HTML routes, and ownership tests. Initial fields are seller, name, description, optional published contact email, and timestamps. Photos, price, clothing attributes, sample-data loading, and homepage catalog integration remain later module work.
+Status: implemented. The initial permissions foundation has since been extended with the Figma-based item detail page, optional price/clothing fields, stock, and HTTPS photo URLs. See [item detail notes](item-detail.md) for the current fields, UI states, and validation. Sample-data loading, file uploads, and homepage catalog integration remain later work.
 
 For the first version, any authenticated user can create listings. Buyer and seller are activities of an account, not separate account types. A user becomes the seller of a particular listing by creating it. Password and SSO sessions receive the same listing access. No new user role field, seller group, or permission package is needed for this policy.
 
@@ -25,7 +25,7 @@ Staff accounts follow the same ownership rules on marketplace views. Administrat
 
 - [x] **4. Preserve the login return destination.** GET login/registration retain a `safe_next()`-validated return URL when opening the homepage popup. `page_context()` passes it to the dialog's `data-next`, and JavaScript uses it for password/registration/profile submissions and SSO links. Popup query flags are removed from the current URL. External destinations fall back to the homepage. A guest opening the create page can sign in and return there; failed POST bodies and uploads are not replayed.
 
-- [x] **5. Assign ownership on the server.** `ListingForm` allows only name, description, and contact email. Creation uses `form.save(commit=False)` and `listing.seller = request.user`. Submitted `seller`/`seller_id` fields cannot choose or transfer ownership.
+- [x] **5. Assign ownership on the server.** `ListingForm` explicitly lists editable product/contact fields and excludes seller/timestamps. Creation uses `form.save(commit=False)` and `listing.seller = request.user`. Submitted `seller`/`seller_id` fields cannot choose or transfer ownership.
 
 - [x] **6. Enforce ownership in update/delete queries.** Both GET forms and POST submissions fetch objects with an owner filter after authentication:
 

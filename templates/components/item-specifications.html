@@ -1,0 +1,11 @@
+<section class="item-panel item-specifications" aria-labelledby="item-specifications-title">
+  <h2 id="item-specifications-title">Product specifications</h2>
+  <dl class="item-specification-list">
+    <div><dt>Category</dt><dd>{{ listing.get_category_display|default:'Not specified' }}</dd></div>
+    <div><dt>Brand</dt><dd>{{ listing.brand|default:'Not specified' }}</dd></div>
+    <div><dt>Condition</dt><dd>{{ listing.get_condition_display|default:'Not specified' }}</dd></div>
+    <div><dt>Material</dt><dd>{{ listing.material|default:'Not specified' }}</dd></div>
+    <div><dt>Style</dt><dd>{{ listing.style|default:'Not specified' }}</dd></div>
+    <div><dt>Size</dt><dd>{{ listing.size|default:'Not specified' }}</dd></div>
+  </dl>
+</section>

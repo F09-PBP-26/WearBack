@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block page_css %}<link rel="stylesheet" href="{% static 'css/listings.css' %}?v=1">{% endblock page_css %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/listings.css' %}?v=2">{% endblock page_css %}
+{% block page_js %}<script src="{% static 'js/listings.js' %}?v=3" defer></script>{% endblock page_js %}
 {% block content %}
 <main class="listing-page">
+  {% include 'components/listing-notices.html' %}
   <nav class="listing-actions" aria-label="Listing navigation">
     <a href="{% url 'listings:index' %}">All listings</a>
     {% if request.user.is_authenticated %}

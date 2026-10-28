@@ -70,12 +70,16 @@
       var loginDialog = document.getElementById('login-dialog');
       function bindNavbarPopup(dialogId, openSelector, closeSelector) {
         var listItemDialog = document.getElementById(dialogId);
-        var listItemTrigger = document.querySelector(openSelector);
-        if (!listItemDialog || !listItemTrigger) return;
-        listItemTrigger.addEventListener('click', function () {
-          setOpen(false);
-          listItemDialog.showModal();
-          document.documentElement.classList.add('login-open');
+        var listItemTriggers = document.querySelectorAll(openSelector);
+        var listItemTrigger = null;
+        if (!listItemDialog || !listItemTriggers.length) return;
+        listItemTriggers.forEach(function (trigger) {
+          trigger.addEventListener('click', function () {
+            listItemTrigger = trigger;
+            setOpen(false);
+            listItemDialog.showModal();
+            document.documentElement.classList.add('login-open');
+          });
         });
         listItemDialog.querySelector(closeSelector).addEventListener('click', function () {
           listItemDialog.close();
@@ -88,7 +92,7 @@
         });
         listItemDialog.addEventListener('close', function () {
           document.documentElement.classList.remove('login-open');
-          if (listItemTrigger.getClientRects().length && getComputedStyle(listItemTrigger).visibility !== 'hidden') {
+          if (listItemTrigger && listItemTrigger.getClientRects().length && getComputedStyle(listItemTrigger).visibility !== 'hidden') {
             listItemTrigger.focus();
           } else {
             toggle.focus();

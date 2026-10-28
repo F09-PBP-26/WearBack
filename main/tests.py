@@ -383,7 +383,7 @@ class AuthReturnTests(TestCase):
             'email': self.user.email, 'password': PASSWORD, 'next': response.context['auth_next'],
         })
         self.assertEqual(response.json()['redirect'], destination)
-        self.assertContains(self.client.get(response.json()['redirect']), 'Create listing')
+        self.assertContains(self.client.get(response.json()['redirect']), 'Create item')
 
     def test_registration_can_return_to_create_page(self):
         destination = reverse('listings:create')
@@ -394,7 +394,7 @@ class AuthReturnTests(TestCase):
         })
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()['redirect'], destination)
-        self.assertContains(self.client.get(destination), 'Create listing')
+        self.assertContains(self.client.get(destination), 'Create item')
 
     def test_registration_rejects_an_external_return_destination(self):
         response = self.client.post(reverse('main:register'), {
@@ -417,7 +417,7 @@ class AuthReturnTests(TestCase):
         self.assertEqual(attempt['next'], destination)
         response = self.client.get(reverse('main:sso_callback'), {'state': attempt['state'], 'ticket': 'ST-test'})
         self.assertRedirects(response, destination)
-        self.assertContains(self.client.get(destination), 'Create listing')
+        self.assertContains(self.client.get(destination), 'Create item')
 
     @patch('main.views.cas_client')
     def test_failed_sso_retains_notice_and_destination_through_login_redirect(self, mocked):

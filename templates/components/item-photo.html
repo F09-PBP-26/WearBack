@@ -1,0 +1,16 @@
+{% load static %}
+<figure class="item-panel item-photo" aria-label="Product photo" data-item-photo>
+  <div class="item-photo-heading">
+    <span>Product photo</span>
+    <span class="item-muted">01 / 01</span>
+  </div>
+  <div class="item-photo-stage">
+    {% if listing.image_url %}
+      <img class="item-photo-image" src="{{ listing.image_url }}" alt="{{ listing.name }}" referrerpolicy="no-referrer" data-product-image>
+    {% endif %}
+    <div class="item-photo-fallback"{% if listing.image_url %} hidden{% endif %} data-photo-fallback>
+      <img src="{% static 'img/item-photo-placeholder.png' %}" alt="No product photo available" width="2667" height="2000">
+    </div>
+  </div>
+  <figcaption class="item-muted" data-photo-caption>A preloved find, ready for its next home.</figcaption>
+</figure>
