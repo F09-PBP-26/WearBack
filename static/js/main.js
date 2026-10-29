@@ -70,12 +70,16 @@
       var loginDialog = document.getElementById('login-dialog');
       function bindNavbarPopup(dialogId, openSelector, closeSelector) {
         var listItemDialog = document.getElementById(dialogId);
-        var listItemTrigger = document.querySelector(openSelector);
-        if (!listItemDialog || !listItemTrigger) return;
-        listItemTrigger.addEventListener('click', function () {
-          setOpen(false);
-          listItemDialog.showModal();
-          document.documentElement.classList.add('login-open');
+        var listItemTriggers = document.querySelectorAll(openSelector);
+        var listItemTrigger = null;
+        if (!listItemDialog || !listItemTriggers.length) return;
+        listItemTriggers.forEach(function (trigger) {
+          trigger.addEventListener('click', function () {
+            listItemTrigger = trigger;
+            setOpen(false);
+            listItemDialog.showModal();
+            document.documentElement.classList.add('login-open');
+          });
         });
         listItemDialog.querySelector(closeSelector).addEventListener('click', function () {
           listItemDialog.close();
@@ -88,19 +92,27 @@
         });
         listItemDialog.addEventListener('close', function () {
           document.documentElement.classList.remove('login-open');
-          if (listItemTrigger.getClientRects().length && getComputedStyle(listItemTrigger).visibility !== 'hidden') {
+          if (listItemTrigger && listItemTrigger.getClientRects().length && getComputedStyle(listItemTrigger).visibility !== 'hidden') {
             listItemTrigger.focus();
           } else {
             toggle.focus();
           }
         });
       }
-      bindNavbarPopup('list-item-dialog', '[data-list-item-open]', '[data-list-item-close]');
       bindNavbarPopup('cart-dialog', '[data-cart-open]', '[data-cart-close]');
       if (loginDialog) {
         var loginTrigger = null;
         var authPanels = loginDialog.querySelectorAll('[data-auth-panel]');
         var authForms = loginDialog.querySelectorAll('.login-form');
+
+        function authNext() {
+          if (loginDialog.dataset.next) return loginDialog.dataset.next;
+          var destination = new URL(window.location.href);
+          destination.searchParams.delete('login');
+          destination.searchParams.delete('register');
+          destination.searchParams.delete('next');
+          return destination.pathname + destination.search + destination.hash;
+        }
 
         function clearErrors(form) {
           form.querySelectorAll('.field-error').forEach(function (error) { error.remove(); });
@@ -199,7 +211,7 @@
             submit.disabled = true;
             submit.textContent = 'Please wait…';
             var body = new FormData(form);
-            body.set('next', window.location.pathname + window.location.search + window.location.hash);
+            body.set('next', authNext());
             try {
               var response = await fetch(form.action, {
                 method: 'POST', body: body, credentials: 'same-origin',
@@ -227,7 +239,7 @@
 
         document.querySelectorAll('[data-sso-login]').forEach(function (link) {
           var url = new URL(link.href);
-          url.searchParams.set('next', window.location.pathname + window.location.search + window.location.hash);
+          url.searchParams.set('next', authNext());
           link.href = url.pathname + url.search;
         });
 
@@ -237,6 +249,7 @@
           openLogin(document.querySelector('.nav-login'), initialMode);
           pageUrl.searchParams.delete('login');
           pageUrl.searchParams.delete('register');
+          pageUrl.searchParams.delete('next');
           window.history.replaceState(null, '', pageUrl.pathname + pageUrl.search + pageUrl.hash);
           if (loginDialog.dataset.authNotice) {
             var notice = loginDialog.querySelector('[data-auth-panel="' + initialMode + '"] .login-status');
@@ -298,6 +311,17 @@
           if (searchAnimation) searchAnimation.cancel();
         });
       }
+      document.querySelectorAll('[data-listing-thumbnail] img[data-fallback-src]').forEach(function (image) {
+        function showFallback() {
+          if (image.getAttribute('src') !== image.dataset.fallbackSrc) {
+            image.src = image.dataset.fallbackSrc;
+            if (image.alt) image.alt = 'No product photo available';
+          }
+        }
+        image.addEventListener('error', showFallback);
+        if (image.complete && image.naturalWidth === 0) showFallback();
+      });
+
       var catalog = document.querySelector('.catalog-grid');
       if (search && catalog) {
         var items = catalog.querySelectorAll('.catalog-item');
@@ -314,17 +338,20 @@
               (selectedCategory !== 'all' && item.dataset.category !== selectedCategory);
             if (!item.hidden) visible += 1;
           });
-          empty.hidden = visible > 0;
+          empty.hidden = items.length === 0 || visible > 0;
+        }
+        function setCategory(category) {
+          selectedCategory = category;
+          categoryFilters.forEach(function (filter) {
+            var active = filter.dataset.categoryFilter === category;
+            filter.classList.toggle('is-active', active);
+            filter.setAttribute('aria-pressed', String(active));
+          });
+          filterCatalog();
         }
         categoryFilters.forEach(function (button) {
           button.addEventListener('click', function () {
-            selectedCategory = button.dataset.categoryFilter;
-            categoryFilters.forEach(function (filter) {
-              var active = filter === button;
-              filter.classList.toggle('is-active', active);
-              filter.setAttribute('aria-pressed', String(active));
-            });
-            filterCatalog();
+            setCategory(button.dataset.categoryFilter);
           });
         });
         search.addEventListener('input', function () {
@@ -338,5 +365,12 @@
             });
           }, 120);
         });
+        document.querySelector('[data-catalog-reset]').addEventListener('click', function () {
+          clearTimeout(searchScrollTimer);
+          search.value = '';
+          setCategory('all');
+          document.querySelector('[data-category-filter="all"]').focus();
+        });
+        filterCatalog();
       }
     })();

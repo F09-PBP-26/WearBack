@@ -1,0 +1,14 @@
+{% extends 'listings/base.html' %}
+
+{% block title %}Delete listing – WearBack{% endblock title %}
+{% block listing_content %}
+  <section class="listing-card">
+    <h1>Delete listing</h1>
+    <p>Delete “{{ listing.name }}”? This cannot be undone.</p>
+    <form class="listing-actions" method="post" action="{% url 'listings:delete' listing.pk %}">
+      {% csrf_token %}
+      <button class="listing-button" type="submit">Delete listing</button>
+      <a href="{% url 'listings:detail' listing.pk %}">Keep listing</a>
+    </form>
+  </section>
+{% endblock listing_content %}

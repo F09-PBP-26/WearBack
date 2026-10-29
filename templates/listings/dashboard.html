@@ -1,0 +1,54 @@
+{% extends 'listings/seller-base.html' %}
+{% load static %}
+
+{% block title %}Seller dashboard – WearBack{% endblock title %}
+{% block seller_content %}
+<main class="seller-dashboard" aria-labelledby="seller-title">
+  {% include 'components/listing-notices.html' %}
+  <header class="seller-heading seller-dashboard-heading">
+    <div><h1 id="seller-title">Seller dashboard</h1><p>A little less clutter. A new life for every item.</p></div>
+    <a class="item-primary-action" href="{% url 'listings:create' %}"><span aria-hidden="true">+</span> Create new item</a>
+  </header>
+  <div class="seller-dashboard-grid">
+    <section class="seller-panel seller-inventory" aria-labelledby="your-listings-title">
+      <header class="seller-section-heading">
+        <div><h2 id="your-listings-title">Your listings</h2><p>All the items in your shop.</p></div>
+        <span class="seller-badge">{{ listings|length }} item{{ listings|length|pluralize }}</span>
+      </header>
+      {% if listings %}
+        <div class="seller-list-head" aria-hidden="true"><span>Item</span><span>Price</span><span>Status</span><span>Edit</span></div>
+        <ul class="seller-inventory-list">
+          {% for listing in listings %}
+            <li class="seller-list-row">
+              <a class="seller-list-item" href="{% url 'listings:detail' listing.pk %}">
+                <span class="seller-thumbnail" data-listing-thumbnail>
+                  <img src="{% if listing.image_url %}{{ listing.image_url }}{% else %}{% static 'img/item-photo-placeholder.png' %}{% endif %}" data-fallback-src="{% static 'img/item-photo-placeholder.png' %}" alt="" width="112" height="112" loading="lazy">
+                </span>
+                <span class="seller-list-description"><strong>{{ listing.name }}</strong><span>{{ listing.get_category_display|default:'Category not set' }}{% if listing.condition %} / {{ listing.get_condition_display }}{% endif %}{% if listing.size %} · {{ listing.size }}{% endif %}</span></span>
+              </a>
+              <p class="seller-list-price">{{ listing.price_display }}</p>
+              <div class="seller-list-status">{% include 'components/seller-status.html' %}</div>
+              <a class="seller-edit-link" href="{% url 'listings:update' listing.pk %}" aria-label="Edit {{ listing.name }}"><img src="{% static 'img/listing-edit.svg' %}" width="20" height="20" alt=""></a>
+            </li>
+          {% endfor %}
+        </ul>
+        <p class="seller-list-footer">Showing all {{ listings|length }} item{{ listings|length|pluralize }}</p>
+      {% else %}
+        <div class="seller-empty"><h3>A fresh start for your wardrobe.</h3><p>You haven’t listed an item yet. Give your first piece a second home.</p><a class="item-primary-action" href="{% url 'listings:create' %}">Create your first item</a></div>
+      {% endif %}
+    </section>
+    <section class="seller-panel seller-shipping" aria-labelledby="shipping-title">
+      <header class="seller-section-heading"><h2 id="shipping-title">Ready to ship</h2><span class="seller-badge">0 orders</span></header>
+      <p class="seller-muted">Give these items their next home.</p>
+      <div class="seller-shipping-empty"><h3>No orders to ship yet</h3><p>Orders will appear here when checkout is available.</p><button class="item-primary-action" type="button" data-dialog-open="shipping-demo-dialog">Try Insta ship demo</button></div>
+      <p class="seller-help">Demo: Insta ship opens a shipping confirmation.</p>
+    </section>
+  </div>
+  <dialog class="item-delete-dialog seller-shipping-dialog" id="shipping-demo-dialog" aria-labelledby="shipping-demo-title" aria-describedby="shipping-demo-description" data-listing-dialog>
+    <span class="seller-badge">SHIPPING DEMO</span>
+    <h2 id="shipping-demo-title">Ready for its next home.</h2>
+    <p id="shipping-demo-description">Insta ship would mark this order as shipped. This demo does not book a courier or change an order.</p>
+    <button class="item-primary-action" type="button" data-dialog-close autofocus>Back to dashboard</button>
+  </dialog>
+</main>
+{% endblock seller_content %}
