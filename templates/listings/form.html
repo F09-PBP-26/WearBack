@@ -45,7 +45,10 @@
       </details>
     </aside>
     <section class="seller-panel seller-details" aria-labelledby="item-details-title">
-      <h2 id="item-details-title">Item details</h2>
+      <div>
+        <h2 id="item-details-title">Item details</h2>
+        <p class="seller-help seller-required-note">Fields marked * are required.</p>
+      </div>
       {% include 'components/seller-field.html' with field=form.name %}
       <div class="seller-field-row">
         {% include 'components/seller-field.html' with field=form.price %}

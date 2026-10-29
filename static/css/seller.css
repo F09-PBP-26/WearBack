@@ -156,6 +156,14 @@
     line-height: 22px;
 }
 
+.seller-required {
+    color: var(--seller-danger);
+}
+
+.seller-required-note {
+    margin-top: 8px;
+}
+
 .seller-field input, .seller-field select, .seller-field textarea {
     display: block;
     width: 100%;

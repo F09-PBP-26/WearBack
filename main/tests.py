@@ -76,7 +76,8 @@ class CatalogTests(TestCase):
         viewer = Client()
         self.client.force_login(self.seller)
         response = self.client.post(reverse('listings:create'), {
-            'name': 'New catalog shirt', 'price': '75.000', 'category': 'tops', 'condition': 'good', 'stock': 2,
+            'name': 'New catalog shirt', 'price': '75.000', 'category': 'tops', 'condition': 'good',
+            'size': 'Medium', 'stock': 2,
         })
         listing = Listing.objects.get(name='New catalog shirt')
         self.assertRedirects(response, reverse('listings:detail', args=[listing.pk]), fetch_redirect_response=False)

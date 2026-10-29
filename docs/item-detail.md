@@ -29,6 +29,6 @@ No new dependency or environment variable is required. The [homepage catalog](ca
 
 ## Validation
 
-The full Django suite passes 76 tests, including seller-screen and homepage catalog regressions. Detail coverage checks fields and viewer states, contact privacy, real seller counts, unavailable/legacy listings, localized prices, new-field validation, and the positive-price database constraint. Django checks, migration drift checks, and JavaScript syntax checks pass.
+The full Django suite passes 81 tests, including seller-screen, required-field creation, and homepage catalog regressions. Detail coverage checks fields and viewer states, contact privacy, real seller counts, unavailable/legacy listings, localized prices, new-field validation, and the positive-price database constraint. Django checks, migration drift checks, and JavaScript syntax checks pass. See [listing validation](listing-validation.md) for creation requirements and legacy editing compatibility.
 
 Browser checks used an isolated preview database: desktop and 390px mobile layouts; guest-to-buyer login; bounded quantity input; cart cancellation/focus; failed and valid photos; sold-out items; long text without horizontal overflow; owner-only delete confirmation/cancellation; and saving localized prices with dismissible success messages. The preview uses test accounts and does not seed the development database.
