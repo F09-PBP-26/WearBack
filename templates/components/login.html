@@ -1,5 +1,5 @@
 {% load static %}
-<dialog class="login-dialog" id="login-dialog" aria-labelledby="login-title" aria-describedby="login-description" data-initial-mode="{{ auth_initial_mode }}" data-auth-notice="{{ auth_notice }}">
+<dialog class="login-dialog" id="login-dialog" aria-labelledby="login-title" aria-describedby="login-description" data-initial-mode="{{ auth_initial_mode }}" data-auth-notice="{{ auth_notice }}" data-next="{{ auth_next }}">
   <div class="login" data-auth-panel="login">
     <button class="login-close" type="button" data-login-close aria-label="Close login">&times;</button>
     <img class="login-logo" src="{% static 'img/brand.svg' %}" alt="WearBack" width="232" height="73">
@@ -17,7 +17,7 @@
       </div>
       <button class="button button-primary login-submit" type="submit">Log in</button>
       <p class="login-status" role="status" hidden></p>
-      {% if sso_enabled %}<a class="login-sso" href="{% url 'main:sso_login' %}" data-sso-login>Continue with SSO UI</a>{% endif %}
+      {% if sso_enabled %}<a class="login-sso" href="{% url 'main:sso_login' %}{% if auth_next %}?next={{ auth_next|urlencode }}{% endif %}" data-sso-login>Continue with SSO UI</a>{% endif %}
       <p class="login-register">Don’t have an account? <button class="text-link login-link" type="button" data-register-open>Register</button></p>
     </form>
   </div>

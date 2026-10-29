@@ -1,0 +1,10 @@
+{% if messages %}
+<div class="listing-notices" aria-label="Notifications">
+  {% for message in messages %}
+    <div class="listing-notice" role="status" data-listing-notice>
+      <p>{{ message }}</p>
+      <button type="button" aria-label="Dismiss notification" data-notice-dismiss>&times;</button>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}

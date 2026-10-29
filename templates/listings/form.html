@@ -1,0 +1,79 @@
+{% extends 'listings/seller-base.html' %}
+
+{% block title %}{% if listing %}Edit item{% else %}Create new item{% endif %} – WearBack{% endblock title %}
+{% block seller_content %}
+<main class="seller-editor" aria-labelledby="seller-title">
+  <a class="seller-back" href="{% url 'listings:mine' %}" data-dialog-open="unsaved-listing-dialog" data-require-dirty><span aria-hidden="true">←</span> Seller dashboard</a>
+  {% include 'components/listing-notices.html' %}
+  <header class="seller-heading">
+    <h1 id="seller-title">{% if listing %}Edit item{% else %}Create new item{% endif %}</h1>
+    <p>{% if listing %}Keep your listing accurate and ready for its next owner.{% else %}Give something good a second home.{% endif %}</p>
+  </header>
+  {% if form.errors %}
+    <div class="seller-errors" role="alert" tabindex="-1" data-form-errors>
+      <h2>Check your item details</h2>
+      <p>Your changes haven’t been saved. Correct the fields below and try again.</p>
+      <ul>{% for field in form %}{% if field.errors %}<li><a href="#{{ field.auto_id }}">{{ field.label }}: {{ field.errors|join:' ' }}</a></li>{% endif %}{% endfor %}</ul>
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+  <form class="seller-form" method="post" action="{% if listing %}{% url 'listings:update' listing.pk %}{% else %}{% url 'listings:create' %}{% endif %}" data-seller-form>
+    {% csrf_token %}
+    <aside class="seller-sidebar" aria-label="Item photo and additional details">
+      <section class="seller-panel seller-photo-card" aria-labelledby="photo-preview-title" data-seller-photo>
+        {% if listing %}{% include 'components/seller-status.html' %}{% else %}<span class="seller-badge">New item</span>{% endif %}
+        <h2 id="photo-preview-title">Photo preview</h2>
+        <div class="seller-photo{% if form.preview_image_url %} seller-photo-loaded{% endif %}" data-preview-box>
+          <img {% if form.preview_image_url %}src="{{ form.preview_image_url }}"{% endif %} alt="Preview of your item" data-preview-image{% if not form.preview_image_url %} hidden{% endif %}>
+          <div class="seller-photo-empty" aria-live="polite" data-preview-empty{% if form.preview_image_url %} hidden{% endif %}>
+            <p data-preview-title>Your photo will appear here</p>
+            <p data-preview-hint>Paste a photo URL below</p>
+          </div>
+        </div>
+        {% include 'components/seller-field.html' with field=form.image_url %}
+      </section>
+      <details class="seller-panel seller-extra"{% if form.extra_details_have_errors %} open{% endif %}>
+        <summary>More item details <span>Stock, specifications &amp; contact</span></summary>
+        <div class="seller-extra-fields">
+          {% include 'components/seller-field.html' with field=form.stock %}
+          {% include 'components/seller-field.html' with field=form.brand %}
+          {% include 'components/seller-field.html' with field=form.material %}
+          {% include 'components/seller-field.html' with field=form.style %}
+          {% include 'components/seller-field.html' with field=form.location %}
+          {% include 'components/seller-field.html' with field=form.contact_email %}
+        </div>
+      </details>
+    </aside>
+    <section class="seller-panel seller-details" aria-labelledby="item-details-title">
+      <h2 id="item-details-title">Item details</h2>
+      {% include 'components/seller-field.html' with field=form.name %}
+      <div class="seller-field-row">
+        {% include 'components/seller-field.html' with field=form.price %}
+        {% include 'components/seller-field.html' with field=form.category select=True %}
+      </div>
+      <div class="seller-field-row">
+        {% include 'components/seller-field.html' with field=form.size select=True %}
+        {% include 'components/seller-field.html' with field=form.condition select=True %}
+      </div>
+      {% include 'components/seller-field.html' with field=form.description %}
+      <p class="seller-form-note">{% if listing %}This item is already listed. Saving updates the existing listing.{% else %}Your item will appear in the catalog after you create it.{% endif %}</p>
+      <div class="seller-form-actions">
+        {% if listing %}<a class="item-secondary-action seller-delete" href="{% url 'listings:delete' listing.pk %}" data-dialog-open="delete-listing-dialog">Delete item</a>{% endif %}
+        <div class="seller-save-actions">
+          <a class="item-secondary-action" href="{% url 'listings:mine' %}" data-dialog-open="unsaved-listing-dialog" data-require-dirty>Cancel</a>
+          <button class="item-primary-action" type="submit" data-save-item>{% if listing %}Save changes{% else %}Create item{% endif %}</button>
+        </div>
+      </div>
+    </section>
+  </form>
+  {% if listing %}{% include 'components/item-delete-dialog.html' %}{% endif %}
+  <dialog class="item-delete-dialog" id="unsaved-listing-dialog" aria-labelledby="unsaved-listing-title" aria-describedby="unsaved-listing-description" data-listing-dialog>
+    <h2 id="unsaved-listing-title">Leave without saving?</h2>
+    <p id="unsaved-listing-description">Your changes to this item haven’t been saved.</p>
+    <div class="item-dialog-actions">
+      <button class="item-secondary-action" type="button" data-dialog-close autofocus>Keep editing</button>
+      <a class="item-primary-action" href="{% url 'listings:mine' %}" data-discard-changes>Leave page</a>
+    </div>
+  </dialog>
+</main>
+{% endblock seller_content %}

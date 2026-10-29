@@ -3,7 +3,7 @@
 
 {% block body_class %}catalog-page{% endblock body_class %}
 {% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
-{% block page_css %}<link rel="stylesheet" href="{% static 'css/style.css' %}?v=45">{% endblock page_css %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/style.css' %}?v=46">{% endblock page_css %}
 {% block nav_links %}
 {% include 'components/guest-nav.html' with active_page='catalog' %}
 {% endblock nav_links %}
@@ -25,12 +25,17 @@
       {% for item in catalog_items %}
         {% include 'components/catalog-item.html' %}
       {% empty %}
-        {% for placeholder in '0123456789' %}
-          {% include 'components/catalog-item.html' %}
-        {% endfor %}
+        <li class="catalog-initial-empty">
+          <h3>No items listed yet</h3>
+          <p>Give your preloved clothes a second home.</p>
+          <a class="catalog-create-link" href="{% url 'listings:create' %}">List the first item</a>
+        </li>
       {% endfor %}
     </ul>
-    <p class="catalog-empty" role="status" hidden>No items match your filters.</p>
+    <div class="catalog-empty" role="status" hidden>
+      <p>No items match your filters.</p>
+      <button class="catalog-reset" type="button" data-catalog-reset>Clear search and filters</button>
+    </div>
   </section>
 </main>
 {% endblock content %}

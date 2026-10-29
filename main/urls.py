@@ -1,12 +1,14 @@
 from django.urls import path
 
 from main import views
+from main.review_views import review_preview
 
 app_name = 'main'
 
 urlpatterns = [
     path('', views.show_main, name='show_main'),
     path('auction/', views.auction, name='auction'),
+    path('reviews/preview/', review_preview, name='review_preview'),
     path('login/', views.login, name='login'),
     path('register/', views.register, name='register'),
     path('logout/', views.logout, name='logout'),

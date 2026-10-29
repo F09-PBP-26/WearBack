@@ -1,0 +1,13 @@
+{% extends 'listings/base.html' %}
+{% load static %}
+
+{% block body_class %}catalog-page seller-page{% endblock body_class %}
+{% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
+{% block nav_links %}{% include 'components/guest-nav.html' with active_page='' %}{% endblock nav_links %}
+{% block page_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=46">
+  <link rel="stylesheet" href="{% static 'css/item-detail.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'css/seller.css' %}?v=1">
+{% endblock page_css %}
+{% block content %}{% block seller_content %}{% endblock seller_content %}{% endblock content %}

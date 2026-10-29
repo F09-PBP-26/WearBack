@@ -1,0 +1,21 @@
+<section class="item-panel item-seller" aria-labelledby="item-seller-title">
+  <h2 id="item-seller-title">About the seller</h2>
+  <p class="item-seller-name">{{ listing.seller.get_full_name|default:'a WearBack member' }}</p>
+  <div class="item-store-facts">
+    <span>No ratings yet</span>
+    <span>{{ seller_listing_count }} listing{{ seller_listing_count|pluralize }}</span>
+  </div>
+  <p class="item-muted">{{ listing.location|default:'Location not provided' }}</p>
+  <div class="item-contact">
+    {% if request.user.is_authenticated %}
+      {% if contact_email %}
+        <span class="item-muted">Contact seller</span>
+        <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+      {% else %}
+        <p class="item-muted">The seller hasn’t shared a contact email.</p>
+      {% endif %}
+    {% else %}
+      <a class="item-text-link" href="{% url 'main:login' %}?next={{ request.get_full_path|urlencode }}">Sign in to see seller contact information</a>
+    {% endif %}
+  </div>
+</section>

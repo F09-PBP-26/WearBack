@@ -1,0 +1,1 @@
+<span class="seller-badge{% if listing.stock == 0 or not listing.price %} seller-badge-muted{% endif %}">{% if listing.stock == 0 %}Sold out{% elif not listing.price %}Needs details{% else %}Listed{% endif %}</span>

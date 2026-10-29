@@ -21,6 +21,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from requests import RequestException
 
+from listings.models import Listing
 from main.auth_utils import throttled
 from main.forms import LoginForm, ProfileForm, RegisterForm
 from main.models import CartItem, TransactionHistory
@@ -35,7 +36,11 @@ def safe_next(request, value):
 def page_context(request):
     context = {'sso_enabled': settings.SSO_ENABLED,
                'auth_notice': request.session.pop('auth_notice', ''),
-               'auth_initial_mode': request.session.pop('auth_mode', '')}
+               'auth_initial_mode': request.session.pop('auth_mode', ''),
+               'auth_next': ''}
+    if request.GET.get('login') == '1' or request.GET.get('register') == '1':
+        if request.GET.get('next'):
+            context['auth_next'] = safe_next(request, request.GET['next'])
     if request.user.is_authenticated:
         context['sso_linked'] = request.user.sso_identities.filter(provider='ui').exists()
         if (not context['sso_linked']
@@ -46,7 +51,9 @@ def page_context(request):
 
 @never_cache
 def show_main(request):
-    return render(request, 'index.html', page_context(request))
+    context = page_context(request)
+    context['catalog_items'] = Listing.objects.all()
+    return render(request, 'index.html', context)
 
 
 @never_cache
@@ -64,12 +71,19 @@ def too_many():
     return response
 
 
+def auth_redirect(request, mode):
+    query = {mode: '1'}
+    if request.GET.get('next'):
+        query['next'] = safe_next(request, request.GET['next'])
+    return redirect(reverse('main:show_main') + '?' + urlencode(query))
+
+
 @never_cache
 @sensitive_post_parameters('password')
 @require_http_methods(['GET', 'POST'])
 def login(request):
     if request.method == 'GET':
-        return redirect(reverse('main:show_main') + '?login=1')
+        return auth_redirect(request, 'login')
     if throttled(request, 'login', request.POST.get('email', '')):
         return too_many()
     form = LoginForm(request.POST, request=request)
@@ -84,7 +98,7 @@ def login(request):
 @require_http_methods(['GET', 'POST'])
 def register(request):
     if request.method == 'GET':
-        return redirect(reverse('main:show_main') + '?register=1')
+        return auth_redirect(request, 'register')
     if throttled(request, 'register'):
         return too_many()
     form = RegisterForm(request.POST)
