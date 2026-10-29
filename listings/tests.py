@@ -94,7 +94,7 @@ class ListingPermissionsTests(TestCase):
     def test_guests_can_browse_without_contact_or_management_links(self):
         for url in [reverse('listings:index'), self.listing_url('detail')]:
             with self.subTest(url=url):
-                response = self.client.get(url)
+                response = self.client.get(url, follow=True)
                 self.assertContains(response, self.listing.name)
                 self.assertNotContains(response, self.listing.contact_email)
                 self.assertNotContains(response, self.owner.email)

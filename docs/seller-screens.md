@@ -12,6 +12,6 @@ The seller pages implement the [Seller Dashboard](https://www.figma.com/design/h
 
 Shared seller markup lives in `templates/listings/seller-base.html` and the `seller-field.html` / `seller-status.html` component partials. Styles live in `static/css/seller.css`; interactions extend `static/js/listings.js`. The dropdown chevron and edit icon are downloaded Figma SVGs with their original 18px and 20px geometry.
 
-No additional migration or dependency is needed for this redesign. Apply listing migration `0002` from the item-detail implementation when upgrading from the permissions milestone. The homepage still uses placeholder catalog items; saved items are available through `/listings/`, the seller dashboard, and their detail routes.
+No additional migration or dependency is needed for this redesign. Apply listing migration `0002` from the item-detail implementation when upgrading from the permissions milestone. Saved items appear in the [homepage catalog](catalog-integration.md), seller dashboard, and detail routes. `/listings/` redirects to the homepage catalog.
 
-Validation includes the complete 69-test Django suite, Django system/migration checks, JavaScript syntax checks, and desktop/mobile browser checks of the seller flows using an isolated test database.
+Validation includes the complete 76-test Django suite, Django system/migration checks, JavaScript syntax checks, and desktop/mobile browser checks of the seller flows using an isolated test database.

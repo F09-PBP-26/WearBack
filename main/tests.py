@@ -10,11 +10,114 @@ from django.urls import reverse
 from django.utils.html import escape
 from requests import Response, Timeout
 
+from listings.models import Listing
 from main.models import SSOIdentity
 from main.sso import cas_client
 
 User = get_user_model()
 PASSWORD = 'Clothing-Cycle!37-Market'
+
+
+class CatalogTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.seller = User.objects.create_user(username='catalog-seller', email='private-catalog@example.test',
+                                             first_name='Catalog', last_name='Seller')
+        cls.other = User.objects.create_user(username='catalog-other', first_name='Other', last_name='Seller')
+
+    def test_empty_marketplace_has_no_dummy_cards(self):
+        response = self.client.get(reverse('main:show_main'))
+        self.assertQuerySetEqual(response.context['catalog_items'], [])
+        self.assertContains(response, 'No items listed yet')
+        self.assertContains(response, 'List the first item')
+        self.assertNotContains(response, 'data-catalog-name=')
+        self.assertNotContains(response, 'catalog-socks.png')
+        self.assertNotContains(response, 'Item Name')
+
+    def test_catalog_displays_all_sellers_newest_first_with_detail_links(self):
+        first = Listing.objects.create(seller=self.seller, name='Wool coat', price=150000,
+                                        category='outerwear', condition='like_new', size='L',
+                                        image_url='https://example.com/coat.jpg', location='Bandung')
+        second = Listing.objects.create(seller=self.other, name='Silk scarf', price='1234.50')
+        response = self.client.get(reverse('main:show_main'))
+        self.assertQuerySetEqual(response.context['catalog_items'], [second, first])
+        for text in ('Wool coat', 'Silk scarf', 'Rp150.000', 'Rp1.234,50', 'Outerwear', 'Like new',
+                     'Bandung', 'data-category="outerwear"', first.image_url):
+            self.assertContains(response, text)
+        for item in (first, second):
+            self.assertContains(response, 'href="' + reverse('listings:detail', args=[item.pk]) + '"')
+        self.assertNotContains(response, 'No items listed yet')
+
+    def test_catalog_keeps_contact_private_for_guests_and_members(self):
+        listing = Listing.objects.create(seller=self.seller, name='Private-contact coat',
+                                          contact_email='published-catalog@example.test')
+        for user in (None, self.other, self.seller):
+            with self.subTest(user=user):
+                if user:
+                    self.client.force_login(user)
+                response = self.client.get(reverse('main:show_main'))
+                self.assertContains(response, listing.name)
+                if user != self.seller:
+                    self.assertNotContains(response, self.seller.email)
+                self.assertNotContains(response, listing.contact_email)
+                self.assertIn('no-store', response.headers['Cache-Control'])
+
+    def test_unavailable_and_legacy_items_have_honest_metadata(self):
+        Listing.objects.create(seller=self.seller, name='Legacy item')
+        Listing.objects.create(seller=self.seller, name='Sold item', price=50000, stock=0)
+        response = self.client.get(reverse('main:show_main'))
+        for text in ('Price not set', 'Currently unavailable', 'Sold out', 'Not specified',
+                     'Location not provided', 'item-photo-placeholder.png', 'data-category=""'):
+            self.assertContains(response, text)
+        for text in ('Rp100.000', 'Gray socks', 'Like New', 'Depok, Indonesia'):
+            self.assertNotContains(response, text)
+
+    def test_catalog_reflects_create_edit_and_delete_without_exposing_management(self):
+        viewer = Client()
+        self.client.force_login(self.seller)
+        response = self.client.post(reverse('listings:create'), {
+            'name': 'New catalog shirt', 'price': '75.000', 'category': 'tops', 'condition': 'good', 'stock': 2,
+        })
+        listing = Listing.objects.get(name='New catalog shirt')
+        self.assertRedirects(response, reverse('listings:detail', args=[listing.pk]), fetch_redirect_response=False)
+        response = viewer.get(reverse('main:show_main'))
+        self.assertContains(response, listing.name)
+        self.assertContains(response, 'Rp75.000')
+        self.assertNotContains(response, reverse('listings:update', args=[listing.pk]))
+        response = self.client.post(reverse('listings:update', args=[listing.pk]), {
+            'name': 'Renamed catalog shirt', 'price': '65.000', 'category': 'bottoms', 'stock': 0,
+        })
+        self.assertEqual(response.status_code, 302)
+        response = viewer.get(reverse('main:show_main'))
+        for text in ('Renamed catalog shirt', 'Rp65.000', 'data-category="bottoms"', 'Sold out'):
+            self.assertContains(response, text)
+        self.assertNotContains(response, 'New catalog shirt')
+        response = self.client.post(reverse('listings:delete', args=[listing.pk]))
+        self.assertRedirects(response, reverse('listings:mine'), fetch_redirect_response=False)
+        response = viewer.get(reverse('main:show_main'))
+        self.assertNotContains(response, 'Renamed catalog shirt')
+        self.assertContains(response, 'No items listed yet')
+
+    def test_legacy_index_redirects_and_detail_returns_to_catalog(self):
+        self.assertRedirects(self.client.get(reverse('listings:index')),
+                             reverse('main:show_main') + '#catalog')
+        self.assertEqual(self.client.post(reverse('listings:index')).status_code, 405)
+        listing = Listing.objects.create(seller=self.seller, name='Browse back test')
+        response = self.client.get(reverse('listings:detail', args=[listing.pk]))
+        self.assertContains(response, 'href="' + reverse('main:show_main') + '#catalog"')
+
+    @override_settings(SSO_ENABLED=False)
+    def test_catalog_preserves_login_destination_and_auth_notice(self):
+        session = self.client.session
+        session['auth_notice'] = 'Test authentication notice'
+        session.save()
+        response = self.client.get(reverse('main:show_main'), {
+            'login': '1', 'next': reverse('listings:create'),
+        })
+        self.assertEqual(response.context['auth_next'], reverse('listings:create'))
+        self.assertEqual(response.context['auth_notice'], 'Test authentication notice')
+        self.assertFalse(response.context['sso_enabled'])
+        self.assertContains(response, 'No items listed yet')
 
 
 @override_settings(SSO_SERVER_URL='https://sso.ui.ac.id/cas2/', SSO_CAS_VERSION='2', SSO_TIMEOUT=8)

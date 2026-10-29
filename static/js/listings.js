@@ -17,14 +17,6 @@
     if (image.complete && image.naturalWidth === 0) showFallback();
   });
 
-  document.querySelectorAll('[data-listing-thumbnail] img').forEach(function (image) {
-    function showFallback() {
-      if (image.getAttribute('src') !== image.dataset.fallbackSrc) image.src = image.dataset.fallbackSrc;
-    }
-    image.addEventListener('error', showFallback);
-    if (image.complete && image.naturalWidth === 0) showFallback();
-  });
-
   document.querySelectorAll('[data-seller-photo]').forEach(function (photo) {
     var input = photo.querySelector('input[name="image_url"]');
     var image = photo.querySelector('[data-preview-image]');

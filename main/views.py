@@ -18,6 +18,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from requests import RequestException
 
+from listings.models import Listing
 from main.auth_utils import throttled
 from main.forms import LoginForm, ProfileForm, RegisterForm
 from main.sso import cas_client, resolve_identity
@@ -47,7 +48,9 @@ def page_context(request):
 
 @never_cache
 def show_main(request):
-    return render(request, 'index.html', page_context(request))
+    context = page_context(request)
+    context['catalog_items'] = Listing.objects.all()
+    return render(request, 'index.html', context)
 
 
 @never_cache

@@ -25,10 +25,10 @@ The new migration adds optional price, photo URL, category, size, condition, bra
 
 Prices use `Decimal` and must be positive when supplied. The form accepts plain decimal values and Indonesian formatting, for example `300000`, `300.000`, and `1.234.567,50`. Display uses rupiah separators. Stock accepts whole numbers from zero to 9,999. Set stock to zero to mark an item unavailable. Model relations and ownership remain unchanged.
 
-No new dependency or environment variable is required. Photo upload/storage, homepage catalog integration, checkout/orders, and review statistics are separate work.
+No new dependency or environment variable is required. The [homepage catalog](catalog-integration.md) now links to saved item details, and Browse items returns to `/#catalog`. Photo upload/storage, checkout/orders, and review statistics are separate work.
 
 ## Validation
 
-The full Django suite passes 69 tests, including seller-screen regressions. Detail coverage checks fields and viewer states, contact privacy, real seller counts, unavailable/legacy listings, localized prices, new-field validation, and the positive-price database constraint. Django checks, migration drift checks, and JavaScript syntax checks pass.
+The full Django suite passes 76 tests, including seller-screen and homepage catalog regressions. Detail coverage checks fields and viewer states, contact privacy, real seller counts, unavailable/legacy listings, localized prices, new-field validation, and the positive-price database constraint. Django checks, migration drift checks, and JavaScript syntax checks pass.
 
 Browser checks used an isolated preview database: desktop and 390px mobile layouts; guest-to-buyer login; bounded quantity input; cart cancellation/focus; failed and valid photos; sold-out items; long text without horizontal overflow; owner-only delete confirmation/cancellation; and saving localized prices with dismissible success messages. The preview uses test accounts and does not seed the development database.

@@ -311,6 +311,17 @@
           if (searchAnimation) searchAnimation.cancel();
         });
       }
+      document.querySelectorAll('[data-listing-thumbnail] img[data-fallback-src]').forEach(function (image) {
+        function showFallback() {
+          if (image.getAttribute('src') !== image.dataset.fallbackSrc) {
+            image.src = image.dataset.fallbackSrc;
+            if (image.alt) image.alt = 'No product photo available';
+          }
+        }
+        image.addEventListener('error', showFallback);
+        if (image.complete && image.naturalWidth === 0) showFallback();
+      });
+
       var catalog = document.querySelector('.catalog-grid');
       if (search && catalog) {
         var items = catalog.querySelectorAll('.catalog-item');
@@ -327,17 +338,20 @@
               (selectedCategory !== 'all' && item.dataset.category !== selectedCategory);
             if (!item.hidden) visible += 1;
           });
-          empty.hidden = visible > 0;
+          empty.hidden = items.length === 0 || visible > 0;
+        }
+        function setCategory(category) {
+          selectedCategory = category;
+          categoryFilters.forEach(function (filter) {
+            var active = filter.dataset.categoryFilter === category;
+            filter.classList.toggle('is-active', active);
+            filter.setAttribute('aria-pressed', String(active));
+          });
+          filterCatalog();
         }
         categoryFilters.forEach(function (button) {
           button.addEventListener('click', function () {
-            selectedCategory = button.dataset.categoryFilter;
-            categoryFilters.forEach(function (filter) {
-              var active = filter === button;
-              filter.classList.toggle('is-active', active);
-              filter.setAttribute('aria-pressed', String(active));
-            });
-            filterCatalog();
+            setCategory(button.dataset.categoryFilter);
           });
         });
         search.addEventListener('input', function () {
@@ -351,5 +365,12 @@
             });
           }, 120);
         });
+        document.querySelector('[data-catalog-reset]').addEventListener('click', function () {
+          clearTimeout(searchScrollTimer);
+          search.value = '';
+          setCategory('all');
+          document.querySelector('[data-category-filter="all"]').focus();
+        });
+        filterCatalog();
       }
     })();

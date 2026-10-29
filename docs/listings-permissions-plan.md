@@ -1,6 +1,6 @@
 # Listing Permissions Plan
 
-Status: implemented. The initial permissions foundation has since been extended with the Figma-based item detail page, optional price/clothing fields, stock, and HTTPS photo URLs. See [item detail notes](item-detail.md) for the current fields, UI states, and validation. Sample-data loading, file uploads, and homepage catalog integration remain later work.
+Status: implemented. The initial permissions foundation has since been extended with the Figma-based detail/seller pages, optional price/clothing fields, stock, HTTPS photo URLs, and the [database-backed homepage catalog](catalog-integration.md). See [item detail notes](item-detail.md) for the current fields, UI states, and validation. Sample-data loading and file uploads remain later work.
 
 For the first version, any authenticated user can create listings. Buyer and seller are activities of an account, not separate account types. A user becomes the seller of a particular listing by creating it. Password and SSO sessions receive the same listing access. No new user role field, seller group, or permission package is needed for this policy.
 
@@ -55,6 +55,6 @@ Apply the new schema before running these routes on another checkout:
 
 For an existing legacy auth database, follow `docs/authentication.md` first. The migration is already applied in this development checkout. No new environment variables or dependencies are required for this permissions foundation.
 
-Routes: `/listings/`, `/listings/create/`, `/listings/mine/`, `/listings/<pk>/`, `/listings/<pk>/edit/`, and `/listings/<pk>/delete/`. The homepage catalog remains a separate placeholder view until the full catalog integration step.
+Routes: `/` (public catalog), `/listings/` (redirect to `/#catalog`), `/listings/create/`, `/listings/mine/`, `/listings/<pk>/`, `/listings/<pk>/edit/`, and `/listings/<pk>/delete/`. Public catalog cards show saved items without seller contact details; published contact remains restricted to authenticated detail responses.
 
 Browser smoke checks on an isolated test database confirmed guest contact restrictions, guest-to-login redirection, keyboard login submission returning to the create form, owner-only management controls, and detail/edit layouts at a 390px mobile viewport. The preview's sample accounts and listings are separate from the development database.

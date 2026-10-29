@@ -56,7 +56,7 @@
         {% include 'components/seller-field.html' with field=form.condition select=True %}
       </div>
       {% include 'components/seller-field.html' with field=form.description %}
-      <p class="seller-form-note">{% if listing %}This item is already listed. Saving updates the existing listing.{% else %}Your item will appear in listings after you create it.{% endif %}</p>
+      <p class="seller-form-note">{% if listing %}This item is already listed. Saving updates the existing listing.{% else %}Your item will appear in the catalog after you create it.{% endif %}</p>
       <div class="seller-form-actions">
         {% if listing %}<a class="item-secondary-action seller-delete" href="{% url 'listings:delete' listing.pk %}" data-dialog-open="delete-listing-dialog">Delete item</a>{% endif %}
         <div class="seller-save-actions">

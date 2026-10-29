@@ -7,13 +7,13 @@
 {% block nav_links %}{% include 'components/guest-nav.html' with active_page='' %}{% endblock nav_links %}
 {% block page_css %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=45">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=46">
   <link rel="stylesheet" href="{% static 'css/item-detail.css' %}?v=2">
 {% endblock page_css %}
 
 {% block content %}
 <main class="item-detail" aria-labelledby="item-title">
-  <a class="item-back" href="{% url 'listings:index' %}"><span aria-hidden="true">←</span> Browse items</a>
+  <a class="item-back" href="{% url 'main:show_main' %}#catalog"><span aria-hidden="true">←</span> Browse items</a>
   {% include 'components/listing-notices.html' %}
   <div class="item-overview">
     {% include 'components/item-photo.html' %}

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods
 
@@ -12,9 +13,7 @@ from main.views import page_context
 @never_cache
 @require_GET
 def index(request):
-    context = page_context(request)
-    context.update(listings=Listing.objects.all(), own_listings=False)
-    return render(request, 'listings/list.html', context)
+    return redirect(reverse('main:show_main') + '#catalog')
 
 
 @never_cache
