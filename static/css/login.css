@@ -101,6 +101,7 @@ html.login-open { overflow-y: hidden; }
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
+    text-decoration: none;
     cursor: pointer;
 }
 .nav-list-item:hover { color: var(--color-secondary); }
@@ -174,6 +175,7 @@ html.login-open { overflow-y: hidden; }
     background: transparent;
     color: inherit;
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
 }
 .profile-menu-action:hover { background: var(--color-field); }

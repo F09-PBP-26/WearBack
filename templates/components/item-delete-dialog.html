@@ -1,0 +1,9 @@
+<dialog class="item-delete-dialog" id="delete-listing-dialog" aria-labelledby="delete-listing-title" aria-describedby="delete-listing-description" data-listing-dialog>
+  <h2 id="delete-listing-title">Delete this listing?</h2>
+  <p id="delete-listing-description">“{{ listing.name }}” will be removed from WearBack. This cannot be undone.</p>
+  <form class="item-dialog-actions" method="post" action="{% url 'listings:delete' listing.pk %}">
+    {% csrf_token %}
+    <button class="item-secondary-action" type="button" data-dialog-close autofocus>Keep listing</button>
+    <button class="item-danger-action" type="submit" data-discard-changes>Delete listing</button>
+  </form>
+</dialog>
