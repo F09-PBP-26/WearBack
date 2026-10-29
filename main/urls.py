@@ -14,4 +14,6 @@ urlpatterns = [
     path('sso/login/', views.sso_login, name='sso_login'),
     path('sso/callback/', views.sso_callback, name='sso_callback'),
     path('sso/link/', views.sso_link, name='sso_link'),
+    #path untuk dropoof 
+    path('dropoff/',views.dropoff_locations, name='dropoff_locations'),
 ]

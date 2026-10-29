@@ -1,0 +1,245 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Complete Your Purchase | WearBack{% endblock title %}
+
+{% block body_class %}checkout-body{% endblock body_class %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/dropoff.css' %}?v=5">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+{% endblock page_css %}
+
+{% block nav_links %}
+<div class="nav-links" data-active-page="catalog">
+    <span class="nav-slider" aria-hidden="true"></span>
+
+    <a class="nav-link is-active"
+       data-menu="catalog"
+       href="{% url 'main:show_main' %}"
+       aria-current="page">
+        Catalog
+    </a>
+
+    <a class="nav-link"
+       data-menu="auction"
+       href="{% url 'main:auction' %}">
+        Auction
+    </a>
+</div>
+{% endblock nav_links %}
+
+{% block content %}
+<main class="checkout-page">
+
+    <a href="{% url 'main:show_main' %}" class="back-link">
+        &larr; Back to items
+    </a>
+
+    <section class="checkout-heading">
+        <div>
+            <h1>Complete your purchase</h1>
+            <p>Review your items and finish your payment.</p>
+        </div>
+        <span class="payment-status">Awaiting payment</span>
+    </section>
+
+    <div class="checkout-layout">
+
+        <!-- LEFT COLUMN -->
+        <div class="checkout-left">
+
+            <section class="checkout-card items-card">
+                <div class="card-heading">
+                    <h2>Items overview</h2>
+                    <span class="item-count">2 items</span>
+                </div>
+
+                <article class="product-item">
+                    <div class="product-image">
+                        <span class="image-placeholder">Image</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Scarf Wool 1970's</h3>
+                        <p>Great condition · Size M · Wool</p>
+                        <p>Stock: 43</p>
+                        <strong>Rp300.000</strong>
+                    </div>
+                    <div class="quantity-control">
+                        <span>−</span>
+                        <span>2</span>
+                        <span>+</span>
+                    </div>
+                </article>
+
+                <article class="product-item">
+                    <div class="product-image">
+                        <span class="image-placeholder">Image</span>
+                    </div>
+                    <div class="product-info">
+                        <h3>Celana Jeans Vintage R50</h3>
+                        <p>Vintage denim · Great condition</p>
+                        <p>Stock: 1</p>
+                        <strong>Rp1.000.000</strong>
+                    </div>
+                    <div class="quantity-control">
+                        <span>−</span>
+                        <span>1</span>
+                        <span>+</span>
+                    </div>
+                </article>
+            </section>
+
+            <section class="checkout-card address-card">
+                <div class="card-heading">
+                    <h3>Drop-off address</h3>
+                    <button id="change-location-button" class="change-button" type="button">
+                        Select location 
+                    </button>
+                </div>
+
+                <div class="address-info">
+                    <h3>{{ request.user.first_name|default:request.user.username }}</h3>
+                    <p id="selected-address">No Location Select</p>
+                </div>
+
+                <div id="dropoff-map" class="dropoff-map" role="application" aria-label="Interactive OpenStreetMap showing the drop-off location">
+                </div>
+
+                <p class="map-caption" id="map-caption">Select dropoff location for continue</p>
+
+                <div class="order-information">
+                    <div>
+                        <span>Order number</span>
+                        <strong>#67420</strong>
+                    </div>
+                    <div class="order-date">
+                        <span>Order date</span>
+                        <strong id="order-date">Loading...</strong>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <aside class="checkout-right">
+
+            <section class="checkout-card summary-card">
+                <h2>Payment summary</h2>
+
+                <div class="summary-row">
+                    <span>Subtotal (2 items)</span>
+                    <strong>Rp1.600.000</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Delivery fee</span>
+                    <strong>Rp15.000</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (5%)</span>
+                    <strong>Rp80.000</strong>
+                </div>
+
+                <div class="summary-total">
+                    <strong>Total</strong>
+                    <strong>Rp1.695.000</strong>
+                </div>
+            </section>
+
+            <section class="checkout-card payment-card">
+                <h2>Payment details</h2>
+
+                <label for="payment-method">Payment method</label>
+                <select id="payment-method" disabled>
+                    <option>BCA (Virtual Account)</option>
+                </select>
+
+                <div class="virtual-account">
+                    <span>Virtual account number</span>
+                    <strong>8808 0674 2000 0268</strong>
+                </div>
+
+                <p class="payment-instruction">
+                    Transfer the exact total through your bank app or ATM,
+                    then confirm your payment below.
+                </p>
+
+                <div class="payment-timer">
+                    <span>Complete payment within</span>
+                    <strong>◷ 23:59:59</strong>
+                </div>
+
+                <button class="confirm-payment" type="button" disabled>
+                    Confirm payment
+                </button>
+            </section>
+
+        </aside>
+    </div>
+</main>
+
+
+<div id="location-modal"
+     class="location-modal"
+     aria-hidden="true">
+
+    <div class="location-dialog"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="location-modal-title">
+
+        <div class="location-modal-header">
+            <div>
+                <h2 id="location-modal-title">Choose drop-off location</h2>
+                <p>Click the map or drag the marker to select a point.</p>
+            </div>
+
+            <button id="close-location-modal"
+                    class="close-location-button"
+                    type="button"
+                    aria-label="Close">
+                &times;
+            </button>
+        </div>
+
+        <div id="location-picker-map"
+             class="location-picker-map"></div>
+
+        <div class="location-selection-info">
+            <span>Selected coordinates</span>
+            <strong id="selected-coordinates">No location selected</strong>
+        </div>
+
+        <p id="location-error"
+           class="location-error"
+           role="status"></p>
+
+        <div class="location-modal-actions">
+            <button id="cancel-location"
+                    class="cancel-location-button"
+                    type="button">
+                Cancel
+            </button>
+
+            <button id="confirm-location"
+                    class="confirm-location-button"
+                    type="button">
+                Use this location
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+></script>
+
+<script src="{% static 'js/dropoff.js' %}?v=1"></script>
+
+{% endblock content %}
+

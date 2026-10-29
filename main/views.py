@@ -194,3 +194,10 @@ def sso_callback(request):
     if not link_user:
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect(safe_next(request, destination))
+
+#bagian dropoff
+@never_cache
+@require_GET
+def dropoff_locations(request):
+    context = page_context(request)
+    return render(request, 'dropoff.html', context)

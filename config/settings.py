@@ -42,6 +42,10 @@ CSRF_COOKIE_SECURE = PRODUCTION
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SECURE_SSL_REDIRECT = PRODUCTION
+
+#nambahin bagian POLICY buat map
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 if os.getenv('TRUST_PROXY_HTTPS', 'false').lower() == 'true':
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
