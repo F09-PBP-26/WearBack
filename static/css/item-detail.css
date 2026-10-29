@@ -168,6 +168,10 @@
     border-top: 1px solid var(--color-listing-border);
 }
 
+.item-purchase-actions form[data-add-to-cart-form] .item-primary-action {
+  width: 100%;
+}
+
 .item-quantity-row,
 .item-store-facts {
     display: flex;
@@ -250,6 +254,7 @@
     text-align: center;
     cursor: pointer;
 }
+
 
 .item-secondary-action {
     border-color: var(--color-listing-border);

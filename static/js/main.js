@@ -352,7 +352,7 @@
         categoryFilters.forEach(function (button) {
           button.addEventListener('click', function () {
             setCategory(button.dataset.categoryFilter);
-          });
+          })
         });
         search.addEventListener('input', function () {
           filterCatalog();
