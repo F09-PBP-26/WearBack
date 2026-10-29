@@ -40,25 +40,27 @@
         <section class="cart-items-section" aria-label="Shopping cart items">
             <div class="cart-items">
                 {% for item in cart_items %}
-                <article class="cart-item" data-cart-id="{{ item.id }}" data-price="{{ item.price }}" data-quantity="{{ item.quantity }}" data-delete-url="{% url 'main:remove_cart_item' item.id %}"
->
+                {% with listing=item.listing %}
+                {% if listing %}
+                <article class="cart-item" data-cart-id="{{ item.id }}" data-price="{{ listing.price }}" data-quantity="{{ item.quantity }}" data-stock="{{ listing.stock }}" data-delete-url="{% url 'main:remove_cart_item' item.id %}">
                     <label class="cart-item-checkbox">
                         <input type="checkbox" class="cart-select-item" {% if item.selected %}checked{% endif %}>
                     </label>
 
                     <div class="cart-item-image">
-                        {% if item.item_image_url %}
-                        <img src="{{ item.item_image_url }}" alt="{{ item.item_name }}">
+                        {% if listing.image_url %}
+                        <img src="{{ listing.image_url }}" alt="{{ listing.name }}">
                         {% else %}
                         <span aria-hidden="true">◇</span>
                         {% endif %}
                     </div>
 
                     <div class="cart-item-details">
-                        <h2>{{ item.item_name }}</h2>
-                        <p>Size {{ item.size }} · {{ item.condition }}</p>
-                        <p>Rp{{ item.price|intcomma }}</p>
-                        <strong class="cart-item-total" data-item-total>Rp{{ item.price|intcomma }}</strong>
+                        <h2>{{ listing.name }}</h2>
+                        <p>Stok tersedia: {{ listing.stock }}</p>
+                        <p>Size {{ listing.size|default:"Not specified" }} · {{ listing.get_condition_display|default:"Not specified" }}</p>
+                        <p>Rp{{ listing.price|floatformat:0|intcomma }}</p>
+                        <strong class="cart-item-total" data-item-total>Rp{{ listing.price|intcomma }}</strong>
                     </div>
 
                     <button class="cart-remove" type="button">
@@ -71,16 +73,17 @@
                         <button type="button" class="quantity-increase">+</button>
                     </div>
                 </article>
-                {% empty %}
-                <div class="cart-empty" id="cart-empty">
+                {% endif %}
+                {% endwith %}
+                {% endfor %}
+                <div class="cart-empty" id="cart-empty" {% if cart_items %}hidden{% endif %}>
                     <h2>Your cart is empty</h2>
                     <p>Add some items to get started.</p>
                     <a class="browse-link" href="{% url 'main:show_main' %}"> ← Browse items </a>
                 </div>
-                {% endfor %}
-                    <p class="cart-search-empty" hidden>
-                        No matching items found.
-                    </p>
+                <p class="cart-search-empty" hidden>
+                    No matching items found.
+                </p>
             </div>
         </section>
 
@@ -120,7 +123,7 @@
                     Buy (0 items)
                 </button>
             </form>
-
+            <a href="{% url 'main:transaction_history' %}" class="browse-link check-transactions-link"> Check your transactions → </a>
             <p class="cart-checkout-message" id="cart-checkout-message" role="status" hidden>
             </p>
         </aside>
@@ -148,6 +151,4 @@
 </main>
 {% endblock content %}
 
-{% block extra_js %}
-<script src="{% static 'js/carts.js' %}?v=2"></script>
-{% endblock extra_js %}
+{% block page_js %} <script src="{% static 'js/carts.js' %}?v=2"></script> {% endblock page_js %}

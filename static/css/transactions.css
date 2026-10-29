@@ -7,13 +7,14 @@
 .browse-link {
     display: inline-block;
     margin-bottom: 26px;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
 }
 
 .browse-link:hover {
+    color: var(--color-primary);
     text-decoration: underline;
 }
 
@@ -30,7 +31,7 @@
 
 .transaction-header p {
     margin: 0;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: var(--fs-body);
 }
 
@@ -64,7 +65,7 @@
 .transaction-order-header p,
 .transaction-item-info p {
     margin: 0;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 13px;
 }
 
@@ -102,7 +103,7 @@
     overflow: hidden;
     border-radius: 10px;
     background: var(--color-search-bg);
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 36px;
 }
 
@@ -132,7 +133,7 @@
 }
 
 .transaction-total span {
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: var(--fs-label-sm);
 }
 
@@ -150,7 +151,7 @@
 
 .transaction-card-footer p {
     margin: 0;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 13px;
 }
 
@@ -169,7 +170,7 @@
 
 .transaction-count {
     margin-top: 22px;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 13px;
 }
 
@@ -187,7 +188,7 @@
 }
 
 .transaction-empty p {
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
 }
 
 .payment-countdown {

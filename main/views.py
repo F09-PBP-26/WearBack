@@ -6,6 +6,7 @@ from xml.etree.ElementTree import ParseError
 
 from cas import CASError
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
@@ -26,6 +27,8 @@ from main.auth_utils import throttled
 from main.forms import LoginForm, ProfileForm, RegisterForm
 from main.models import CartItem, TransactionHistory
 from main.sso import cas_client, resolve_identity
+
+from listings.models import Listing
 
 def safe_next(request, value):
     if value and url_has_allowed_host_and_scheme(value, {request.get_host()}, require_https=request.is_secure()):
@@ -243,6 +246,7 @@ def remove_cart_item(request, item_id):
         "message": "Item removed successfully."
     })
 
+# Logic
 @login_required
 @require_POST
 def checkout_cart(request):
@@ -251,25 +255,80 @@ def checkout_cart(request):
     if not selected_ids:
         return redirect("main:cart")
 
-    item_ids = [int(item_id) for item_id in selected_ids.split(",") if item_id]
-    cart_items = CartItem.objects.filter(buyer=request.user, id__in=item_ids)
+    item_ids = list({int(item_id) for item_id in selected_ids.split(",") if item_id.strip()})
 
-    if not cart_items.exists():
+    if not item_ids:
         return redirect("main:cart")
 
     deadline = timezone.now() + timedelta(minutes=10)
 
-    for item in cart_items:
-        TransactionHistory.objects.create(
-            buyer=request.user,
-            item_name=item.item_name,
-            item_image_url=item.item_image_url,
-            price=item.price * item.quantity,
-            status="ongoing",
-            item_count=item.quantity,
-            seller_name=item.seller_name,
-            payment_deadline=deadline,
+    with transaction.atomic():
+        cart_items = list(CartItem.objects
+            .filter(buyer=request.user, id__in=item_ids, selected=True) 
+            .select_related("listing", "listing__seller")
+            .select_for_update()
         )
 
-    cart_items.delete()
+        if not cart_items:
+            return redirect("main:cart")
+
+        for item in cart_items:
+            listing = item.listing
+
+            if listing is None:
+                return redirect("main:cart")
+            if listing.price is None or listing.price <= 0:
+                return redirect("main:cart")
+            if item.quantity < 1 or item.quantity > listing.stock:
+                return redirect("main:cart")
+
+        for item in cart_items:
+            listing = item.listing
+
+            TransactionHistory.objects.create(
+                buyer=request.user,
+                item_name=listing.name,
+                item_image_url=listing.image_url or "",
+                price=listing.price * item.quantity,
+                status="ongoing",
+                item_count=item.quantity,
+                seller_name=listing.seller.get_full_name().strip(),
+                payment_deadline=deadline,
+            )
+        CartItem.objects.filter(buyer=request.user, id__in=[item.id for item in cart_items]).delete()
     return redirect("main:transaction_history")
+
+@login_required
+@require_POST
+def add_to_cart(request, listing_id):
+    listing = get_object_or_404(Listing, pk=listing_id)
+
+    if listing.stock <= 0:
+        return redirect("listings:detail", pk=listing.pk)
+    
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 0
+
+    if quantity < 1 or quantity > listing.stock:
+        return redirect("listings:detail", pk=listing.pk)
+
+    cart_item, created = CartItem.objects.get_or_create(
+        buyer=request.user,
+        listing=listing,
+        defaults={
+            "quantity": quantity,
+            "selected": True,
+        },
+    )
+
+    if not created:
+        new_quantity = cart_item.quantity + quantity
+        if new_quantity <= listing.stock:
+            cart_item.quantity = new_quantity
+            cart_item.save(update_fields=["quantity"])
+        else:
+            return redirect("listings:detail", pk=listing.pk)
+
+    return redirect("main:cart")

@@ -47,9 +47,13 @@
           </div>
           <span class="item-sr-only" id="quantity-status" role="status" data-quantity-status>Quantity: 1</span>
           {% if request.user.is_authenticated %}
-            <button class="item-primary-action" type="button" data-cart-open>Add to cart</button>
-            <p class="item-purchase-help">Shopping cart is coming soon. You can contact the seller below.</p>
-          {% else %}
+            <form method="post" action="{% url 'main:add_to_cart' listing.pk %}" data-add-to-cart-form>
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1" data-cart-quantity>
+              <button class="item-primary-action" type="submit">Add to cart</button>
+            </form>
+            <p class="item-purchase-help">Add this item to your shopping cart.</p>
+            {% else %}
             <a class="item-primary-action" href="{% url 'main:login' %}?next={{ request.get_full_path|urlencode }}">Sign in to shop</a>
             <p class="item-purchase-help">Sign in to contact the seller. Checkout is coming soon.</p>
           {% endif %}

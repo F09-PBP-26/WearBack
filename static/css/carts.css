@@ -9,7 +9,7 @@
 .cart-main .browse-link {
     display: inline-block;
     margin-bottom: 26px;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
@@ -17,7 +17,15 @@
 
 .cart-main .browse-link:hover {
     color: var(--color-primary);
+    text-decoration: underline;
 }
+
+.order-summary .check-transactions-link {
+    display: block;
+    margin: 24px auto 0;
+    text-align: center;
+}
+
 
 .cart-header {
     display: flex;
@@ -70,7 +78,7 @@
 
 #cart-selection-count {
     margin: 0 0 0 auto;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: var(--fs-label-sm);
     text-align: right;
     white-space: nowrap;
@@ -126,7 +134,7 @@
     min-height: 80px;
     border-radius: 10px;
     background: var(--color-search-bg);
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 42px;
 }
 
@@ -144,7 +152,7 @@
 
 .cart-item-details p {
     margin: 0 0 8px;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: var(--fs-label-sm);
 }
 
@@ -160,7 +168,7 @@
     align-self: start;
     border: 0;
     background: transparent;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 25px;
     cursor: pointer;
 }
@@ -178,7 +186,7 @@
     justify-content: space-between;
     width: 108px;
     min-height: 36px;
-    border: 1px solid var(--color-muted);
+    border: 1px solid var(--color-listing-muted);
     border-radius: var(--radius-control);
 }
 
@@ -204,7 +212,7 @@
 
 .cart-selection-note {
     margin: 4px 0 0;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 12px;
 }
 
@@ -232,7 +240,7 @@
 }
 
 .summary-row span {
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
 }
 
 .summary-row strong {
@@ -260,7 +268,7 @@
 
 .summary-description {
     margin: 24px 0;
-    color: var(--color-muted);
+    color: var(--color-listing-muted);
     font-size: 12px;
     line-height: 1.6;
 }
@@ -300,7 +308,7 @@
 .cart-empty p {
     margin-top: 0;
     margin-bottom: 12px;
-    color: var(--color-muted)
+    color: var(--color-listing-muted)
 }
 
 .cart-empty a {

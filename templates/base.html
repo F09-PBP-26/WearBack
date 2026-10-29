@@ -36,7 +36,7 @@
       {% if request.user.is_authenticated %}
       <div class="nav-account">
         <a class="nav-list-item" href="{% url 'listings:create' %}">List an item</a>
-        <button class="nav-list-item nav-cart" type="button" data-cart-open aria-label="Open shopping cart" title="Shopping cart">
+        <a class="nav-list-item nav-cart" href="{% url 'main:cart' %}" data-cart-open aria-label="Open shopping cart" title="Shopping cart">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
             <path d="M3 3h2l2.4 12.4a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 2-1.6L21 7H6"/>
             <circle cx="10" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>
@@ -70,18 +70,10 @@
 
   {% include 'components/login.html' %}
   {% if request.user.is_authenticated %}
-<<<<<<< HEAD
-    {% include 'components/list-item.html' %}
-    {% include 'components/profile-menu.html' %}
-  {% endif %}
-  <script src="{% static 'js/main.js' %}?v=17"></script>
-  {% block extra_js %}{% endblock extra_js %}
-=======
     {% include 'components/cart.html' %}
     {% include 'components/profile-menu.html' %}
   {% endif %}
   <script src="{% static 'js/main.js' %}?v=20"></script>
   {% block page_js %}{% endblock page_js %}
->>>>>>> origin/main
 </body>
 </html>

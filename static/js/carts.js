@@ -17,9 +17,9 @@ document.addEventListener("DOMContentLoaded", function () {
     "Rp" + Number(amount).toLocaleString("en-US");
 
     function getItems() {
-        return [...cartItems.querySelectorAll(".cart-item")];
+    return [...cartItems.querySelectorAll(".cart-item[data-cart-id]")];
     }
-
+    
     function updateCart() {
         const items = getItems();
         let selectedProducts = 0;
@@ -30,12 +30,14 @@ document.addEventListener("DOMContentLoaded", function () {
             const checkbox = item.querySelector(".cart-select-item");
             const quantity = Number(item.dataset.quantity);
             const price = Number(item.dataset.price);
+            const stock = Number(item.dataset.stock);
             const total = price * quantity;
 
             item.querySelector(".quantity-value").textContent = quantity;
             item.querySelector(".cart-item-total").textContent = formatRupiah(total);
             item.querySelector(".quantity-decrease").disabled = quantity <= 1;
-
+            item.querySelector(".quantity-increase").disabled = stock <= 0 || quantity >= stock;
+            
             if (checkbox.checked) {
                 selectedProducts++;
                 selectedQuantity += quantity;
@@ -100,7 +102,12 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!item) return;
 
         if (event.target.closest(".quantity-increase")) {
-            item.dataset.quantity = Number(item.dataset.quantity) + 1;
+            const quantity = Number(item.dataset.quantity);
+            const stock = Number(item.dataset.stock);
+            if (stock <= 0 || quantity >= stock) {
+                return;
+            }
+            item.dataset.quantity = quantity + 1;
         } else if (event.target.closest(".quantity-decrease")) {
             item.dataset.quantity = Math.max(1, Number(item.dataset.quantity) - 1);
         } else if (event.target.closest(".cart-remove")) {
@@ -175,49 +182,49 @@ document.addEventListener("DOMContentLoaded", function () {
         selectedCartIds.value = selectedItems.map((item) => item.dataset.cartId).join(",");
     });
     updateCart();
-});
-
-function cartSearch() {
-    const searchInput = document.querySelector("#site-search");
-    const cartList = document.querySelector(".cart-items");
-
-    if (!searchInput || !cartList) {
-        return;
-    }
-
-    const cartItems = cartList.querySelectorAll(".cart-item");
-    const cartCount = document.querySelector("#cart-total-products");
-    const cartPlural = document.querySelector("#cart-product-plural");
-    const cartSearchEmpty = document.querySelector(".cart-search-empty");
-
-    function filterCartItems() {
-        const cartQuery = searchInput.value.trim().toLowerCase();
-        let visible = 0;
-
-        cartItems.forEach((item) => {
-            const cartFiltered = item.textContent
-                .toLowerCase()
-                .includes(cartQuery);
-
-            item.hidden = !cartFiltered;
-
-            if (cartFiltered) {
-                visible++;
+    
+    function cartSearch() {
+        const searchInput = document.querySelector("#site-search");
+        const cartList = document.querySelector(".cart-items");
+    
+        if (!searchInput || !cartList) {
+            return;
+        }
+    
+        const cartItems = cartList.querySelectorAll(".cart-item");
+        const cartCount = document.querySelector("#cart-total-products");
+        const cartPlural = document.querySelector("#cart-product-plural");
+        const cartSearchEmpty = document.querySelector(".cart-search-empty");
+    
+        function filterCartItems() {
+            const cartQuery = searchInput.value.trim().toLowerCase();
+            let visible = 0;
+    
+            cartItems.forEach((item) => {
+                const cartFiltered = item.textContent
+                    .toLowerCase()
+                    .includes(cartQuery);
+    
+                item.hidden = !cartFiltered;
+    
+                if (cartFiltered) {
+                    visible++;
+                }
+            });
+    
+            if (cartCount) {
+                cartCount.textContent = visible;
             }
-        });
-
-        if (cartCount) {
-            cartCount.textContent = visible;
+            if (cartPlural) {
+                cartPlural.textContent = visible === 1 ? "" : "s";
+            }
+            if (cartSearchEmpty) {
+                cartSearchEmpty.hidden = visible > 0 || cartItems.length === 0;
+            }
         }
-        if (cartPlural) {
-            cartPlural.textContent = visible === 1 ? "" : "s";
-        }
-        if (cartSearchEmpty) {
-            cartSearchEmpty.hidden = visible > 0 || cartItems.length === 0;
-        }
+        searchInput.addEventListener("input", filterCartItems);
+        filterCartItems();
     }
-    searchInput.addEventListener("input", filterCartItems);
-    filterCartItems();
-}
-
-cartSearch();
+    
+    cartSearch();
+});

@@ -21,6 +21,7 @@ urlpatterns = [
     path("cart/", views.cart, name="cart"),
     path("cart/<int:item_id>/remove/", views.remove_cart_item, name="remove_cart_item"),
     path("cart/checkout/", views.checkout_cart, name="checkout_cart"),
+    path("cart/add/<int:listing_id>/", views.add_to_cart, name="add_to_cart"),
 
     path('sso/login/', views.sso_login, name='sso_login'),
     path('sso/callback/', views.sso_callback, name='sso_callback'),
