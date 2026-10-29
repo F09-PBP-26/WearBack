@@ -40,6 +40,9 @@ class ListingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label_suffix = ''
+        if self.instance._state.adding:
+            for name in ('price', 'category', 'size', 'condition'):
+                self.fields[name].required = True
         self.fields['category'].choices = [('', 'Choose a category'), *Listing.Category.choices]
         self.fields['condition'].choices = [('', 'Choose a condition'), *Listing.Condition.choices]
         sizes = ['XXS', 'XS', 'Small', 'Medium', 'Large', 'XL', 'XXL', 'One size']
@@ -49,6 +52,7 @@ class ListingForm(forms.ModelForm):
         self.fields['size'].widget = forms.Select(choices=[('', 'Choose a size'), *((size, size) for size in sizes)])
         if not self.is_bound and self.instance.price is not None:
             self.initial['price'] = self.instance.price_display.removeprefix('Rp')
+
     @property
     def preview_image_url(self):
         if self.is_bound:
