@@ -136,6 +136,10 @@ _Proyek Tengah Semester PBP Gasal 2026/2027 - Fakultas Ilmu Komputer Universitas
 
 ## AI Disclosure
 
+Niccola Geraldo W D - 2506619070
+
+"Saya menggunakan Codex dengan GPT-6.1 Sol untuk membantu pengerjaan proyek ini."
+
 Hudzaifah - 2506622840
 
 "Saya menggunakan AI untuk membantu saya dalam mengerjakan Proyek Tengah Semester ini. AI yang saya pakai adalah Gemini 3.6 Flash dan Copilot. Saya juga menggunakan AI untuk membantu menemukan bug yang susah saya cari. Berikut link percakapan saya dengan Gemini
