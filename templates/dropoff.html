@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load static humanize tz %}
 
-{% block title %}Drop-off Location | WearBack{% endblock title %}
+{% block title %}Order Details | WearBack{% endblock title %}
 
-{% block body_class %}checkout-body{% endblock body_class %}
+{% block body_class %}catalog-page checkout-body{% endblock body_class %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/dropoff.css' %}?v=9">
+<link rel="stylesheet" href="{% static 'css/style.css' %}?v=47">
+<link rel="stylesheet" href="{% static 'css/dropoff.css' %}?v=10">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 {% endblock page_css %}
 
@@ -20,13 +21,13 @@
         <p class="location-notice" role="status">{{ message }}</p>
     {% endfor %}
 
-    <a href="{% url 'main:show_main' %}" class="back-link">
-        &larr; Back to items
+    <a href="{% url 'main:transaction_history' %}" class="back-link">
+        &larr; Back to transactions
     </a>
 
     <section class="checkout-heading">
         <div>
-            <h1>Drop-off location</h1>
+            <h1>Order details</h1>
             <p>{% if transaction.status == 'ongoing' %}Save your drop-off address, then pay so the seller can complete your order.{% else %}View the drop-off address and payment status for this order.{% endif %}</p>
         </div>
         <span class="location-status">{% if transaction.status != 'ongoing' %}{{ transaction.get_status_display }}{% elif dropoff_location %}Location saved{% else %}Choose a location{% endif %}</span>
@@ -80,7 +81,7 @@
 
             <section class="checkout-card address-card">
                 <div class="card-heading">
-                    <h3>Drop-off address</h3>
+                    <h2>Drop-off address</h2>
                     <button id="change-location-button" class="change-button" type="button" {% if transaction.status != 'ongoing' %}disabled{% endif %}>
                         Select location 
                     </button>
