@@ -50,8 +50,7 @@ class AuthThrottle(models.Model):
 class TransactionHistory(models.Model):
     STATUS_CHOICES = [
         ("ongoing", "Ongoing"),
-        ("paid", "Awaiting shipment"),
-        ("shipping", "Shipping"),
+        ("paid", "Awaiting seller"),
         ("delivered", "Delivered"),
         ("completed", "Completed"),
         ("cancelled", "Cancelled"),
@@ -75,7 +74,7 @@ class TransactionHistory(models.Model):
     seller_name = models.CharField(max_length=255, blank=True)
     status_message = models.CharField(max_length=255, blank=True)
     payment_deadline = models.DateTimeField(null=True, blank=True)
-    shipped_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
