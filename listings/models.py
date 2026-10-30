@@ -1,3 +1,4 @@
+import uuid
 from decimal import Decimal
 
 from django.conf import settings
@@ -56,3 +57,13 @@ class Listing(models.Model):
     @property
     def is_available(self):
         return self.stock > 0 and self.price is not None
+
+
+class ListingImportBatch(models.Model):
+    """Server-side preview and one-time confirmation for an admin CSV upload."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    rows = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)

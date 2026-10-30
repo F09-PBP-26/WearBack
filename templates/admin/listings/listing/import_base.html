@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/css/forms.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-listing-import.css' %}">
+{% endblock %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:listings_listing_changelist' %}">Listings</a>
+    &rsaquo; {{ title }}
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="content-main" class="listing-import">
+    {% block import_content %}{% endblock %}
+    {% if row_errors %}
+      <h2>CSV errors</h2>
+      <p>No items have been added. Fix all errors and upload the CSV again.</p>
+      <div class="import-table" role="region" aria-label="CSV errors" tabindex="0">
+        <table>
+          <thead><tr><th scope="col">CSV line</th><th scope="col">Field</th><th scope="col">Error</th></tr></thead>
+          <tbody>
+            {% for row in row_errors %}
+              {% for error in row.errors %}
+                <tr>
+                  <td>{{ row.line }}</td><td>{{ error.field }}</td>
+                  <td>{% for message in error.messages %}{{ message }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "admin/listings/listing/import_base.html" %}
+
+{% block import_content %}
+  {% if row_errors %}
+    <p class="errornote">Some item details are no longer valid. Upload a corrected CSV to continue.</p>
+    <p><a href="{% url 'admin:listings_listing_import_csv' %}">Upload CSV again</a></p>
+  {% else %}
+    <p><strong>{{ listings|length }} item{{ listings|length|pluralize }} ready to import.</strong> No items have been added yet.</p>
+    <p>Check the details and sellers below. Confirmation creates new listings; existing listings are not updated. This preview expires after 30 minutes.</p>
+    <div class="import-table" role="region" aria-label="Items to import" tabindex="0">
+      <table>
+        <thead><tr>
+          <th scope="col">Name</th><th scope="col">Seller</th><th scope="col">Price</th>
+          <th scope="col">Category</th><th scope="col">Size</th><th scope="col">Condition</th>
+          <th scope="col">Stock</th><th scope="col">More details</th>
+        </tr></thead>
+        <tbody>
+          {% for item in listings %}
+            <tr>
+              <th scope="row">{{ item.name }}</th><td>{{ item.seller.username }}</td><td>{{ item.price_display }}</td>
+              <td>{{ item.get_category_display }}</td><td>{{ item.size }}</td><td>{{ item.get_condition_display }}</td><td>{{ item.stock }}</td>
+              <td><details><summary>View details</summary><dl>
+                <dt>Description</dt><dd>{{ item.description|default:"—"|linebreaksbr }}</dd>
+                <dt>Photo URL</dt><dd>{{ item.image_url|default:"—" }}</dd>
+                <dt>Brand</dt><dd>{{ item.brand|default:"—" }}</dd>
+                <dt>Material</dt><dd>{{ item.material|default:"—" }}</dd>
+                <dt>Style</dt><dd>{{ item.style|default:"—" }}</dd>
+                <dt>Location</dt><dd>{{ item.location|default:"—" }}</dd>
+                <dt>Contact email</dt><dd>{{ item.contact_email|default:"—" }}</dd>
+              </dl></details></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="submit-row">
+        <input type="submit" value="Confirm import" class="default">
+        <a href="{% url 'admin:listings_listing_import_csv' %}" class="closelink">Start again</a>
+        <a href="{% url 'admin:listings_listing_changelist' %}" class="closelink">Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}
