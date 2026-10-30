@@ -46,8 +46,12 @@ def page_context(request):
             context['auth_next'] = safe_next(request, request.GET['next'])
     if request.user.is_authenticated:
         context['sso_linked'] = request.user.sso_identities.filter(provider='ui').exists()
+        context['profile_complete'] = bool(
+            request.user.email and request.user.first_name and request.user.last_name
+            and request.user.location
+        )
         if (not context['sso_linked']
-                and (not request.user.email or not request.user.first_name or not request.user.last_name)):
+                and not context['profile_complete']):
             context['auth_initial_mode'] = 'profile'
     return context
 

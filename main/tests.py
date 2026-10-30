@@ -161,6 +161,7 @@ class CASClientTests(TestCase):
 class PasswordAuthTests(TestCase):
     def payload(self, **changes):
         return dict(first_name='Demo', last_name='User', email='demo@example.com',
+                    location='Depok, Indonesia',
                     password=PASSWORD, password_confirm=PASSWORD, **changes)
 
     def test_registration_hashes_password_and_starts_session(self):
@@ -171,6 +172,7 @@ class PasswordAuthTests(TestCase):
         user = User.objects.get(email='demo@example.com')
         self.assertTrue(user.check_password(PASSWORD))
         self.assertNotEqual(user.password, PASSWORD)
+        self.assertEqual(user.location, 'Depok, Indonesia')
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
         page = self.client.get(reverse('main:auction'))
         self.assertContains(page, 'Log out')
@@ -198,6 +200,37 @@ class PasswordAuthTests(TestCase):
         self.assertIn('password', response.json()['errors'])
         self.assertIn('password_confirm', response.json()['errors'])
         self.assertFalse(User.objects.exists())
+
+    def test_registration_requires_location(self):
+        data = self.payload()
+        del data['location']
+
+        response = self.client.post(reverse('main:register'), data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('location', response.json()['errors'])
+        self.assertFalse(User.objects.exists())
+
+    def test_registration_accepts_compound_and_unicode_names(self):
+        names = [
+            ('Muhammad Rizky', 'Pratama'),
+            ('Demo', "O'Connor"),
+            ('Demo', 'Smith-Jones'),
+            ('José', 'García'),
+            ('Jose\u0301', 'O’Connor'),
+        ]
+        for index, (first_name, last_name) in enumerate(names):
+            with self.subTest(first_name=first_name, last_name=last_name):
+                data = self.payload()
+                data.update(first_name=first_name, last_name=last_name,
+                            email=f'name-{index}@example.test')
+
+                response = self.client.post(reverse('main:register'), data)
+
+                self.assertEqual(response.status_code, 201, response.content)
+                user = User.objects.get(email=data['email'])
+                self.assertEqual(user.first_name, first_name)
+                self.assertEqual(user.last_name, last_name)
 
     def test_email_login_and_logout(self):
         user = User.objects.create_user(username='internal', email='demo@example.com', password=PASSWORD)
@@ -247,8 +280,57 @@ class PasswordAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
         user.refresh_from_db()
         self.assertEqual(user.email, 'demo@example.com')
+        self.assertEqual(user.location, 'Depok, Indonesia')
         self.assertEqual(user.username, 'internal')
         self.assertFalse(user.has_usable_password())
+
+    def test_profile_requires_location(self):
+        user = User.objects.create_user(username='internal')
+        self.client.force_login(user)
+        data = self.payload()
+        del data['location']
+
+        response = self.client.post(reverse('main:profile'), data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('location', response.json()['errors'])
+        user.refresh_from_db()
+        self.assertEqual(user.location, '')
+
+    def test_profile_location_update_preserves_existing_compound_and_unicode_names(self):
+        user = User.objects.create_user(
+            username='existing-member', email='demo@example.com',
+            first_name='Muhammad Rizky', last_name='García O’Connor',
+        )
+        self.client.force_login(user)
+        data = self.payload()
+        data.update(first_name=user.first_name, last_name=user.last_name,
+                    location='Bandung, Indonesia')
+
+        response = self.client.post(reverse('main:profile'), data)
+
+        self.assertEqual(response.status_code, 200, response.content)
+        user.refresh_from_db()
+        self.assertEqual(user.first_name, 'Muhammad Rizky')
+        self.assertEqual(user.last_name, 'García O’Connor')
+        self.assertEqual(user.location, 'Bandung, Indonesia')
+
+    def test_authenticated_user_can_access_saved_profile_from_account_menu(self):
+        user = User.objects.create_user(
+            username='internal', email='demo@example.com', location='Depok, Indonesia',
+            first_name='Demo', last_name='User', password=PASSWORD,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('main:show_main'))
+
+        self.assertContains(response, 'data-profile-open')
+        self.assertContains(response, '/static/js/main.js?v=21')
+        self.assertContains(response, 'Edit your profile')
+        self.assertContains(response, 'value="Demo"')
+        self.assertContains(response, 'value="User"')
+        self.assertContains(response, 'value="demo@example.com"')
+        self.assertContains(response, 'value="Depok, Indonesia"')
 
     def test_existing_username_admin_login_remains_supported(self):
         user = User.objects.create_superuser(username='admin', email='admin@example.com', password=PASSWORD)
@@ -494,6 +576,7 @@ class AuthReturnTests(TestCase):
         page = self.client.get(reverse('main:register'), {'next': destination}, follow=True)
         response = self.client.post(reverse('main:register'), {
             'first_name': 'New', 'last_name': 'Member', 'email': 'new-return@example.com',
+            'location': 'Depok, Indonesia',
             'password': PASSWORD, 'password_confirm': PASSWORD, 'next': page.context['auth_next'],
         })
         self.assertEqual(response.status_code, 201)
@@ -503,6 +586,7 @@ class AuthReturnTests(TestCase):
     def test_registration_rejects_an_external_return_destination(self):
         response = self.client.post(reverse('main:register'), {
             'first_name': 'New', 'last_name': 'Member', 'email': 'unsafe-return@example.com',
+            'location': 'Depok, Indonesia',
             'password': PASSWORD, 'password_confirm': PASSWORD, 'next': 'https://evil.example/',
         })
         self.assertEqual(response.status_code, 201)
