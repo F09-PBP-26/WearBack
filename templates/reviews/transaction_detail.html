@@ -1,10 +1,11 @@
-{% extends 'reviews/transaction_preview.html' %}
+{% extends 'reviews/layout.html' %}
 
 {% block title %}Order #{{ order.order_number|default:order.pk }} | WearBack{% endblock %}
 
 {% block content %}
 <main class="review-main">
   <a class="review-back" href="{% url 'main:transaction_history' %}">← Back to transactions</a>
+  <a class="review-back" href="{% url 'reviews:list' %}">My reviews →</a>
   <header class="review-heading">
     <div>
       <h1>Order #{{ order.order_number|default:order.pk }}</h1>
@@ -51,11 +52,9 @@
 
   <section class="review-rating-section" aria-labelledby="rating-title">
     <h2 id="rating-title">Rate your items</h2>
-    {% if order.status == 'delivered' %}
-    <p>You can leave a review once your purchase is marked as completed.</p>
-    {% else %}
-    <p>Reviews are not available for this order yet. Please check back later.</p>
-    {% endif %}
+    <p>Share how your purchase worked out. Your feedback helps the next owner.</p>
+    <p data-review-message role="status" aria-live="polite"></p>
+    <div id="review-editor">{% include 'reviews/components/editor.html' %}</div>
   </section>
 </main>
 {% endblock %}

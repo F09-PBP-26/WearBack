@@ -1,0 +1,11 @@
+{% extends 'reviews/layout.html' %}
+{% block content %}
+<main class="review-main">
+  <h1>Delete your review?</h1>
+  <p>Your {{ review.rating }}-star review for {{ review.transaction.item_name }} will be removed.</p>
+  <form method="post" class="review-panel review-card">{% csrf_token %}
+    <button class="review-delete" type="submit">Delete review</button>
+    <a class="review-back" href="{% url 'reviews:list' %}">Cancel</a>
+  </form>
+</main>
+{% endblock %}

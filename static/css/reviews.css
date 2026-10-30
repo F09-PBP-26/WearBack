@@ -61,6 +61,23 @@
 .review-comment > span { position: absolute; right: 12px; bottom: 12px; color: #6e7c70; font-size: 10px; pointer-events: none; }
 .review-submit { width: 100%; margin-top: 16px; padding: 12px; border: 0; border-radius: 8px; background: #283f32; color: #fff; font-size: 12px; font-weight: 600; }
 .review-main button:disabled { cursor: not-allowed; }
+.review-main > .review-back + .review-back { float: right; }
+.review-card form { margin-top: 20px; }
+.review-errors { padding: 12px; margin-block: 12px; border: 1px solid #a33a2a; border-radius: 8px; color: #812d20; background: #fff3ef; }
+.review-delete { padding: 10px 14px; border: 1px solid #a33a2a; border-radius: 8px; color: #812d20; background: white; cursor: pointer; font: inherit; }
+.review-submit { cursor: pointer; }
+.review-submit:focus-visible, .review-delete:focus-visible, .review-back:focus-visible { outline: 2px solid #b37353; outline-offset: 3px; }
+.review-filters { padding: 20px; margin: 0 0 24px; }
+.review-filters label { display: block; margin-bottom: 8px; }
+.review-filters input, .review-filters select { width: 100%; min-height: 44px; padding: 8px; border: 1px solid #dce3d9; border-radius: 6px; background: white; font: inherit; }
+.review-filters .review-submit { width: auto; margin: 0 12px 0 0; }
+.review-result-count, [data-review-message] { margin-block: 16px; }
+.review-saved { height: 100%; overflow-wrap: anywhere; }
+.review-saved p { margin-block: 12px; white-space: pre-wrap; }
+.review-saved .review-back { display: inline-block; margin-right: 16px; }
+.review-score { color: #b37353; font-weight: 600; }
+.review-date { font-size: 12px; color: #6e7c70; }
+.review-pagination { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; margin-top: 24px; }
 @media (max-width: 950px) {
   .review-order-grid { grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; }
   .review-order, .review-summary, .review-card { padding: 20px; }
