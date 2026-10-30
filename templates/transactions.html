@@ -104,8 +104,8 @@
                 <button class="continue-payment" type="button" onclick="alert('Payment feature is coming soon!')">
                     Continue payment
                 </button>
-                {% elif transaction.status == "delivered" %}
-                <a class="check-details" href="{% url 'main:review_preview' %}">
+                {% elif transaction.status == "delivered" or transaction.status == "completed" %}
+                <a class="check-details" href="{% url 'main:transaction_review' transaction.pk %}">
                     Check details
                 </a>
                 {% endif %}

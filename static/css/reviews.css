@@ -21,6 +21,7 @@
 .review-order-item:nth-child(2) { border-top: 0; }
 .review-order-item:last-child { padding-bottom: 4px; }
 .review-order-item img, .review-card-product img { width: 100%; object-fit: contain; }
+.review-image-placeholder { display: grid; place-items: center; width: 84px; height: 84px; border-radius: 8px; background: #f5f5f0; color: #6e7c70; font-size: 32px; }
 .review-order-item h3 { font-size: 18px; font-weight: 600; }
 .review-order-item p { margin-top: 5px; color: #6e7c70; font-size: 13px; }
 .review-order-item strong { font-size: 18px; white-space: nowrap; }
