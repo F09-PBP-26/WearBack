@@ -1,0 +1,13 @@
+{% extends 'reviews/layout.html' %}
+{% block content %}
+<main class="review-main">
+  <a class="review-back" href="{% url 'main:transaction_history' %}">← Transactions</a>
+  <header class="review-heading"><div><h1>My reviews</h1><p>Your purchases. Your honest feedback.</p></div></header>
+  <form method="get" class="review-panel review-filters row g-3" data-review-filters>
+    {% for field in filter_form %}<div class="col-12 col-sm-6 col-lg-3"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+    <div class="col-12"><button class="review-submit" type="submit">Apply filters</button> <a class="review-back" href="{% url 'reviews:list' %}">Reset</a></div>
+  </form>
+  <p data-review-message role="status" aria-live="polite"></p>
+  <div id="review-results">{% include 'reviews/components/results.html' %}</div>
+</main>
+{% endblock %}

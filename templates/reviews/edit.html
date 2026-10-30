@@ -1,0 +1,9 @@
+{% extends 'reviews/layout.html' %}
+{% block content %}
+<main class="review-main">
+  <a class="review-back" href="{% url 'reviews:list' %}">← My reviews</a>
+  <header class="review-heading"><h1>{% if review %}Edit your review{% else %}Write a review{% endif %}</h1></header>
+  <p data-review-message role="status" aria-live="polite"></p>
+  <div id="review-editor">{% include 'reviews/components/editor.html' %}</div>
+</main>
+{% endblock %}

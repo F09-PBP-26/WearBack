@@ -15,6 +15,8 @@
     >My listings</a
   >
 
+  <a class="profile-menu-action" href="{% url 'reviews:list' %}">My reviews</a>
+
   {% if sso_enabled and not sso_linked %}
   <form action="{% url 'main:sso_link' %}" method="post">
     {% csrf_token %}

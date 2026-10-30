@@ -4,8 +4,17 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
+REVIEW_TAGS = ['Quality', 'Description', 'Delivery', 'Packaging']
+
+
+def validate_review_tags(value):
+    if (not isinstance(value, list) or any(not isinstance(tag, str) or tag not in REVIEW_TAGS for tag in value)
+            or len(value) != len(set(value))):
+        raise ValidationError('Choose valid, unique review highlights.')
+
+
 class Review(models.Model):
-    """Review foundation; no public submission endpoint is enabled yet.
+    """A verified buyer's review of a purchased product.
 
     Listing membership is checked against the product saved during checkout.
     Historical transactions without that relation cannot be reviewed.
@@ -26,6 +35,7 @@ class Review(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)],
     )
     comment = models.CharField(max_length=500, blank=True)
+    tags = models.JSONField(default=list, blank=True, validators=[validate_review_tags])
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
