@@ -437,7 +437,8 @@ def checkout_cart(request):
         cart_items = list(CartItem.objects
             .filter(buyer=request.user, id__in=item_ids, selected=True) 
             .select_related("listing", "listing__seller")
-            .select_for_update()
+            # PostgreSQL cannot lock the nullable side of these outer joins.
+            .select_for_update(of=("self",))
         )
 
         if not cart_items:
