@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import uuid4
 
 from django import forms
@@ -78,7 +79,7 @@ class BidForm(forms.Form):
         label='Your bid (Rp)',
         max_digits=12,
         decimal_places=2,
-        min_value=0.01,
+        min_value=Decimal('0.01'),
         widget=forms.TextInput(attrs={
             'inputmode': 'decimal',
             'autocomplete': 'off',
