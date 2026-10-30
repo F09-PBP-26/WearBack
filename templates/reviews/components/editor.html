@@ -1,0 +1,36 @@
+{% if can_review %}
+<div class="row g-4"><div class="col-12 col-md-8 col-lg-6">
+  <article class="review-panel review-card" data-review-card>
+    <h3>{{ order.item_name }}</h3>
+    {% if review %}<p>Your saved rating: {{ review.rating }}/5 · Updated {{ review.updated_at|date:'j F Y' }}</p>{% endif %}
+    <form action="{{ form_action }}" method="post" data-review-form>
+      {% csrf_token %}
+      {% if form.errors %}<div class="review-errors" role="alert">{{ form.non_field_errors }}{{ form.rating.errors }}{{ form.comment.errors }}{{ form.tags.errors }}</div>{% endif %}
+      <fieldset class="review-rating">
+        <legend>Your rating</legend>
+        <div class="review-stars">
+          {% for radio in form.rating %}
+          <label class="review-star">{{ radio.tag }}<span aria-hidden="true">★</span><span class="review-sr-only">{{ radio.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+      </fieldset>
+      <fieldset class="review-highlights"><legend>What stood out?</legend><div class="review-tags">
+        {% for checkbox in form.tags %}<label>{{ checkbox.tag }}<span>{{ checkbox.choice_label }}</span></label>{% endfor %}
+      </div></fieldset>
+      <div class="review-comment"><label class="review-sr-only" for="{{ form.comment.id_for_label }}">Your review</label>{{ form.comment }}<span data-review-count>0 / 500</span></div>
+      <button class="review-submit" type="submit">{% if review %}Save changes{% else %}Submit review{% endif %}</button>
+    </form>
+    {% if review %}
+    <form action="{% url 'reviews:delete' review.pk %}" method="post" data-review-form data-confirm-delete>
+      {% csrf_token %}<button class="review-delete" type="submit">Delete review</button>
+    </form>
+    {% endif %}
+  </article>
+</div></div>
+{% elif order.status != 'completed' %}
+<p>You can leave a review once your purchase is marked as completed.</p>
+{% elif not order.listing_id %}
+<p>This order has no linked product, so a verified review is not available.</p>
+{% else %}
+<p>You cannot review your own product.</p>
+{% endif %}

@@ -1,0 +1,24 @@
+{% if filter_form.errors %}<div class="review-errors" role="alert">{{ filter_form.errors }}</div>{% endif %}
+<p class="review-result-count">{{ page_obj.paginator.count }} review{{ page_obj.paginator.count|pluralize }}{% if average != None %} · Average {{ average|floatformat:1 }}/5{% endif %}</p>
+<div class="row g-4">
+  {% for review in page_obj %}
+  <div class="col-12 col-md-6 col-lg-4"><article class="review-panel review-card review-saved">
+    <h2>{{ review.transaction.item_name }}</h2>
+    <p class="review-score">★ {{ review.rating }}/5</p>
+    <p>{{ review.comment|default:'No written comment.' }}</p>
+    <div class="review-tags">{% for tag in review.tags %}<span>{{ tag }}</span>{% endfor %}</div>
+    <p class="review-date">{{ review.created_at|date:'j F Y' }}</p>
+    {% if review.reviewer_id == request.user.pk %}
+    <a class="review-back" href="{% url 'reviews:edit' review.pk %}">Edit review</a>
+    <a class="review-back" href="{% url 'reviews:delete' review.pk %}">Delete review</a>
+    {% else %}<p>Verified purchase</p>{% endif %}
+  </article></div>
+  {% empty %}<div class="col-12"><p class="review-panel review-card">No reviews match your filters.</p></div>{% endfor %}
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="review-pagination" aria-label="Review pages">
+  {% if page_obj.has_previous %}<a data-review-page href="?{{ filter_query }}&amp;page={{ page_obj.previous_page_number }}">← Previous</a>{% endif %}
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a data-review-page href="?{{ filter_query }}&amp;page={{ page_obj.next_page_number }}">Next →</a>{% endif %}
+</nav>
+{% endif %}
