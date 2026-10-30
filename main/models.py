@@ -9,6 +9,7 @@ class User(AbstractUser):
 
     id = models.AutoField(primary_key=True)
     email = models.EmailField(blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, default='')
     groups = models.ManyToManyField(Group, blank=True, related_name='wearback_users', related_query_name='wearback_user')
     user_permissions = models.ManyToManyField(Permission, blank=True, related_name='wearback_users', related_query_name='wearback_user')
 

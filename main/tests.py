@@ -56,6 +56,7 @@ class CASClientTests(TestCase):
 class PasswordAuthTests(TestCase):
     def payload(self, **changes):
         return dict(first_name='Demo', last_name='User', email='demo@example.com',
+                    location='Depok, Indonesia',
                     password=PASSWORD, password_confirm=PASSWORD, **changes)
 
     def test_registration_hashes_password_and_starts_session(self):
@@ -66,6 +67,7 @@ class PasswordAuthTests(TestCase):
         user = User.objects.get(email='demo@example.com')
         self.assertTrue(user.check_password(PASSWORD))
         self.assertNotEqual(user.password, PASSWORD)
+        self.assertEqual(user.location, 'Depok, Indonesia')
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
         page = self.client.get(reverse('main:auction'))
         self.assertContains(page, 'Log out')
@@ -92,6 +94,16 @@ class PasswordAuthTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn('password', response.json()['errors'])
         self.assertIn('password_confirm', response.json()['errors'])
+        self.assertFalse(User.objects.exists())
+
+    def test_registration_requires_location(self):
+        data = self.payload()
+        del data['location']
+
+        response = self.client.post(reverse('main:register'), data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('location', response.json()['errors'])
         self.assertFalse(User.objects.exists())
 
     def test_email_login_and_logout(self):
@@ -142,8 +154,39 @@ class PasswordAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
         user.refresh_from_db()
         self.assertEqual(user.email, 'demo@example.com')
+        self.assertEqual(user.location, 'Depok, Indonesia')
         self.assertEqual(user.username, 'internal')
         self.assertFalse(user.has_usable_password())
+
+    def test_profile_requires_location(self):
+        user = User.objects.create_user(username='internal')
+        self.client.force_login(user)
+        data = self.payload()
+        del data['location']
+
+        response = self.client.post(reverse('main:profile'), data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('location', response.json()['errors'])
+        user.refresh_from_db()
+        self.assertEqual(user.location, '')
+
+    def test_authenticated_user_can_access_saved_profile_from_account_menu(self):
+        user = User.objects.create_user(
+            username='internal', email='demo@example.com', location='Depok, Indonesia',
+            first_name='Demo', last_name='User', password=PASSWORD,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('main:show_main'))
+
+        self.assertContains(response, 'data-profile-open')
+        self.assertContains(response, '/static/js/main.js?v=18')
+        self.assertContains(response, 'Edit your profile')
+        self.assertContains(response, 'value="Demo"')
+        self.assertContains(response, 'value="User"')
+        self.assertContains(response, 'value="demo@example.com"')
+        self.assertContains(response, 'value="Depok, Indonesia"')
 
     def test_existing_username_admin_login_remains_supported(self):
         user = User.objects.create_superuser(username='admin', email='admin@example.com', password=PASSWORD)

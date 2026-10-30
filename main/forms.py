@@ -11,10 +11,29 @@ class ProfileForm(forms.ModelForm):
     first_name = forms.CharField(max_length=150)
     last_name = forms.CharField(max_length=150)
     email = forms.EmailField(max_length=254)
+    location = forms.CharField(max_length=255)
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email']
+        fields = ['first_name', 'last_name', 'email', 'location']
+
+    def clean(self):
+        cleaned = super().clean()
+        first_name = cleaned.get('first_name', '')
+        last_name = cleaned.get('last_name', '')
+
+        print(first_name)
+        for char in first_name:
+            if not ('a' <= char <= 'z' or 'A' <= char <= 'Z'):
+                self.add_error('first_name', "Hanya boleh berisi huruf")
+                break
+
+        for char in last_name:
+            if not ('a' <= char <= 'z' or 'A' <= char <= 'Z'):
+                self.add_error('last_name', "Hanya boleh berisi huruf")
+                break
+
+        return cleaned
 
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
@@ -36,7 +55,7 @@ class RegisterForm(ProfileForm):
         if password and password != cleaned.get('password_confirm'):
             self.add_error('password_confirm', 'Passwords do not match.')
         if password:
-            user = User(**{key: cleaned.get(key, '') for key in ['first_name', 'last_name', 'email']})
+            user = User(**{key: cleaned.get(key, '') for key in ['first_name', 'last_name', 'email', 'location']})
             try:
                 password_validation.validate_password(password, user)
             except ValidationError as errors:
