@@ -517,7 +517,25 @@
 
   var catalog = document.querySelector(".catalog-grid");
   if (search && catalog) {
-    var items = catalog.querySelectorAll(".catalog-item");
+    var items = Array.from(catalog.querySelectorAll(".catalog-item"));
+    var catalogSort = document.querySelector("[data-catalog-sort]");
+    if (catalogSort) {
+      catalogSort.addEventListener("change", function () {
+        var direction = catalogSort.value === "price-desc" ? -1 : 1;
+        items.slice().sort(function (first, second) {
+          var originalOrder = items.indexOf(first) - items.indexOf(second);
+          if (catalogSort.value === "newest") return originalOrder;
+          var firstPrice = parseFloat(first.dataset.catalogPrice);
+          var secondPrice = parseFloat(second.dataset.catalogPrice);
+          // Keep unpriced listings after priced items in either direction.
+          if (Number.isNaN(firstPrice)) return Number.isNaN(secondPrice) ? originalOrder : 1;
+          if (Number.isNaN(secondPrice)) return -1;
+          return (firstPrice - secondPrice) * direction || originalOrder;
+        }).forEach(function (item) {
+          catalog.appendChild(item);
+        });
+      });
+    }
     var empty = document.querySelector(".catalog-empty");
     var catalogSection = document.getElementById("catalog");
     var searchScrollTimer;
