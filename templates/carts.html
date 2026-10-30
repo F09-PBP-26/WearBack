@@ -17,6 +17,7 @@
 
 {% block content %}
 <main class="cart-main">
+    {% include 'components/listing-notices.html' %}
     <a class="browse-link" href="{% url 'main:show_main' %}"> ← Continue shopping </a>
 
     <header class="cart-header">
