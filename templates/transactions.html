@@ -62,7 +62,8 @@
                 </div>
 
                 <div class="transaction-item-info">
-                    <h3>{{ transaction.item_summary|default:transaction.item_name }}</h3>
+                    <h3>{{ transaction.item_name }}</h3>
+                    <p>{{ transaction.item_summary }}</p>
                     <p>
                         {{ transaction.item_count }}
                         item{% if transaction.item_count != 1 %}s{% endif %}
