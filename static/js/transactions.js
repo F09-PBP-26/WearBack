@@ -13,6 +13,11 @@ function updatePaymentCountdowns() {
         if (remaining <= 0) {
             element.textContent = "Payment time expired";
             element.classList.add("payment-expired");
+            const paymentCard = element.closest(".payment-card");
+            if (paymentCard) {
+                paymentCard.querySelector("#pay-now-button").disabled = true;
+                paymentCard.querySelector("#payment-help").textContent = "Payment time expired. Return to transactions to place a new order.";
+            }
             return;
         }
 

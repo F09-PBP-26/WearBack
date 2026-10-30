@@ -1,5 +1,5 @@
 {% extends 'listings/seller-base.html' %}
-{% load static %}
+{% load static humanize tz %}
 
 {% block title %}Seller dashboard – WearBack{% endblock title %}
 {% block seller_content %}
@@ -42,17 +42,57 @@
       {% endif %}
     </section>
     <section class="seller-panel seller-shipping" aria-labelledby="shipping-title">
-      <header class="seller-section-heading"><h2 id="shipping-title">Ready to ship</h2><span class="seller-badge">0 orders</span></header>
-      <p class="seller-muted">Give these items their next home.</p>
-      <div class="seller-shipping-empty"><h3>No orders to ship yet</h3><p>Orders will appear here when checkout is available.</p><button class="item-primary-action" type="button" data-dialog-open="shipping-demo-dialog">Try Insta ship demo</button></div>
-      <p class="seller-help">Demo: Insta ship opens a shipping confirmation.</p>
+      <header class="seller-section-heading"><h2 id="shipping-title">Ready to ship</h2><span class="seller-badge">{{ ready_to_ship|length }} order{{ ready_to_ship|length|pluralize }}</span></header>
+      <p class="seller-muted">Payment is confirmed. Check the address, then confirm shipment with Insta ship.</p>
+      <ul class="seller-shipping-list">
+        {% for order in ready_to_ship %}
+          <li class="seller-order-card">
+            <div class="seller-order-heading"><strong>Order #{{ order.order_number|default:order.pk }}</strong><span class="seller-badge">Paid</span></div>
+            <h3>{{ order.item_name }}</h3>
+            <p>{{ order.item_count }} item{{ order.item_count|pluralize }} · Rp{{ order.price|intcomma }}</p>
+            <dl class="seller-order-address">
+              <dt>Deliver to</dt>
+              <dd>{{ order.buyer.get_full_name|default:order.buyer.username }}</dd>
+              <dd>{{ order.dropoff_location.address|default:'No drop-off address saved.' }}</dd>
+            </dl>
+            {% if order.dropoff_location %}
+              <form method="post" action="{% url 'listings:ship_order' order.pk %}">
+                {% csrf_token %}
+                <button class="item-primary-action" type="submit" data-dialog-open="ship-order-{{ order.pk }}">Insta ship</button>
+              </form>
+              <dialog class="item-delete-dialog seller-shipping-dialog" id="ship-order-{{ order.pk }}" aria-labelledby="ship-title-{{ order.pk }}" aria-describedby="ship-description-{{ order.pk }}" data-listing-dialog>
+                <span class="seller-badge">Order #{{ order.order_number|default:order.pk }} · Paid</span>
+                <h2 id="ship-title-{{ order.pk }}">Confirm shipment</h2>
+                <p id="ship-description-{{ order.pk }}">Mark {{ order.item_name }} as shipping to {{ order.buyer.get_full_name|default:order.buyer.username }}?</p>
+                <p class="seller-shipping-destination">{{ order.dropoff_location.address }}</p>
+                <p class="seller-help">Confirm once you have dispatched this order. Insta ship updates the order status; it does not book a courier.</p>
+                <form class="seller-shipping-actions" method="post" action="{% url 'listings:ship_order' order.pk %}">
+                  {% csrf_token %}
+                  <button class="item-secondary-action" type="button" data-dialog-close autofocus>Cancel</button>
+                  <button class="item-primary-action" type="submit">Confirm shipment</button>
+                </form>
+              </dialog>
+            {% else %}
+              <p class="seller-help">A saved drop-off address is required before shipping.</p>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="seller-shipping-empty"><h3>No orders to ship yet</h3><p>Paid orders appear here after buyers complete payment.</p></li>
+        {% endfor %}
+      </ul>
+      {% if recent_shipments %}
+        <h3 class="seller-shipped-heading">Recently shipped</h3>
+        <ul class="seller-shipping-list">
+          {% for order in recent_shipments %}
+            <li class="seller-order-card">
+              <div class="seller-order-heading"><strong>Order #{{ order.order_number|default:order.pk }}</strong><span class="seller-badge">Shipping</span></div>
+              <h3>{{ order.item_name }}</h3>
+              <p>Insta ship confirmed{% if order.shipped_at %} · {{ order.shipped_at|timezone:'Asia/Jakarta'|date:'j F Y, H:i' }} WIB{% endif %}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </section>
   </div>
-  <dialog class="item-delete-dialog seller-shipping-dialog" id="shipping-demo-dialog" aria-labelledby="shipping-demo-title" aria-describedby="shipping-demo-description" data-listing-dialog>
-    <span class="seller-badge">SHIPPING DEMO</span>
-    <h2 id="shipping-demo-title">Ready for its next home.</h2>
-    <p id="shipping-demo-description">Insta ship would mark this order as shipped. This demo does not book a courier or change an order.</p>
-    <button class="item-primary-action" type="button" data-dialog-close autofocus>Back to dashboard</button>
-  </dialog>
 </main>
 {% endblock seller_content %}

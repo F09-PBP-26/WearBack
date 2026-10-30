@@ -7,11 +7,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from listings.forms import ListingForm
 from listings.models import Listing
-from main.models import Bid
+from main.models import Bid, DropoffLocation, TransactionHistory
 from main.views import AUCTION_DURATION, BID_EXTENSION, _format_rupiah, page_context
 from reviews.models import Review
 
@@ -87,8 +87,36 @@ def mine(request):
             status__in=[Bid.Status.PENDING, Bid.Status.APPROVED],
         )),
     )
-    context.update(listings=listings, own_listings=True)
+    orders = TransactionHistory.objects.filter(listing__seller=request.user)
+    context.update(
+        listings=listings, own_listings=True,
+        ready_to_ship=orders.filter(status='paid').select_related('buyer', 'dropoff_location'),
+        recent_shipments=orders.filter(status='shipping').order_by('-shipped_at', '-pk')[:5],
+    )
     return render(request, 'listings/dashboard.html', context)
+
+
+@never_cache
+@login_required
+@require_POST
+def ship_order(request, transaction_id):
+    with transaction.atomic():
+        # Lock the order itself; ownership is checked against its listing's seller.
+        order = get_object_or_404(
+            TransactionHistory.objects.select_for_update(of=('self',)),
+            pk=transaction_id, listing__seller=request.user,
+        )
+        if order.status != 'paid':
+            messages.info(request, 'Only paid orders awaiting shipment can be shipped.')
+        elif not DropoffLocation.objects.filter(transaction=order).exists():
+            messages.error(request, 'This order needs a saved drop-off address before shipping.')
+        else:
+            order.status = 'shipping'
+            order.status_message = 'Seller confirmed shipment via Insta ship.'
+            order.shipped_at = timezone.now()
+            order.save(update_fields=['status', 'status_message', 'shipped_at', 'updated_at'])
+            messages.success(request, f'Order #{order.order_number or order.pk} is now shipping. Insta ship confirmed!')
+    return redirect('listings:mine')
 
 
 @never_cache
@@ -150,6 +178,9 @@ def delete(request, pk):
             if listing.reviews.exists():
                 messages.error(request, 'This listing has buyer reviews and cannot be deleted. Set its stock to 0 to stop selling it.')
                 return redirect('listings:detail', pk=listing.pk)
+            if listing.transactions.filter(status__in=['paid', 'shipping']).exists():
+                messages.error(request, 'This listing has paid orders awaiting delivery and cannot be deleted.')
+                return redirect('listings:mine')
             try:
                 with transaction.atomic():
                     listing.delete()
@@ -160,6 +191,9 @@ def delete(request, pk):
             messages.success(request, 'Listing deleted.')
             return redirect('listings:mine')
     listing = get_object_or_404(Listing, pk=pk, seller=request.user)
+    if listing.transactions.filter(status__in=['paid', 'shipping']).exists():
+        messages.error(request, 'This listing has paid orders awaiting delivery and cannot be deleted.')
+        return redirect('listings:mine')
     if listing.reviews.exists():
         messages.error(request, 'This listing has buyer reviews and cannot be deleted. Set its stock to 0 to stop selling it.')
         return redirect('listings:detail', pk=listing.pk)

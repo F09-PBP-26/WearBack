@@ -7,7 +7,7 @@
 {% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/transactions.css' %}">
+<link rel="stylesheet" href="{% static 'css/transactions.css' %}?v=3">
 <link rel="stylesheet" href="{% static 'css/style.css' %}?v=47">
 {% endblock page_css %}
 
@@ -17,6 +17,9 @@
 
 {% block content %}
 <main class="transaction-history">
+    {% for message in messages %}
+        <p class="transaction-notice" role="status">{{ message }}</p>
+    {% endfor %}
     <a class="browse-link" href="{% url 'main:show_main' %}"> ← Browse items </a>
 
     <header class="transaction-header">
@@ -44,6 +47,14 @@
                 {% elif transaction.status == "cancelled" %}
                     <span class="transaction-status status-cancelled">
                         Cancelled
+                    </span>
+                {% elif transaction.status == "paid" %}
+                    <span class="transaction-status status-paid">
+                        Awaiting shipment
+                    </span>
+                {% elif transaction.status == "shipping" %}
+                    <span class="transaction-status status-shipping">
+                        Shipping
                     </span>
                 {% else %}
                     <span class="transaction-status status-ongoing">
@@ -90,6 +101,10 @@
                         Purchase completed
                     {% elif transaction.status == "delivered" %}
                         Item delivered
+                    {% elif transaction.status == "paid" %}
+                        Payment confirmed · Waiting for the seller to ship
+                    {% elif transaction.status == "shipping" %}
+                        Seller confirmed shipment via Insta ship
                     {% elif transaction.status == "cancelled" %}
                         {% if transaction.status_message == "Payment time expired" %}
                             Awaiting payment · <span class="payment-expired">Payment time expired</span>
@@ -103,7 +118,11 @@
                 
                 {% if transaction.status == "ongoing" %}
                 <a class="set-dropoff-location" href="{% url 'main:dropoff' transaction.pk %}">
-                    Set drop-off location
+                    {% if transaction.dropoff_location %}Continue to payment{% else %}Set drop-off location{% endif %}
+                </a>
+                {% elif transaction.status == "paid" or transaction.status == "shipping" %}
+                <a class="check-details" href="{% url 'main:dropoff' transaction.pk %}">
+                    View shipping details
                 </a>
                 {% elif transaction.status == "delivered" or transaction.status == "completed" %}
                 <a class="check-details" href="{% url 'main:transaction_review' transaction.pk %}">
@@ -127,4 +146,4 @@
 </main>
 {% endblock content %}
 
-{% block page_js %} <script src="{% static 'js/transactions.js' %}?v=2"></script> {% endblock page_js %}
+{% block page_js %} <script src="{% static 'js/transactions.js' %}?v=3"></script> {% endblock page_js %}

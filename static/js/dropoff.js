@@ -1,4 +1,24 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const addressForm = document.getElementById("dropoff-form");
+    const paymentForm = document.getElementById("payment-form");
+    const payButton = document.getElementById("pay-now-button");
+    const paymentHelp = document.getElementById("payment-help");
+
+    if (addressForm && payButton && paymentHelp) {
+        function requireAddressSave() {
+            payButton.disabled = true;
+            paymentHelp.textContent = "Save your drop-off location to enable payment.";
+        }
+        addressForm.addEventListener("input", requireAddressSave);
+        addressForm.addEventListener("change", requireAddressSave);
+    }
+    if (paymentForm && payButton) {
+        paymentForm.addEventListener("submit", function () {
+            payButton.disabled = true;
+            payButton.textContent = "Confirming payment…";
+        });
+    }
+
     const previewElement = document.getElementById("dropoff-map");
     const modal = document.getElementById("location-modal");
     const pickerElement = document.getElementById("location-picker-map");
@@ -223,6 +243,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             latitudeInput.value = selectedLocation.lat.toFixed(6);
             longitudeInput.value = selectedLocation.lng.toFixed(6);
+            addressForm.dispatchEvent(new Event("change", {bubbles: true}));
             addressElement.textContent = addressInput.value.trim()
                 || "Selected location (" + coordinates + ")";
 
@@ -246,6 +267,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+
+    initializePreviewMap();
+
+    requestAnimationFrame(function () {
+        previewMap.invalidateSize();
+    });
+
+    if (selectedLocation) {
+        openButton.textContent = "Change";
+        captionElement.textContent = "Selected coordinates: " + formatCoordinates(selectedLocation);
+    }
+    if (openButton.disabled) return;
 
     openButton.addEventListener("click", openModal);
 
@@ -272,16 +305,6 @@ document.addEventListener("DOMContentLoaded", function () {
             closeModal();
         }
     });
-    initializePreviewMap();
-
-    requestAnimationFrame(function () {
-        previewMap.invalidateSize();
-    });
-
-    if (selectedLocation) {
-        openButton.textContent = "Change";
-        captionElement.textContent = "Selected coordinates: " + formatCoordinates(selectedLocation);
-    }
     addressInput.addEventListener("input", function () {
         addressElement.textContent = addressInput.value.trim() || "No address entered";
     });
