@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Exists, OuterRef
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -135,10 +136,22 @@ def delete(request, pk):
             if listing.bids.filter(status__in=[Bid.Status.PENDING, Bid.Status.APPROVED]).exists():
                 messages.error(request, 'This listing cannot be deleted after bidding has started.')
                 return redirect('listings:detail', pk=listing.pk)
-            listing.delete()
+            if listing.reviews.exists():
+                messages.error(request, 'This listing has buyer reviews and cannot be deleted. Set its stock to 0 to stop selling it.')
+                return redirect('listings:detail', pk=listing.pk)
+            try:
+                with transaction.atomic():
+                    listing.delete()
+            except ProtectedError:
+                # Also handle a protected relation added after the checks above.
+                messages.error(request, 'This listing is linked to protected records and cannot be deleted. Set its stock to 0 to stop selling it.')
+                return redirect('listings:detail', pk=listing.pk)
             messages.success(request, 'Listing deleted.')
             return redirect('listings:mine')
     listing = get_object_or_404(Listing, pk=pk, seller=request.user)
+    if listing.reviews.exists():
+        messages.error(request, 'This listing has buyer reviews and cannot be deleted. Set its stock to 0 to stop selling it.')
+        return redirect('listings:detail', pk=listing.pk)
     if listing.bids.filter(status__in=[Bid.Status.PENDING, Bid.Status.APPROVED]).exists():
         messages.error(request, 'This listing cannot be deleted after bidding has started.')
         return redirect('listings:detail', pk=listing.pk)
