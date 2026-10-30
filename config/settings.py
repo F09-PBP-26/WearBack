@@ -18,14 +18,6 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Midtrans Configuration
-MIDTRANS_IS_PRODUCTION = (
-    os.getenv("MIDTRANS_IS_PRODUCTION", "False").lower() == "true"
-)
-
-MIDTRANS_SERVER_KEY = os.getenv("MIDTRANS_SERVER_KEY")
-MIDTRANS_CLIENT_KEY = os.getenv("MIDTRANS_CLIENT_KEY")
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -50,10 +42,6 @@ CSRF_COOKIE_SECURE = PRODUCTION
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SECURE_SSL_REDIRECT = PRODUCTION
-
-#nambahin bagian POLICY buat map
-SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
-
 if os.getenv('TRUST_PROXY_HTTPS', 'false').lower() == 'true':
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

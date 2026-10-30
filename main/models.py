@@ -2,11 +2,10 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
-
-
 
 
 class User(AbstractUser):
@@ -48,20 +47,12 @@ class AuthThrottle(models.Model):
     attempts = models.PositiveIntegerField(default=0)
     expires_at = models.DateTimeField(db_index=True)
 
-
 class TransactionHistory(models.Model):
     STATUS_CHOICES = [
         ("ongoing", "Ongoing"),
         ("delivered", "Delivered"),
         ("completed", "Completed"),
         ("cancelled", "Cancelled"),
-    ]
-
-    PAYMENT_STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("paid", "Paid"),
-        ("failed", "Failed"),
-        ("expired", "Expired"),
     ]
 
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="transaction_histories")
@@ -73,44 +64,14 @@ class TransactionHistory(models.Model):
     item_name = models.CharField(max_length=255)
     item_image_url = models.URLField(blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=0)
-
-    # Status transaksi/pengiriman
-    status = models.CharField(
-        max_length=20,
-        choices=STATUS_CHOICES,
-        default="ongoing"
-    )
-
-    # Status pembayaran Midtrans
-    payment_status = models.CharField(
-        max_length=20,
-        choices=PAYMENT_STATUS_CHOICES,
-        default="pending"
-    )
-
-    # Mencegah pengurangan stok berulang
-    stock_deducted = models.BooleanField(default=False)
-
-    order_number = models.CharField(
-        max_length=20,
-        unique=True,
-        null=True,
-        blank=True
-    )
-
-    midtrans_token = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-
-    item_summary = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ongoing")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    order_number = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    item_summary = models.CharField(max_length=255, blank=True,)
     item_count = models.PositiveIntegerField(default=1)
     seller_name = models.CharField(max_length=255, blank=True)
     status_message = models.CharField(max_length=255, blank=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     payment_deadline = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -118,6 +79,22 @@ class TransactionHistory(models.Model):
 
     def __str__(self):
         return f"{self.item_name} - {self.get_status_display()}"
+
+
+class DropoffLocation(models.Model):
+    transaction = models.OneToOneField(
+        TransactionHistory, on_delete=models.CASCADE, related_name='dropoff_location',
+    )
+    address = models.CharField(max_length=500)
+    latitude = models.DecimalField(
+        max_digits=9, decimal_places=6,
+        validators=[MinValueValidator(-90), MaxValueValidator(90)],
+    )
+    longitude = models.DecimalField(
+        max_digits=9, decimal_places=6,
+        validators=[MinValueValidator(-180), MaxValueValidator(180)],
+    )
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class CartItem(models.Model):

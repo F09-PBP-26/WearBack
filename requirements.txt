@@ -4,4 +4,3 @@ psycopg2-binary
 python-dotenv
 whitenoise
 python-cas==1.7.2
-midtransclient

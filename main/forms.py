@@ -10,6 +10,21 @@ from listings.forms import RupiahField
 User = get_user_model()
 
 
+class DropoffLocationForm(forms.Form):
+    address = forms.CharField(
+        max_length=500, label='Drop-off address',
+        widget=forms.Textarea(attrs={'rows': 4, 'placeholder': 'Street, building, and delivery instructions'}),
+    )
+    latitude = forms.DecimalField(
+        min_value=-90, max_value=90, max_digits=9, decimal_places=6,
+        widget=forms.HiddenInput,
+    )
+    longitude = forms.DecimalField(
+        min_value=-180, max_value=180, max_digits=9, decimal_places=6,
+        widget=forms.HiddenInput,
+    )
+
+
 class ProfileForm(forms.ModelForm):
     first_name = forms.CharField(max_length=150)
     last_name = forms.CharField(max_length=150)

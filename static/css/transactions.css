@@ -155,7 +155,7 @@
     font-size: 13px;
 }
 
-.continue-payment, .check-details {
+.set-dropoff-location, .check-details {
     padding: 14px 21px;
     border: 0;
     border-radius: 9px;
@@ -191,6 +191,13 @@
     margin-top: 22px;
     color: var(--color-listing-muted);
     font-size: 13px;
+}
+
+.set-dropoff-location {
+    cursor: pointer;
+    opacity: 1;
+    text-align: center;
+    text-decoration: none;
 }
 
 .transaction-empty {
@@ -267,7 +274,7 @@
         flex-direction: column;
     }
 
-    .continue-payment {
+    .set-dropoff-location {
         width: 100%;
     }
 }

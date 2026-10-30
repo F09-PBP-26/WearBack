@@ -174,7 +174,7 @@
     }
 }
 
-/* ---------- Checkout page ---------- */
+/* ---------- Drop-off page ---------- */
 
 .checkout-page {
     width: calc(100% - 48px);
@@ -224,7 +224,7 @@
     line-height: 1.5;
 }
 
-.payment-status {
+.location-status {
     flex: none;
     padding: 7px 12px;
     border-radius: 5px;
@@ -441,113 +441,52 @@
     font-size: 12px;
 }
 
-/* ---------- Payment summary ---------- */
+/* ---------- Saved address form ---------- */
 
-.summary-card h2,
-.payment-card h2 {
-    margin-bottom: 18px;
-}
-
-.summary-row {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 15px;
-    font-size: 12px;
-}
-
-.summary-row span {
-    color: #7b857e;
-}
-
-.summary-row strong {
-    font-size: 12px;
-    font-weight: 500;
-    text-align: right;
-    white-space: nowrap;
-}
-
-.summary-total {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding-top: 16px;
-    border-top: 1px solid #e8eae4;
-    font-size: 16px;
-}
-
-/* ---------- Payment details ---------- */
-
-.payment-card label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 12px;
-}
-
-.payment-card select {
-    display: block;
-    width: 100%;
-    min-height: 40px;
-    padding: 10px 12px;
-    border: 1px solid #e2e6e0;
-    border-radius: 7px;
-    background: var(--color-white);
-    color: #53665a;
-    font: inherit;
-    font-size: 12px;
-}
-
-.virtual-account {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 14px;
-    padding: 15px;
-    border-radius: 8px;
-    background: #e9efe7;
-}
-
-.virtual-account span,
-.payment-timer span {
-    color: #7b857e;
-    font-size: 10px;
-}
-
-.virtual-account strong {
-    font-size: 16px;
-    overflow-wrap: anywhere;
-}
-
-.payment-instruction {
-    margin: 15px 0;
-    color: #7b857e;
-    font-size: 11px;
+.location-instruction {
+    margin: 14px 0;
+    color: #657365;
+    font-size: 13px;
     line-height: 1.6;
 }
 
-.payment-timer {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 13px;
-    border-radius: 8px;
-    background: #f5f5f0;
+.location-form-card label {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 13px;
 }
 
-.payment-timer strong {
-    font-size: 17px;
-}
-
-.confirm-payment {
+.location-form-card textarea {
     width: 100%;
-    margin-top: 14px;
-    padding: 13px;
+    padding: 12px;
+    border: 1px solid #d6dcd5;
+    border-radius: 8px;
+    font: inherit;
+    resize: vertical;
+}
+
+.save-location {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
     border: 0;
     border-radius: 8px;
-    background: var(--color-button);
-    color: var(--color-white);
+    background: var(--color-primary);
+    color: white;
     font: inherit;
+    cursor: pointer;
+}
+
+.location-notice {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #e8eee6;
+}
+
+.location-form-card .errorlist {
+    margin: 8px 0;
+    color: #a23d32;
     font-size: 12px;
 }
 

@@ -1,12 +1,8 @@
 from datetime import timedelta
 import secrets
 import time
-import midtransclient
 from urllib.parse import urlencode, urlparse
 from xml.etree.ElementTree import ParseError
-
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 
 from cas import CASError
 from django.conf import settings
@@ -29,8 +25,8 @@ from requests import RequestException
 
 from listings.models import Listing
 from main.auth_utils import throttled
-from main.forms import BidForm, LoginForm, ProfileForm, RegisterForm
-from main.models import Bid, CartItem, TransactionHistory
+from main.forms import BidForm, DropoffLocationForm, LoginForm, ProfileForm, RegisterForm
+from main.models import Bid, CartItem, DropoffLocation, TransactionHistory
 from main.sso import cas_client, resolve_identity
 
 
@@ -371,144 +367,23 @@ def sso_callback(request):
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect(safe_next(request, destination))
 
-#bagian dropoff
+
+@login_required
 @never_cache
-@login_required
+@require_http_methods(['GET', 'POST'])
 def dropoff_locations(request, transaction_id):
-    transaction = get_object_or_404(
-        TransactionHistory,
-        pk=transaction_id,
-        buyer=request.user
-    )
+    order = get_object_or_404(TransactionHistory, pk=transaction_id, buyer=request.user)
+    location = DropoffLocation.objects.filter(transaction=order).first()
+    initial = ({'address': location.address, 'latitude': location.latitude, 'longitude': location.longitude}
+               if location else {})
+    form = DropoffLocationForm(request.POST if request.method == 'POST' else None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        DropoffLocation.objects.update_or_create(transaction=order, defaults=form.cleaned_data)
+        messages.success(request, 'Drop-off location saved.')
+        return redirect('main:dropoff', transaction_id=order.pk)
     context = page_context(request)
-    context["transaction"] = transaction
-
-    subtotal = transaction.price
-    delivery_fee = 20000
-    total = subtotal + delivery_fee
-
-    context.update({
-        "subtotal": subtotal,
-        "delivery_fee": delivery_fee,
-        "total": total,
-    })
-    context["MIDTRANS_CLIENT_KEY"] = settings.MIDTRANS_CLIENT_KEY
-    return render(request, 'dropoff.html', context)
-
-#payment
-@login_required
-@require_POST
-def create_payment(request, transaction_id):
-    payment_transaction = get_object_or_404(
-        TransactionHistory,
-        pk=transaction_id,
-        buyer=request.user
-    )
-
-    # Pastikan transaksi masih dapat dibayar.
-    if payment_transaction.status != "ongoing":
-        return JsonResponse({
-            "success": False,
-            "message": "This transaction cannot be paid."
-        }, status=400)
-
-    if (
-        payment_transaction.payment_deadline
-        and payment_transaction.payment_deadline <= timezone.now()
-    ):
-        payment_transaction.status = "cancelled"
-        payment_transaction.status_message = "Payment time expired"
-        payment_transaction.save(
-            update_fields=["status", "status_message", "updated_at"]
-        )
-
-        return JsonResponse({
-            "success": False,
-            "message": "Payment deadline has expired."
-        }, status=400)
-
-    # Pastikan konfigurasi Midtrans tersedia.
-    if not settings.MIDTRANS_SERVER_KEY:
-        return JsonResponse({
-            "success": False,
-            "message": "Payment service is not configured."
-        }, status=503)
-
-    # Gunakan kembali token jika sudah pernah dibuat.
-    if payment_transaction.midtrans_token:
-        return JsonResponse({
-            "success": True,
-            "token": payment_transaction.midtrans_token
-        })
-
-    # Buat order number yang konsisten untuk transaksi ini.
-    if not payment_transaction.order_number:
-        payment_transaction.order_number = f"WB-{payment_transaction.pk}"
-        payment_transaction.save(update_fields=["order_number"])
-
-    # Hitung total dari database.
-    delivery_fee = 20000
-    total = int(payment_transaction.price) + delivery_fee
-
-    try:
-        snap = midtransclient.Snap(
-            is_production=settings.MIDTRANS_IS_PRODUCTION,
-            server_key=settings.MIDTRANS_SERVER_KEY
-        )
-
-        try:
-            validate_email(request.user.email)
-        except (ValidationError, TypeError):
-            return JsonResponse({
-                "success": False,
-                "message": "Please update your account with a valid email address."
-            }, status=400)
-
-        parameter = {
-            "transaction_details": {
-                "order_id": payment_transaction.order_number,
-                "gross_amount": total
-            },
-            "customer_details": {
-                "first_name": request.user.first_name or request.user.username,
-                "email": request.user.email,
-            },
-            "expiry": {
-                "unit": "minute",
-                "duration": 10
-            }
-        }
-
-        response = snap.create_transaction(parameter)
-
-        payment_transaction.midtrans_token = response["token"]
-        payment_transaction.save(update_fields=["midtrans_token"])
-
-        return JsonResponse({
-            "success": True,
-            "token": response["token"]
-        })
-
-    except midtransclient.MidtransAPIError as error:
-        print("MIDTRANS ERROR TYPE:", type(error))
-        print("MIDTRANS ERROR DETAIL:", vars(error))
-        print("MIDTRANS ERROR STRING:", str(error))
-
-        return JsonResponse({
-            "success": False,
-            "message": "Unable to create payment. Please try again."
-        }, status=502)
-
-    except Exception as error:
-        print("GENERAL PAYMENT ERROR:", repr(error))
-
-        return JsonResponse({
-            "success": False,
-            "message": "Unable to create payment. Please try again."
-        }, status=502)
-
-
-
+    context.update(transaction=order, form=form, dropoff_location=location)
+    return render(request, 'dropoff.html', context, status=400 if request.method == 'POST' else 200)
 
 
 # Transaction 
@@ -516,14 +391,12 @@ def create_payment(request, transaction_id):
 @never_cache
 def transaction_history(request):
     now = timezone.now()
-
     TransactionHistory.objects.filter(buyer=request.user, status="ongoing", payment_deadline__isnull=False, payment_deadline__lte=now).update(
             status="cancelled",
             status_message="Payment time expired",
             updated_at=now,
     )
     transactions = TransactionHistory.objects.filter(buyer=request.user).order_by("-created_at")
-    
     return render(request, "transactions.html", {**page_context(request), "transactions": transactions})
 
 # Carts

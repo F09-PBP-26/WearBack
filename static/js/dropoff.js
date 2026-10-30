@@ -13,7 +13,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const coordinatesElement = document.getElementById("selected-coordinates");
     const errorElement = document.getElementById("location-error");
 
+    const latitudeInput = document.getElementById("id_latitude");
+    const longitudeInput = document.getElementById("id_longitude");
+    const addressInput = document.getElementById("id_address");
+
     const requiredElements = [
+        latitudeInput,
+        longitudeInput,
+        addressInput,
         previewElement,
         modal,
         pickerElement,
@@ -26,20 +33,6 @@ document.addEventListener("DOMContentLoaded", function () {
         coordinatesElement,
         errorElement
     ];
-
-    // For Time
-    const orderDate = document.getElementById("order-date");
-
-    if (orderDate) {
-        const now = new Date();
-
-        orderDate.textContent = new Intl.DateTimeFormat("en-GB", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-            timeZone: "Asia/Jakarta"
-        }).format(now);
-    }
 
     if (requiredElements.some(element => !element)) {
         console.error(
@@ -56,7 +49,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // Default coordinates around Universitas Indonesia, Depok.
     const defaultLocation = L.latLng(-6.370375, 106.827413);
 
-    let selectedLocation = null;
+    const savedLatitude = Number(latitudeInput.value);
+    const savedLongitude = Number(longitudeInput.value);
+    let selectedLocation = latitudeInput.value.trim() && longitudeInput.value.trim()
+        && Number.isFinite(savedLatitude) && Math.abs(savedLatitude) <= 90
+        && Number.isFinite(savedLongitude) && Math.abs(savedLongitude) <= 180
+        ? {lat: savedLatitude, lng: savedLongitude} : null;
     let temporaryLocation = null;
 
     let previewMap = null;
@@ -167,21 +165,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     function updatePreview() {
-    initializePreviewMap();
+        initializePreviewMap();
 
-    const position = L.latLng(
-        selectedLocation.lat,
-        selectedLocation.lng
-    );
+        const position = L.latLng(
+            selectedLocation.lat,
+            selectedLocation.lng
+        );
 
-    previewMap.setView(position, 16);
-    previewMarker.setLatLng(position);
-    previewMarker.bindPopup("Selected drop-off location");
+        previewMap.setView(position, 16);
+        previewMarker.setLatLng(position);
+        previewMarker.bindPopup("Selected drop-off location");
 
-    requestAnimationFrame(function () {
-        previewMap.invalidateSize();
-    });
-}
+        requestAnimationFrame(function () {
+            previewMap.invalidateSize();
+        });
+    }
 
     function initializePreviewMap() {
         if (previewMap) return;
@@ -219,8 +217,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const coordinates =
                 formatCoordinates(selectedLocation);
 
-            addressElement.textContent =
-                "Selected location (" + coordinates + ")";
+            latitudeInput.value = selectedLocation.lat.toFixed(6);
+            longitudeInput.value = selectedLocation.lng.toFixed(6);
+            addressElement.textContent = addressInput.value.trim()
+                || "Selected location (" + coordinates + ")";
 
             captionElement.textContent =
                 "Selected coordinates: " + coordinates;
@@ -230,10 +230,6 @@ document.addEventListener("DOMContentLoaded", function () {
             closeModal();
             updatePreview();
 
-            console.log(
-                "Drop-off location selected:",
-                selectedLocation
-            );
         } catch (error) {
             console.error(
                 "Failed to confirm drop-off location:",
@@ -278,109 +274,11 @@ document.addEventListener("DOMContentLoaded", function () {
         previewMap.invalidateSize();
     });
 
-    console.log("Drop-off location picker initialized.");
-});
-
-
-// ========================================
-// MIDTRANS PAYMENT
-// ========================================
-
-document.addEventListener("DOMContentLoaded", function () {
-    const paymentButton = document.getElementById("confirm-payment");
-    const paymentMessage = document.getElementById("payment-message");
-    const paymentForm = document.getElementById("payment-form");
-
-    if (!paymentButton || !paymentForm) {
-        return;
+    if (selectedLocation) {
+        openButton.textContent = "Change";
+        captionElement.textContent = "Selected coordinates: " + formatCoordinates(selectedLocation);
     }
-
-    function getCsrfToken() {
-        const csrfInput = paymentForm.querySelector(
-            'input[name="csrfmiddlewaretoken"]'
-        );
-
-        return csrfInput ? csrfInput.value : "";
-    }
-
-    function showMessage(message) {
-        if (paymentMessage) {
-            paymentMessage.textContent = message;
-        }
-    }
-
-    paymentButton.addEventListener("click", async function () {
-        if (!window.snap) {
-            showMessage("Payment service is unavailable. Please refresh the page.");
-            return;
-        }
-
-        paymentButton.disabled = true;
-        paymentButton.textContent = "Preparing payment...";
-        showMessage("");
-
-        try {
-            const response = await fetch(
-                paymentButton.dataset.paymentUrl,
-                {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": getCsrfToken(),
-                        "Content-Type": "application/json"
-                    },
-                    credentials: "same-origin"
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success || !data.token) {
-                throw new Error(
-                    data.message || "Unable to prepare payment."
-                );
-            }
-
-            window.snap.pay(data.token, {
-                onSuccess: function () {
-                    showMessage(
-                        "Payment submitted successfully. Waiting for payment verification."
-                    );
-                    paymentButton.disabled = false;
-                    paymentButton.textContent = "Confirm Payment";
-                },
-
-                onPending: function () {
-                    showMessage(
-                        "Payment is pending. Please complete your payment."
-                    );
-                    paymentButton.disabled = false;
-                    paymentButton.textContent = "Confirm Payment";
-                },
-
-                onError: function () {
-                    showMessage(
-                        "Payment failed. Please try again."
-                    );
-                    paymentButton.disabled = false;
-                    paymentButton.textContent = "Confirm Payment";
-                },
-
-                onClose: function () {
-                    showMessage(
-                        "Payment window closed. You can continue payment later."
-                    );
-                    paymentButton.disabled = false;
-                    paymentButton.textContent = "Confirm Payment";
-                }
-            });
-
-        } catch (error) {
-            console.error("Midtrans payment error:", error);
-
-            showMessage(error.message || "An unexpected error occurred.");
-
-            paymentButton.disabled = false;
-            paymentButton.textContent = "Confirm Payment";
-        }
+    addressInput.addEventListener("input", function () {
+        addressElement.textContent = addressInput.value.trim() || "No address entered";
     });
 });

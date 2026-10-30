@@ -451,7 +451,6 @@ class ItemDetailTests(TestCase):
         self.assertContains(response, 'id="item-quantity"')
         self.assertContains(response, 'max="3"')
         self.assertContains(response, 'Add to cart')
-        self.assertContains(response, 'Add this item to your shopping cart.')
         self.assertContains(response, 'data-add-to-cart-form')
         self.assertContains(response, 'action="' + reverse('main:add_to_cart', args=[self.listing.pk]) + '"')
         self.assertContains(response, self.listing.contact_email)

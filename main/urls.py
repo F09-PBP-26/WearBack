@@ -20,6 +20,7 @@ urlpatterns = [
     # Transaction
     path("transactions/", views.transaction_history, name="transaction_history"),
     path('transactions/<int:transaction_id>/review/', transaction_review, name='transaction_review'),
+    path('dropoff/<int:transaction_id>/', views.dropoff_locations, name='dropoff'),
 
     # Cart
     path("cart/", views.cart, name="cart"),
@@ -30,8 +31,4 @@ urlpatterns = [
     path('sso/login/', views.sso_login, name='sso_login'),
     path('sso/callback/', views.sso_callback, name='sso_callback'),
     path('sso/link/', views.sso_link, name='sso_link'),
-    #path untuk dropoof 
-    path("dropoff/<int:transaction_id>/",views.dropoff_locations, name="dropoff"),
-    #payment
-    path("payment/create/<int:transaction_id>/",views.create_payment,name="create_payment"),   
 ]
