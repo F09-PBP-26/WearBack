@@ -6,27 +6,12 @@
 {% block body_class %}checkout-body{% endblock body_class %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/dropoff.css' %}?v=7">
+<link rel="stylesheet" href="{% static 'css/dropoff.css' %}?v=8">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 {% endblock page_css %}
 
 {% block nav_links %}
-<div class="nav-links" data-active-page="catalog">
-    <span class="nav-slider" aria-hidden="true"></span>
-
-    <a class="nav-link is-active"
-       data-menu="catalog"
-       href="{% url 'main:show_main' %}"
-       aria-current="page">
-        Catalog
-    </a>
-
-    <a class="nav-link"
-       data-menu="auction"
-       href="{% url 'main:auction' %}">
-        Auction
-    </a>
-</div>
+{% include 'components/guest-nav.html' with active_page='' %}
 {% endblock nav_links %}
 
 {% block content %}

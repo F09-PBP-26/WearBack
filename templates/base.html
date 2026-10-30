@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400&family=Instrument+Sans:wdth,wght@75..100,400..700&family=Instrument+Serif&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=10" />
+    <link rel="stylesheet" href="{% static 'css/base.css' %}?v=11" />
     <link rel="stylesheet" href="{% static 'css/login.css' %}?v=18" />
     {% block page_css %}{% endblock page_css %}
   </head>
@@ -43,7 +43,7 @@
       </button>
 
       <nav class="nav-menu" id="navbar-menu" aria-label="Main navigation">
-        {% block nav_links %}{% endblock nav_links %}
+        {% block nav_links %}{% include 'components/guest-nav.html' with active_page='' %}{% endblock nav_links %}
         <form class="search" role="search" onsubmit="return false;">
           <label class="search-label" for="site-search" hidden
             >Search items</label
@@ -52,7 +52,7 @@
             class="search-input"
             id="site-search"
             type="search"
-            placeholder="{% block search_placeholder %}Search 90s leather, Stüssy, Acne Studios, vintage denim...{% endblock search_placeholder %}"
+            placeholder="{% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}"
           />
           <img
             class="search-icon"

@@ -1,178 +1,6 @@
-
 /* ==========================================================================
    WearBack — Drop-off / Checkout
-   Navbar follows the existing catalog navbar styling.
    ========================================================================== */
-
-/* ---------- Navbar layout ---------- */
-
-.checkout-body .navbar {
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding-inline: clamp(1rem, 5.14vw, 4.625rem);
-    border-bottom: 1px solid #919090;
-    background: var(--color-white);
-}
-
-.checkout-body .nav-brand {
-    flex: none;
-}
-
-.checkout-body .nav-menu {
-    display: contents;
-}
-
-.checkout-body .search {
-    flex: 0 1 23.6875rem;
-    width: 100%;
-    max-width: 23.6875rem;
-    min-width: 0;
-    height: 2.5rem;
-    margin: 0;
-}
-
-.checkout-body .search-input {
-    height: 100%;
-    padding: 0 3.5rem 0 1.5rem;
-    border: 1px solid rgba(40, 57, 47, 0.2);
-    border-radius: var(--radius-button);
-    background: var(--color-field);
-    box-shadow:
-        0 0 10px 2px rgba(179, 115, 83, 0.12),
-        inset 2px 2px 5px rgba(40, 57, 47, 0.16),
-        inset -2px -2px 5px rgba(255, 255, 255, 0.8);
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    letter-spacing: 0.5px;
-}
-
-.checkout-body .search-icon {
-    top: calc(50% - 0.375rem);
-    right: 1.3125rem;
-    left: auto;
-}
-
-/* ---------- Catalog / Auction capsule ---------- */
-
-.checkout-body .nav-links {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: center;
-    justify-content: flex-start;
-    flex: none;
-    gap: 0;
-    margin-left: 0;
-    padding: var(--space-4);
-    border-radius: var(--radius-button);
-    outline: 1px solid rgba(40, 57, 47, 0.2);
-    outline-offset: -1px;
-    background: var(--color-field);
-    box-shadow:
-        0 0 10px 2px rgba(179, 115, 83, 0.16),
-        inset 2px 2px 5px rgba(40, 57, 47, 0.18),
-        inset -2px -2px 5px rgba(255, 255, 255, 0.75);
-}
-
-.checkout-body .nav-slider {
-    position: absolute;
-    top: var(--space-4);
-    bottom: var(--space-4);
-    left: var(--space-4);
-    width: calc((100% - 0.5rem) / 2);
-    border-radius: calc(var(--radius-button) - var(--space-4));
-    background: var(--color-accent);
-    box-shadow:
-        0 0 7px 1px rgba(222, 152, 116, 0.45),
-        inset 2px 2px 4px rgba(40, 57, 47, 0.18),
-        inset -2px -2px 4px rgba(255, 255, 255, 0.3);
-    pointer-events: none;
-    transition:
-        transform 240ms ease,
-        background-color 240ms ease,
-        box-shadow 240ms ease;
-}
-
-.checkout-body .nav-slider::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background:
-        radial-gradient(
-            ellipse at top left,
-            rgba(255, 255, 255, 0.45),
-            transparent 60%
-        ),
-        radial-gradient(
-            ellipse at bottom right,
-            rgba(255, 255, 255, 0.35),
-            transparent 60%
-        );
-    pointer-events: none;
-}
-
-.checkout-body .nav-links[data-active-page="auction"] .nav-slider {
-    transform: translateX(100%);
-    background: var(--color-primary);
-    box-shadow:
-        0 0 7px 1px rgba(40, 57, 47, 0.3),
-        inset 2px 2px 4px rgba(40, 57, 47, 0.18),
-        inset -2px -2px 4px rgba(255, 255, 255, 0.3);
-}
-
-.checkout-body .nav-link {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 4.5rem;
-    min-height: 2rem;
-    padding: 0 0.75rem;
-    border: 0;
-    border-radius: calc(var(--radius-button) - var(--space-4));
-    background: transparent;
-    color: var(--color-black);
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    font-weight: 400;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    transition:
-        background-color 160ms ease,
-        box-shadow 160ms ease;
-}
-
-.checkout-body .nav-link.is-active {
-    color: var(--color-card-text);
-    font-weight: 700;
-}
-
-.checkout-body .nav-links[data-active-page="auction"] .nav-link.is-active {
-    color: var(--color-white);
-}
-
-.checkout-body .nav-link:focus-visible {
-    outline: 2px solid var(--color-secondary);
-    outline-offset: 3px;
-}
-
-@media (hover: hover) {
-    .checkout-body .nav-link:hover {
-        background: rgba(222, 152, 116, 0.18);
-        box-shadow:
-            0 0 12px 2px rgba(179, 115, 83, 0.25),
-            inset 2px 2px 4px rgba(78, 33, 7, 0.1);
-    }
-}
-
-/* ---------- Navbar account actions ---------- */
-
-@media (min-width: 769px) {
-    .checkout-body .nav-menu > .nav-account {
-        margin-left: auto;
-    }
-}
 
 /* ---------- Drop-off page ---------- */
 
@@ -500,13 +328,6 @@
 
 /* ---------- Responsive ---------- */
 
-@media (max-width: 1100px) {
-    .checkout-body .navbar {
-        gap: 1rem;
-        padding-inline: 1rem;
-    }
-}
-
 @media (max-width: 850px) {
     .checkout-layout {
         grid-template-columns: minmax(0, 1fr);
@@ -516,38 +337,6 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         align-items: start;
-    }
-}
-
-@media (max-width: 768px) {
-    .checkout-body .navbar {
-        justify-content: space-between;
-    }
-
-    .checkout-body .nav-menu {
-        display: flex;
-    }
-
-    .checkout-body .nav-links {
-        flex: none;
-        justify-content: flex-start;
-        margin-left: 0;
-    }
-
-    .checkout-body .nav-menu.is-open {
-        max-height: 18rem;
-    }
-
-    .checkout-body .search {
-        flex: none;
-        max-width: none;
-        margin: 0;
-    }
-
-    .checkout-body .nav-category {
-        min-width: 4rem;
-        padding-inline: 0.5rem;
-        font-size: 0.875rem;
     }
 }
 
@@ -604,14 +393,7 @@
     }
 }
 
-/* ---------- Reduced motion ---------- */
 
-@media (prefers-reduced-motion: reduce) {
-    .checkout-body .nav-link,
-    .checkout-body .nav-slider {
-        transition: none;
-    }
-}
 
 
 
