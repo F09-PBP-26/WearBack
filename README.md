@@ -144,3 +144,7 @@ https://share.gemini.google/PdlA97Xb0Z0h "
 ### Albert Timmothy Ariajaya - 2506656381
 
 Saya menggunakan ChatGPT dan Claude untuk membantu pengerjaan modul Ulasan & Rating Penjual dalam Proyek Tengah Semester ini. AI membantu saya memahami kebutuhan modul, mempertimbangkan alur ulasan dan rating, serta mencari kemungkinan penyebab bug selama pengembangan. Saya meninjau dan menyesuaikan saran yang diberikan agar sesuai dengan kebutuhan proyek. Berikut tautan percakapan saya dengan Claude: [Claude](https://claude.ai/share/8144f8fe-a630-4219-add9-9f374e3b2f29).
+
+### Fathir Azka Dillafah - 2506539523
+
+Saya menggunakan ChatGPT dan Claude untuk membantu pengerjaan Proyek Tengah Semester ini. ChatGPT membantu saya membentuk struktur HTML, CSS, dan JavaScript serta melakukan debugging pada bagian transaksi dan keranjang belanja. Claude membantu saya membentuk struktur CSV dan mengubah tautan thumbnail Google Drive untuk data dummy.
