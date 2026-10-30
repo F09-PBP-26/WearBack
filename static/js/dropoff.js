@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function setTemporaryLocation(latlng) {
-        temporaryLocation = L.latLng(latlng.lat, latlng.lng);
+        temporaryLocation = L.latLng(latlng.lat, latlng.lng).wrap();
 
         coordinatesElement.textContent =
             formatCoordinates(temporaryLocation);
