@@ -20,6 +20,7 @@ urlpatterns = [
     # Transaction
     path("transactions/", views.transaction_history, name="transaction_history"),
     path('transactions/<int:transaction_id>/review/', transaction_review, name='transaction_review'),
+    path('dropoff/<int:transaction_id>/', views.dropoff_locations, name='dropoff'),
 
     # Cart
     path("cart/", views.cart, name="cart"),

@@ -25,8 +25,8 @@ from requests import RequestException
 
 from listings.models import Listing
 from main.auth_utils import throttled
-from main.forms import BidForm, LoginForm, ProfileForm, RegisterForm
-from main.models import Bid, CartItem, TransactionHistory
+from main.forms import BidForm, DropoffLocationForm, LoginForm, ProfileForm, RegisterForm
+from main.models import Bid, CartItem, DropoffLocation, TransactionHistory
 from main.sso import cas_client, resolve_identity
 
 
@@ -366,6 +366,25 @@ def sso_callback(request):
     if not link_user:
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect(safe_next(request, destination))
+
+
+@login_required
+@never_cache
+@require_http_methods(['GET', 'POST'])
+def dropoff_locations(request, transaction_id):
+    order = get_object_or_404(TransactionHistory, pk=transaction_id, buyer=request.user)
+    location = DropoffLocation.objects.filter(transaction=order).first()
+    initial = ({'address': location.address, 'latitude': location.latitude, 'longitude': location.longitude}
+               if location else {})
+    form = DropoffLocationForm(request.POST if request.method == 'POST' else None, initial=initial)
+    if request.method == 'POST' and form.is_valid():
+        DropoffLocation.objects.update_or_create(transaction=order, defaults=form.cleaned_data)
+        messages.success(request, 'Drop-off location saved.')
+        return redirect('main:dropoff', transaction_id=order.pk)
+    context = page_context(request)
+    context.update(transaction=order, form=form, dropoff_location=location)
+    return render(request, 'dropoff.html', context, status=400 if request.method == 'POST' else 200)
+
 
 # Transaction 
 @login_required
