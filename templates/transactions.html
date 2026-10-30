@@ -105,9 +105,9 @@
                     Continue payment
                 </button>
                 {% elif transaction.status == "delivered" %}
-                <button class="check-details" type="button" onclick="alert('Review feature is coming soon!')">
+                <a class="check-details" href="{% url 'main:review_preview' %}">
                     Check details
-                </button>
+                </a>
                 {% endif %}
             </div>
         </article>
