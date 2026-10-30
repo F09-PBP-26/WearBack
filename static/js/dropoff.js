@@ -103,6 +103,8 @@ document.addEventListener("DOMContentLoaded", function () {
             "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             {
                 maxZoom: 19,
+                // OSM requires a referrer; Django's same-origin default omits it.
+                referrerPolicy: "strict-origin-when-cross-origin",
                 attribution:
                     '&copy; <a href="https://www.openstreetmap.org/copyright">' +
                     "OpenStreetMap</a> contributors"
@@ -197,6 +199,8 @@ document.addEventListener("DOMContentLoaded", function () {
             "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             {
                 maxZoom: 19,
+                // Send only the site origin to OSM, without the order URL.
+                referrerPolicy: "strict-origin-when-cross-origin",
                 attribution:
                     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }
