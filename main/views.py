@@ -287,6 +287,7 @@ def checkout_cart(request):
 
             TransactionHistory.objects.create(
                 buyer=request.user,
+                listing=listing,
                 item_name=listing.name,
                 item_image_url=listing.image_url or "",
                 price=listing.price * item.quantity,
