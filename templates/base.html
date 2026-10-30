@@ -152,9 +152,13 @@
       </p>
     </footer>
 
-    {% include 'components/login.html' %} {% if request.user.is_authenticated %}
-    {% include 'components/cart.html' %} {% include
-    'components/profile-menu.html' %} {% endif %}
+    {% include 'components/login.html' %}
+
+    <!-- prettier-ignore -->
+    {% if request.user.is_authenticated %}
+      {% include 'components/cart.html' %}
+      {% include 'components/profile-menu.html' %}
+    {% endif %}
     <script src="{% static 'js/main.js' %}?v=20"></script>
     {% block page_js %}{% endblock page_js %}
   </body>

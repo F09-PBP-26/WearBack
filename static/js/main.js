@@ -76,27 +76,36 @@
   var profileMenu = document.getElementById("profile-menu");
 
   function positionProfileMenu() {
-    if (!profileMenu || !profileMenu.matches(":popover-open")) return;
-    var bounds = profileButton.getBoundingClientRect();
-    profileMenu.style.left =
-      Math.max(
-        8,
-        Math.min(
-          bounds.right - profileMenu.offsetWidth,
-          window.innerWidth - profileMenu.offsetWidth - 8,
-        ),
-      ) + "px";
-    profileMenu.style.top =
-      Math.max(
-        8,
-        Math.min(
-          bounds.bottom + 8,
-          window.innerHeight - profileMenu.offsetHeight - 8,
-        ),
-      ) + "px";
+    if (!profileMenu || !profileMenu.matches(":popover-open") || !profileButton)
+      return;
+    requestAnimationFrame(function () {
+      var bounds = profileButton.getBoundingClientRect();
+      profileMenu.style.left =
+        Math.max(
+          8,
+          Math.min(
+            bounds.right - profileMenu.offsetWidth,
+            window.innerWidth - profileMenu.offsetWidth - 8,
+          ),
+        ) + "px";
+      profileMenu.style.top =
+        Math.max(
+          8,
+          Math.min(
+            bounds.bottom + 8,
+            window.innerHeight - profileMenu.offsetHeight - 8,
+          ),
+        ) + "px";
+    });
   }
 
   if (profileButton && profileMenu) {
+    profileButton.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (typeof profileMenu.togglePopover === "function") {
+        profileMenu.togglePopover();
+      }
+    });
     profileMenu.addEventListener("toggle", positionProfileMenu);
     window.addEventListener("resize", positionProfileMenu);
   }
@@ -133,7 +142,8 @@
     var listItemDialog = document.getElementById(dialogId);
     var listItemTrigger = document.querySelector(openSelector);
     if (!listItemDialog || !listItemTrigger) return;
-    listItemTrigger.addEventListener("click", function () {
+    listItemTrigger.addEventListener("click", function (event) {
+      event.preventDefault(); // Mencegah tautan <a> berpindah halaman
       setOpen(false);
       listItemDialog.showModal();
       document.documentElement.classList.add("login-open");
