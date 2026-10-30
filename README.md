@@ -7,6 +7,7 @@ WearBack adalah platform marketplace pakaian preloved yang membantu pengguna men
 Proyek ini dibuat untuk memenuhi tugas **Proyek Tengah Semester - Pemrograman Berbasis Platform (CSGE602022)**, Fakultas Ilmu Komputer, Universitas Indonesia, Semester Gasal 2026/2027, dengan tema **Sustainable Living** (sub-tema: **Slow Fashion & Conscious Shopping**).
 
 ### Manfaat bagi Masyarakat
+
 - Mengurangi limbah tekstil dengan memperpanjang siklus pakai pakaian.
 - Membuka peluang penghasilan tambahan bagi penjual pakaian bekas.
 - Menyediakan alternatif belanja fashion yang lebih terjangkau dan berkelanjutan.
@@ -14,28 +15,28 @@ Proyek ini dibuat untuk memenuhi tugas **Proyek Tengah Semester - Pemrograman Be
 
 ## Anggota Kelompok
 
-| Nama | NPM |
-|---|---|
-| Niccola Geraldo Winaryo Durand | 2506619070 |
-| Fathir Azka Dillafah | 2506539523 |
-| Hudzaifah | 2506622840 |
+| Nama                                       | NPM        |
+| ------------------------------------------ | ---------- |
+| Niccola Geraldo Winaryo Durand             | 2506619070 |
+| Fathir Azka Dillafah                       | 2506539523 |
+| Hudzaifah                                  | 2506622840 |
 | Albert Timmothy Ariajaya (Project Manager) | 2506656381 |
-| Lynorexly Imanuel Tatipikalawan | 2506546932 |
+| Lynorexly Imanuel Tatipikalawan            | 2506546932 |
 
 ## Daftar Modul & Pembagian Kerja
 
-| No | Modul | Deskripsi | PIC |
-|---|---|---|---|
-| 1 | Manajemen Listing Pakaian | CRUD data listing pakaian preloved: unggah, edit, hapus, dan lihat detail pakaian yang dijual (nama, kategori, ukuran, kondisi, harga, foto). | Niccola Geraldo Winaryo Durand |
-| 2 | Transaksi & Pesanan | CRUD proses transaksi: pembuatan pesanan, update status pesanan (diproses/dikirim/selesai), riwayat transaksi pengguna. | Fathir Azka Dillafah |
-| 3 | Profil & Autentikasi Pengguna | CRUD data profil pengguna, sistem login/register, filter akses berbasis autentikasi (mis. data kontak hanya terlihat oleh pengguna yang sudah login). | Hudzaifah |
-| 4 | Ulasan & Rating Penjual | CRUD ulasan dan rating terhadap penjual/produk setelah transaksi selesai. | Albert Timmothy Ariajaya |
-| 5 | Lokasi Drop-off (Integrasi OpenStreetMap) | CRUD data titik drop-off/mitra pengiriman, ditampilkan di peta menggunakan data dari OpenStreetMap, dengan filter berdasarkan lokasi terdekat. | Lynorexly Imanuel Tatipikalawan |
+| No  | Modul                                     | Deskripsi                                                                                                                                             | PIC                             |
+| --- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 1   | Manajemen Listing Pakaian                 | CRUD data listing pakaian preloved: unggah, edit, hapus, dan lihat detail pakaian yang dijual (nama, kategori, ukuran, kondisi, harga, foto).         | Niccola Geraldo Winaryo Durand  |
+| 2   | Transaksi & Pesanan                       | CRUD proses transaksi: pembuatan pesanan, update status pesanan (diproses/dikirim/selesai), riwayat transaksi pengguna.                               | Fathir Azka Dillafah            |
+| 3   | Profil & Autentikasi Pengguna             | CRUD data profil pengguna, sistem login/register, filter akses berbasis autentikasi (mis. data kontak hanya terlihat oleh pengguna yang sudah login). | Hudzaifah                       |
+| 4   | Ulasan & Rating Penjual                   | CRUD ulasan dan rating terhadap penjual/produk setelah transaksi selesai.                                                                             | Albert Timmothy Ariajaya        |
+| 5   | Lokasi Drop-off (Integrasi OpenStreetMap) | CRUD data titik drop-off/mitra pengiriman, ditampilkan di peta menggunakan data dari OpenStreetMap, dengan filter berdasarkan lokasi terdekat.        | Lynorexly Imanuel Tatipikalawan |
 
 ## Sumber Data
 
 - **Public API eksternal:** [OpenStreetMap](https://www.openstreetmap.org/) digunakan untuk menampilkan dan mencari titik drop-off/mitra pengiriman pakaian terdekat berdasarkan lokasi pengguna.
-- **Data utama (listing pakaian, minimal 50 data):** Dataset sintetis yang dihasilkan menggunakan LLM, di-*seed* secara manual ke database (nama produk, kategori, ukuran, kondisi, harga, deskripsi).
+- **Data utama (listing pakaian, minimal 50 data):** Dataset sintetis yang dihasilkan menggunakan LLM, di-_seed_ secara manual ke database (nama produk, kategori, ukuran, kondisi, harga, deskripsi).
 
 ## Peran Pengguna
 
@@ -128,5 +129,14 @@ Untuk menambahkan banyak listing sekaligus, buka **Listings → Import CSV**. Un
 - Repositori Git: https://github.com/F09-PBP-26/WearBack
 - Desain Figma: https://ristek.link/PBP2026-F09-Figma
 - Tautan Deployment (PWS): https://hudzaifah51-wearback.pws.cs.ui.ac.id
+
 ---
-*Proyek Tengah Semester PBP Gasal 2026/2027 - Fakultas Ilmu Komputer Universitas Indonesia*
+
+_Proyek Tengah Semester PBP Gasal 2026/2027 - Fakultas Ilmu Komputer Universitas Indonesia_
+
+## AI Disclosure
+
+Hudzaifah - 2506622840
+
+"Saya menggunakan AI untuk membantu saya dalam mengerjakan Proyek Tengah Semester ini. AI yang saya pakai adalah Gemini 3.6 Flash dan Copilot. Saya juga menggunakan AI untuk membantu menemukan bug yang susah saya cari. Berikut link percakapan saya dengan Gemini
+https://share.gemini.google/PdlA97Xb0Z0h "
