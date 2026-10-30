@@ -1,0 +1,49 @@
+.listing-import .import-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.listing-import table {
+  width: 100%;
+}
+
+.listing-import th,
+.listing-import td {
+  vertical-align: top;
+}
+
+.listing-import details {
+  min-width: 180px;
+  max-width: 360px;
+  overflow-wrap: anywhere;
+}
+
+.listing-import summary {
+  cursor: pointer;
+}
+
+.listing-import dt {
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.listing-import dd {
+  margin-left: 0;
+}
+
+.listing-import .import-instructions p {
+  padding: 0 12px;
+}
+
+@media (max-width: 767px) {
+  .listing-import .flex-container {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .listing-import select,
+  .listing-import input[type="file"] {
+    max-width: 100%;
+  }
+}

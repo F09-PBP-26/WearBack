@@ -121,6 +121,8 @@ python manage.py runserver
 
 Buka [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) dan masuk menggunakan akun superuser yang baru dibuat untuk mengelola data melalui halaman admin Django.
 
+Untuk menambahkan banyak listing sekaligus, buka **Listings → Import CSV**. Unduh template, unggah CSV, periksa preview, lalu pilih **Confirm import**. Fitur ini mendukung hingga 500 item per unggahan, seller default atau username seller per baris, serta validasi seluruh file sebelum menyimpan. Lihat [panduan impor listing](docs/admin-listing-import.md), termasuk langkah deployment PWS.
+
 ## Tautan Terkait
 
 - Repositori Git: https://github.com/F09-PBP-26/WearBack

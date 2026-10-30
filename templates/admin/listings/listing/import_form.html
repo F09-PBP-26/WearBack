@@ -1,0 +1,38 @@
+{% extends "admin/listings/listing/import_base.html" %}
+
+{% block import_content %}
+  <p>Upload a CSV to add multiple listings. You will review the items before they are added.</p>
+  <p><a href="{% url 'admin:listings_listing_csv_template' %}">Download CSV template</a></p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <fieldset class="module aligned">
+      <h2>Upload items</h2>
+      {% for field in form %}
+        <div class="form-row{% if field.errors %} errors{% endif %}">
+          {{ field.errors }}
+          <div class="flex-container">{{ field.label_tag }} {{ field }}</div>
+          {% if field.help_text %}<div class="help"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+    <div class="submit-row">
+      <input type="submit" value="Preview items" class="default">
+      <a href="{% url 'admin:listings_listing_changelist' %}" class="closelink">Cancel</a>
+    </div>
+  </form>
+  <div class="module import-instructions">
+    <h2>Preparing your CSV</h2>
+    <ul>
+      <li>Use the template headings. Required columns: <code>{{ required_columns|join:", " }}</code>.</li>
+      <li>Each row needs a name, positive price, category, size, and condition. Blank stock defaults to 1; zero means unavailable.</li>
+      <li>Use an existing active username in <code>seller</code>, or leave it blank to use the default seller.</li>
+      <li>Prices can be plain numbers such as <code>75000</code> or rupiah amounts such as <code>75.000</code>. Quote values containing a comma, for example <code>"75.000,50"</code>.</li>
+      <li>Optional photo links must use HTTPS. Omit optional columns or leave their values blank.</li>
+      <li>Import up to 500 items in a UTF-8, comma-separated CSV of up to 2 MB.</li>
+      <li>Each import creates new listings. Importing the same file again as a new upload creates additional listings.</li>
+    </ul>
+    <p><strong>Category values:</strong> {% for value, label in categories %}<code>{{ value }}</code> ({{ label }}){% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+    <p><strong>Condition values:</strong> {% for value, label in conditions %}<code>{{ value }}</code> ({{ label }}){% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+  </div>
+{% endblock %}
