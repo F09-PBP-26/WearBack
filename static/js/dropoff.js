@@ -280,3 +280,107 @@ document.addEventListener("DOMContentLoaded", function () {
 
     console.log("Drop-off location picker initialized.");
 });
+
+
+// ========================================
+// MIDTRANS PAYMENT
+// ========================================
+
+document.addEventListener("DOMContentLoaded", function () {
+    const paymentButton = document.getElementById("confirm-payment");
+    const paymentMessage = document.getElementById("payment-message");
+    const paymentForm = document.getElementById("payment-form");
+
+    if (!paymentButton || !paymentForm) {
+        return;
+    }
+
+    function getCsrfToken() {
+        const csrfInput = paymentForm.querySelector(
+            'input[name="csrfmiddlewaretoken"]'
+        );
+
+        return csrfInput ? csrfInput.value : "";
+    }
+
+    function showMessage(message) {
+        if (paymentMessage) {
+            paymentMessage.textContent = message;
+        }
+    }
+
+    paymentButton.addEventListener("click", async function () {
+        if (!window.snap) {
+            showMessage("Payment service is unavailable. Please refresh the page.");
+            return;
+        }
+
+        paymentButton.disabled = true;
+        paymentButton.textContent = "Preparing payment...";
+        showMessage("");
+
+        try {
+            const response = await fetch(
+                paymentButton.dataset.paymentUrl,
+                {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": getCsrfToken(),
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "same-origin"
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success || !data.token) {
+                throw new Error(
+                    data.message || "Unable to prepare payment."
+                );
+            }
+
+            window.snap.pay(data.token, {
+                onSuccess: function () {
+                    showMessage(
+                        "Payment submitted successfully. Waiting for payment verification."
+                    );
+                    paymentButton.disabled = false;
+                    paymentButton.textContent = "Confirm Payment";
+                },
+
+                onPending: function () {
+                    showMessage(
+                        "Payment is pending. Please complete your payment."
+                    );
+                    paymentButton.disabled = false;
+                    paymentButton.textContent = "Confirm Payment";
+                },
+
+                onError: function () {
+                    showMessage(
+                        "Payment failed. Please try again."
+                    );
+                    paymentButton.disabled = false;
+                    paymentButton.textContent = "Confirm Payment";
+                },
+
+                onClose: function () {
+                    showMessage(
+                        "Payment window closed. You can continue payment later."
+                    );
+                    paymentButton.disabled = false;
+                    paymentButton.textContent = "Confirm Payment";
+                }
+            });
+
+        } catch (error) {
+            console.error("Midtrans payment error:", error);
+
+            showMessage(error.message || "An unexpected error occurred.");
+
+            paymentButton.disabled = false;
+            paymentButton.textContent = "Confirm Payment";
+        }
+    });
+});

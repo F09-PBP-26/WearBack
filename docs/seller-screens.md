@@ -4,6 +4,7 @@ The seller pages implement the [Seller Dashboard](https://www.figma.com/design/h
 
 - `/listings/mine/` shows only the signed-in seller's items, actual counts, prices, clothing details, detail links, and edit controls. Missing prices show “Needs details”; zero stock shows “Sold out.” There is no draft state in the model. An empty shop offers a first-item action.
 - `/listings/create/` and `/listings/<pk>/edit/` share the Figma photo sidebar and item-details card. The size dropdown preserves existing custom values, and prices display in Indonesian format without changing their stored value on an unchanged save.
+- New listings require price, category, size, and condition in addition to name. Required indicators and native browser attributes follow Django form metadata. Editing saved listings retains its previous optional-field behavior. See [listing validation](listing-validation.md).
 - Photo previews update from direct HTTPS URLs, with empty, loading, invalid-URL, and failed-image messages. Dashboard photos fall back to the local placeholder. Image uploads are not implemented.
 - Additional stock, brand, material, style, location, and published-contact fields remain available under “More item details.” The panel opens when one of its fields fails validation. Published contact visibility continues to follow the existing authentication rules.
 - Failed submissions retain entered values and show a focusable error summary with links to fields. Successful create/edit actions keep the existing redirect to item details and display a success notice. Save buttons prevent repeat submissions.
@@ -14,4 +15,4 @@ Shared seller markup lives in `templates/listings/seller-base.html` and the `sel
 
 No additional migration or dependency is needed for this redesign. Apply listing migration `0002` from the item-detail implementation when upgrading from the permissions milestone. Saved items appear in the [homepage catalog](catalog-integration.md), seller dashboard, and detail routes. `/listings/` redirects to the homepage catalog.
 
-Validation includes the complete 76-test Django suite, Django system/migration checks, JavaScript syntax checks, and desktop/mobile browser checks of the seller flows using an isolated test database.
+Validation includes the complete 81-test Django suite, Django system/migration checks, JavaScript syntax checks, and desktop/mobile browser checks of the seller flows using an isolated test database.

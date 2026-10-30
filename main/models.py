@@ -1,7 +1,12 @@
+from datetime import timedelta
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
+
+
 
 
 class User(AbstractUser):
@@ -41,3 +46,95 @@ class AuthThrottle(models.Model):
     key = models.CharField(max_length=64, primary_key=True)
     attempts = models.PositiveIntegerField(default=0)
     expires_at = models.DateTimeField(db_index=True)
+
+
+class TransactionHistory(models.Model):
+    STATUS_CHOICES = [
+        ("ongoing", "Ongoing"),
+        ("delivered", "Delivered"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    PAYMENT_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("paid", "Paid"),
+        ("failed", "Failed"),
+        ("expired", "Expired"),
+    ]
+
+    buyer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="transaction_histories"
+    )
+
+    listing = models.ForeignKey(
+        "listings.Listing",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="transaction_histories"
+    )
+
+    item_name = models.CharField(max_length=255)
+    item_image_url = models.URLField(blank=True)
+    price = models.DecimalField(max_digits=12, decimal_places=0)
+
+    # Status transaksi/pengiriman
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="ongoing"
+    )
+
+    # Status pembayaran Midtrans
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default="pending"
+    )
+
+    # Mencegah pengurangan stok berulang
+    stock_deducted = models.BooleanField(default=False)
+
+    order_number = models.CharField(
+        max_length=20,
+        unique=True,
+        null=True,
+        blank=True
+    )
+
+    midtrans_token = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    item_summary = models.CharField(max_length=255, blank=True)
+    item_count = models.PositiveIntegerField(default=1)
+    seller_name = models.CharField(max_length=255, blank=True)
+    status_message = models.CharField(max_length=255, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    payment_deadline = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.item_name} - {self.get_status_display()}"
+
+
+class CartItem(models.Model):
+    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="cart_items")
+
+    # Data item sementara
+    listing = models.ForeignKey("listings.Listing", on_delete=models.SET_NULL, null=True, blank=True, related_name="cart_items")
+    quantity = models.PositiveIntegerField(default=1)
+    selected = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.item_name} - {self.buyer}"

@@ -13,6 +13,88 @@ from main.models import SSOIdentity
 User = get_user_model()
 
 
+class RequiredListingFieldsTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.seller = User.objects.create_user(username='required-fields-seller', first_name='Item', last_name='Seller')
+        cls.legacy = Listing.objects.create(seller=cls.seller, name='Legacy scarf', stock=3)
+
+    def setUp(self):
+        self.client.force_login(self.seller)
+
+    def creation_data(self, **changes):
+        return {'name': 'Complete new scarf', 'price': '100.000', 'category': 'accessories',
+                'size': 'One size', 'condition': 'good', **changes}
+
+    def test_missing_empty_or_whitespace_required_values_do_not_create_a_listing(self):
+        for field in ('price', 'category', 'size', 'condition'):
+            for value in (None, '', '   '):
+                with self.subTest(field=field, value=value):
+                    payload = self.creation_data()
+                    if value is None:
+                        payload.pop(field)
+                    else:
+                        payload[field] = value
+                    response = self.client.post(reverse('listings:create'), payload)
+                    self.assertEqual(response.status_code, 200)
+                    self.assertIn(field, response.context['form'].errors)
+                    self.assertEqual(response.context['form']['name'].value(), payload['name'])
+                    self.assertEqual(Listing.objects.count(), 1)
+
+    def test_name_only_submission_shows_required_errors_and_retains_values(self):
+        response = self.client.post(reverse('listings:create'), {
+            'name': 'Unfinished scarf', 'description': 'Keep this description.', 'brand': 'Keep this brand',
+        })
+        form = response.context['form']
+        self.assertEqual(set(form.errors), {'price', 'category', 'size', 'condition'})
+        self.assertContains(response, 'Check your item details')
+        self.assertContains(response, 'This field is required.')
+        self.assertEqual(form['name'].value(), 'Unfinished scarf')
+        self.assertEqual(form['description'].value(), 'Keep this description.')
+        self.assertEqual(form['brand'].value(), 'Keep this brand')
+        self.assertEqual(Listing.objects.count(), 1)
+
+    def test_complete_creation_accepts_localized_prices_zero_stock_and_omitted_optional_fields(self):
+        for price, expected in (('100.000', Decimal('100000.00')), ('1.234.567,50', Decimal('1234567.50')),
+                                 ('25,75', Decimal('25.75'))):
+            with self.subTest(price=price):
+                response = self.client.post(reverse('listings:create'), self.creation_data(price=price, stock='0'))
+                listing = Listing.objects.latest('pk')
+                self.assertRedirects(response, reverse('listings:detail', args=[listing.pk]),
+                                     fetch_redirect_response=False)
+                self.assertEqual(listing.price, expected)
+                self.assertEqual(listing.seller, self.seller)
+                self.assertEqual(listing.stock, 0)
+                self.assertEqual(listing.image_url, '')
+                self.assertEqual(listing.contact_email, '')
+                self.assertFalse(listing.is_available)
+
+    def test_required_attributes_follow_create_or_edit_field_metadata(self):
+        create = self.client.get(reverse('listings:create'))
+        edit = self.client.get(reverse('listings:update', args=[self.legacy.pk]))
+        self.assertContains(create, 'Fields marked * are required.')
+        for field in ('price', 'category', 'size', 'condition'):
+            with self.subTest(field=field):
+                self.assertTrue(create.context['form'].fields[field].required)
+                self.assertIn(' required', str(create.context['form'][field]))
+                self.assertFalse(edit.context['form'].fields[field].required)
+                self.assertNotIn(' required', str(edit.context['form'][field]))
+
+    def test_legacy_listing_remains_viewable_and_editable_without_new_required_fields(self):
+        self.assertContains(self.client.get(reverse('main:show_main')), self.legacy.name)
+        detail_url = reverse('listings:detail', args=[self.legacy.pk])
+        self.assertContains(self.client.get(detail_url), 'Price not set')
+        response = self.client.post(reverse('listings:update', args=[self.legacy.pk]), {'name': 'Updated legacy scarf'})
+        self.assertRedirects(response, detail_url, fetch_redirect_response=False)
+        self.legacy.refresh_from_db()
+        self.assertEqual(self.legacy.name, 'Updated legacy scarf')
+        self.assertIsNone(self.legacy.price)
+        self.assertEqual(self.legacy.category, '')
+        self.assertEqual(self.legacy.size, '')
+        self.assertEqual(self.legacy.condition, '')
+        self.assertEqual(self.legacy.stock, 3)
+
+
 class SellerScreenTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -149,6 +231,7 @@ class ListingPermissionsTests(TestCase):
                 self.client.force_login(user)
                 response = self.client.post(reverse('listings:create'), {
                     'name': 'New listing by ' + user.username, 'description': 'Preloved clothing',
+                    'price': '100.000', 'category': 'outerwear', 'size': 'Medium', 'condition': 'good',
                     'contact_email': 'optional-contact@example.com',
                     'seller': self.staff.pk, 'seller_id': self.staff.pk,
                 })
@@ -231,7 +314,10 @@ class ListingPermissionsTests(TestCase):
         client.force_login(self.owner)
         client.get(reverse('listings:create'))
         token = client.cookies['csrftoken'].value
-        response = client.post(reverse('listings:create'), {'name': 'CSRF checked listing'}, HTTP_X_CSRFTOKEN=token)
+        response = client.post(reverse('listings:create'), {
+            'name': 'CSRF checked listing', 'price': '100.000', 'category': 'tops',
+            'size': 'Medium', 'condition': 'good',
+        }, HTTP_X_CSRFTOKEN=token)
         listing = Listing.objects.get(name='CSRF checked listing')
         self.assertEqual(response.status_code, 302)
         response = client.post(self.listing_url('update', listing.pk), {'name': 'Updated with token'},
@@ -265,7 +351,10 @@ class ListingPermissionsTests(TestCase):
         self.assertFalse(user.has_usable_password())
         SSOIdentity.objects.create(user=user, subject='listing-sso-member')
         self.client.force_login(user, backend='django.contrib.auth.backends.ModelBackend')
-        response = self.client.post(reverse('listings:create'), {'name': 'SSO member listing'})
+        response = self.client.post(reverse('listings:create'), {
+            'name': 'SSO member listing', 'price': '100.000', 'category': 'tops',
+            'size': 'Medium', 'condition': 'good',
+        })
         listing = Listing.objects.get(name='SSO member listing')
         self.assertRedirects(response, reverse('listings:detail', args=[listing.pk]))
         self.assertEqual(listing.seller, user)
@@ -314,7 +403,7 @@ class ItemDetailTests(TestCase):
         self.assertContains(response, 'id="item-quantity"')
         self.assertContains(response, 'max="3"')
         self.assertContains(response, 'Add to cart')
-        self.assertContains(response, 'Shopping cart is coming soon.')
+        self.assertContains(response, 'Add this item to your shopping cart.')
         self.assertContains(response, self.listing.contact_email)
         self.assertNotContains(response, self.seller.email)
         self.assertNotContains(response, 'delete-listing-dialog')
@@ -383,11 +472,13 @@ class ItemDetailTests(TestCase):
         self.client.force_login(self.seller)
         cases = [('price', '0'), ('price', '-10'), ('price', 'NaN'), ('price', '1.2345'),
                  ('stock', '-1'), ('stock', '10000'), ('stock', '1.5'),
-                 ('category', 'not-a-category'), ('condition', 'not-a-condition'),
+                 ('category', 'not-a-category'), ('condition', 'not-a-condition'), ('size', 'x' * 33),
                  ('image_url', 'javascript:alert(1)'), ('image_url', 'http://example.com/image.jpg')]
         for field, value in cases:
             with self.subTest(field=field, value=value):
-                response = self.client.post(reverse('listings:create'), {'name': 'Invalid item', field: value})
+                payload = {'name': 'Invalid item', 'price': '100.000', 'category': 'tops',
+                           'size': 'Medium', 'condition': 'good', field: value}
+                response = self.client.post(reverse('listings:create'), payload)
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(field, response.context['form'].errors)
                 self.assertFalse(Listing.objects.filter(name='Invalid item').exists())

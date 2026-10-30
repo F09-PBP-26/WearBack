@@ -1,16 +1,24 @@
+from datetime import timedelta
 import secrets
 import time
+import midtransclient
 from urllib.parse import urlencode, urlparse
 from xml.etree.ElementTree import ParseError
 
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
 from cas import CASError
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.crypto import constant_time_compare
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
@@ -21,8 +29,10 @@ from requests import RequestException
 from listings.models import Listing
 from main.auth_utils import throttled
 from main.forms import LoginForm, ProfileForm, RegisterForm
+from main.models import CartItem, TransactionHistory
 from main.sso import cas_client, resolve_identity
 
+from listings.models import Listing
 
 def safe_next(request, value):
     if value and url_has_allowed_host_and_scheme(value, {request.get_host()}, require_https=request.is_secure()):
@@ -211,7 +221,261 @@ def sso_callback(request):
 
 #bagian dropoff
 @never_cache
-@require_GET
-def dropoff_locations(request):
+@login_required
+def dropoff_locations(request, transaction_id):
+    transaction = get_object_or_404(
+        TransactionHistory,
+        pk=transaction_id,
+        buyer=request.user
+    )
     context = page_context(request)
+    context["transaction"] = transaction
+
+    subtotal = transaction.price
+    delivery_fee = 20000
+    total = subtotal + delivery_fee
+
+    context.update({
+        "subtotal": subtotal,
+        "delivery_fee": delivery_fee,
+        "total": total,
+    })
+    context["MIDTRANS_CLIENT_KEY"] = settings.MIDTRANS_CLIENT_KEY
     return render(request, 'dropoff.html', context)
+
+#payment
+@login_required
+@require_POST
+def create_payment(request, transaction_id):
+    payment_transaction = get_object_or_404(
+        TransactionHistory,
+        pk=transaction_id,
+        buyer=request.user
+    )
+
+    # Pastikan transaksi masih dapat dibayar.
+    if payment_transaction.status != "ongoing":
+        return JsonResponse({
+            "success": False,
+            "message": "This transaction cannot be paid."
+        }, status=400)
+
+    if (
+        payment_transaction.payment_deadline
+        and payment_transaction.payment_deadline <= timezone.now()
+    ):
+        payment_transaction.status = "cancelled"
+        payment_transaction.status_message = "Payment time expired"
+        payment_transaction.save(
+            update_fields=["status", "status_message", "updated_at"]
+        )
+
+        return JsonResponse({
+            "success": False,
+            "message": "Payment deadline has expired."
+        }, status=400)
+
+    # Pastikan konfigurasi Midtrans tersedia.
+    if not settings.MIDTRANS_SERVER_KEY:
+        return JsonResponse({
+            "success": False,
+            "message": "Payment service is not configured."
+        }, status=503)
+
+    # Gunakan kembali token jika sudah pernah dibuat.
+    if payment_transaction.midtrans_token:
+        return JsonResponse({
+            "success": True,
+            "token": payment_transaction.midtrans_token
+        })
+
+    # Buat order number yang konsisten untuk transaksi ini.
+    if not payment_transaction.order_number:
+        payment_transaction.order_number = f"WB-{payment_transaction.pk}"
+        payment_transaction.save(update_fields=["order_number"])
+
+    # Hitung total dari database.
+    delivery_fee = 20000
+    total = int(payment_transaction.price) + delivery_fee
+
+    try:
+        snap = midtransclient.Snap(
+            is_production=settings.MIDTRANS_IS_PRODUCTION,
+            server_key=settings.MIDTRANS_SERVER_KEY
+        )
+
+        try:
+            validate_email(request.user.email)
+        except (ValidationError, TypeError):
+            return JsonResponse({
+                "success": False,
+                "message": "Please update your account with a valid email address."
+            }, status=400)
+
+        parameter = {
+            "transaction_details": {
+                "order_id": payment_transaction.order_number,
+                "gross_amount": total
+            },
+            "customer_details": {
+                "first_name": request.user.first_name or request.user.username,
+                "email": request.user.email,
+            },
+            "expiry": {
+                "unit": "minute",
+                "duration": 10
+            }
+        }
+
+        response = snap.create_transaction(parameter)
+
+        payment_transaction.midtrans_token = response["token"]
+        payment_transaction.save(update_fields=["midtrans_token"])
+
+        return JsonResponse({
+            "success": True,
+            "token": response["token"]
+        })
+
+    except midtransclient.MidtransAPIError as error:
+        print("MIDTRANS ERROR TYPE:", type(error))
+        print("MIDTRANS ERROR DETAIL:", vars(error))
+        print("MIDTRANS ERROR STRING:", str(error))
+
+        return JsonResponse({
+            "success": False,
+            "message": "Unable to create payment. Please try again."
+        }, status=502)
+
+    except Exception as error:
+        print("GENERAL PAYMENT ERROR:", repr(error))
+
+        return JsonResponse({
+            "success": False,
+            "message": "Unable to create payment. Please try again."
+        }, status=502)
+
+
+
+
+
+# Transaction 
+@login_required
+@never_cache
+def transaction_history(request):
+    now = timezone.now()
+
+    TransactionHistory.objects.filter(buyer=request.user, status="ongoing", payment_deadline__isnull=False, payment_deadline__lte=now).update(
+            status="cancelled",
+            status_message="Payment time expired",
+            updated_at=now,
+    )
+    transactions = TransactionHistory.objects.filter(buyer=request.user).order_by("-created_at")
+    
+    return render(request, "transactions.html", {**page_context(request), "transactions": transactions})
+
+# Carts
+@login_required
+@never_cache
+def cart(request):
+    cart_items = CartItem.objects.filter(buyer=request.user).order_by("-created_at")
+    return render(request, "carts.html", {**page_context(request), "cart_items": cart_items})
+
+@login_required
+@require_POST
+def remove_cart_item(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id, buyer=request.user)
+    item.delete()
+
+    return JsonResponse({
+        "success": True,
+        "message": "Item removed successfully."
+    })
+
+# Logic
+@login_required
+@require_POST
+def checkout_cart(request):
+    selected_ids = request.POST.get("selected_cart_ids", "")
+
+    if not selected_ids:
+        return redirect("main:cart")
+
+    item_ids = list({int(item_id) for item_id in selected_ids.split(",") if item_id.strip()})
+
+    if not item_ids:
+        return redirect("main:cart")
+
+    deadline = timezone.now() + timedelta(minutes=10)
+
+    with transaction.atomic():
+        cart_items = list(CartItem.objects
+            .filter(buyer=request.user, id__in=item_ids, selected=True) 
+            .select_related("listing", "listing__seller")
+            .select_for_update()
+        )
+
+        if not cart_items:
+            return redirect("main:cart")
+
+        for item in cart_items:
+            listing = item.listing
+
+            if listing is None:
+                return redirect("main:cart")
+            if listing.price is None or listing.price <= 0:
+                return redirect("main:cart")
+            if item.quantity < 1 or item.quantity > listing.stock:
+                return redirect("main:cart")
+
+        for item in cart_items:
+            listing = item.listing
+
+            TransactionHistory.objects.create(
+                buyer=request.user,
+                item_name=listing.name,
+                item_image_url=listing.image_url or "",
+                price=listing.price * item.quantity,
+                status="ongoing",
+                item_count=item.quantity,
+                seller_name=listing.seller.get_full_name().strip(),
+                payment_deadline=deadline,
+                listing =listing,
+            )
+        CartItem.objects.filter(buyer=request.user, id__in=[item.id for item in cart_items]).delete()
+    return redirect("main:transaction_history")
+
+@login_required
+@require_POST
+def add_to_cart(request, listing_id):
+    listing = get_object_or_404(Listing, pk=listing_id)
+
+    if listing.stock <= 0:
+        return redirect("listings:detail", pk=listing.pk)
+    
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 0
+
+    if quantity < 1 or quantity > listing.stock:
+        return redirect("listings:detail", pk=listing.pk)
+
+    cart_item, created = CartItem.objects.get_or_create(
+        buyer=request.user,
+        listing=listing,
+        defaults={
+            "quantity": quantity,
+            "selected": True,
+        },
+    )
+
+    if not created:
+        new_quantity = cart_item.quantity + quantity
+        if new_quantity <= listing.stock:
+            cart_item.quantity = new_quantity
+            cart_item.save(update_fields=["quantity"])
+        else:
+            return redirect("listings:detail", pk=listing.pk)
+
+    return redirect("main:cart")

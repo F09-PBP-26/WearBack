@@ -139,6 +139,19 @@
     input.addEventListener('change', function () { updateQuantity(input.valueAsNumber); });
     input.addEventListener('blur', function () { updateQuantity(input.valueAsNumber); });
     updateQuantity(Number(input.value));
+
+    var cartForm = document.querySelector('[data-add-to-cart-form]');
+    var cartQuantity = cartForm ? cartForm.querySelector('[data-cart-quantity]') : null;
+
+    if (cartQuantity) {
+      function syncCartQuantity() {
+        cartQuantity.value = input.value;
+      }
+
+      input.addEventListener('input', syncCartQuantity);
+      input.addEventListener('change', syncCartQuantity);
+      syncCartQuantity();
+    }
   });
 
   document.querySelectorAll('[data-listing-dialog]').forEach(function (dialog) {

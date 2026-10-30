@@ -1,5 +1,6 @@
 
 {% extends 'base.html' %}
+{% load static humanize %}
 {% load static %}
 
 {% block title %}Complete Your Purchase | WearBack{% endblock title %}
@@ -53,43 +54,46 @@
             <section class="checkout-card items-card">
                 <div class="card-heading">
                     <h2>Items overview</h2>
-                    <span class="item-count">2 items</span>
+
+                    <span class="item-count">
+                        1 item
+                    </span>
                 </div>
 
                 <article class="product-item">
                     <div class="product-image">
-                        <span class="image-placeholder">Image</span>
+                        {% if transaction.item_image_url %}
+                            <img
+                                src="{{ transaction.item_image_url }}"
+                                alt="{{ transaction.item_name }}"
+                            >
+                        {% else %}
+                            <span class="image-placeholder">Image</span>
+                        {% endif %}
                     </div>
-                    <div class="product-info">
-                        <h3>Scarf Wool 1970's</h3>
-                        <p>Great condition · Size M · Wool</p>
-                        <p>Stock: 43</p>
-                        <strong>Rp300.000</strong>
-                    </div>
-                    <div class="quantity-control">
-                        <span>−</span>
-                        <span>2</span>
-                        <span>+</span>
-                    </div>
-                </article>
 
-                <article class="product-item">
-                    <div class="product-image">
-                        <span class="image-placeholder">Image</span>
-                    </div>
                     <div class="product-info">
-                        <h3>Celana Jeans Vintage R50</h3>
-                        <p>Vintage denim · Great condition</p>
-                        <p>Stock: 1</p>
-                        <strong>Rp1.000.000</strong>
+                        <h3>{{ transaction.item_name }}</h3>
+
+                        <p>
+                            {{ transaction.seller_name }}
+                        </p>
+
+                        <p>
+                            Quantity: {{ transaction.item_count }}
+                        </p>
+
+                        <strong>
+                            Rp{{ transaction.price|floatformat:0|intcomma }}
+                        </strong>
                     </div>
+
                     <div class="quantity-control">
-                        <span>−</span>
-                        <span>1</span>
-                        <span>+</span>
+                        <span>{{ transaction.item_count }}</span>
                     </div>
                 </article>
             </section>
+
 
             <section class="checkout-card address-card">
                 <div class="card-heading">
@@ -130,50 +134,41 @@
                 <h2>Payment summary</h2>
 
                 <div class="summary-row">
-                    <span>Subtotal (2 items)</span>
-                    <strong>Rp1.600.000</strong>
+                    <span>Subtotal</span>
+                    <strong>Rp{{ subtotal|intcomma}}</strong>
                 </div>
                 <div class="summary-row">
                     <span>Delivery fee</span>
-                    <strong>Rp15.000</strong>
+                    <strong>Rp{{ delivery_fee|intcomma }}</strong>
                 </div>
-                <div class="summary-row">
-                    <span>Tax (5%)</span>
-                    <strong>Rp80.000</strong>
-                </div>
-
+                
                 <div class="summary-total">
                     <strong>Total</strong>
-                    <strong>Rp1.695.000</strong>
+                    <strong>Rp{{ total|intcomma }}</strong>
                 </div>
             </section>
 
             <section class="checkout-card payment-card">
                 <h2>Payment details</h2>
 
-                <label for="payment-method">Payment method</label>
-                <select id="payment-method" disabled>
-                    <option>BCA (Virtual Account)</option>
-                </select>
-
-                <div class="virtual-account">
-                    <span>Virtual account number</span>
-                    <strong>8808 0674 2000 0268</strong>
-                </div>
-
                 <p class="payment-instruction">
-                    Transfer the exact total through your bank app or ATM,
-                    then confirm your payment below.
+                    Choose your preferred payment method through
+                    Midtrans secure payment.
                 </p>
+                <form id="payment-form">
+                    {% csrf_token %}
 
-                <div class="payment-timer">
-                    <span>Complete payment within</span>
-                    <strong>◷ 23:59:59</strong>
-                </div>
+                    <button
+                        id="confirm-payment"
+                        class="confirm-payment"
+                        type="button"
+                        data-payment-url="{% url 'main:create_payment' transaction.id %}"
+                    >
+                        Confirm Payment
+                    </button>
+                </form>
 
-                <button class="confirm-payment" type="button" disabled>
-                    Confirm payment
-                </button>
+                <p id="payment-message" role="status"></p>
             </section>
 
         </aside>
@@ -238,6 +233,11 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
 ></script>
+
+<script
+    src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="{{ MIDTRANS_CLIENT_KEY }}">
+</script>
 
 <script src="{% static 'js/dropoff.js' %}?v=1"></script>
 

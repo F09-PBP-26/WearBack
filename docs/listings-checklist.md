@@ -19,7 +19,7 @@ Work through these steps in order. Add tests alongside each behavior as you impl
 
 - [x] **6. Register `Listing` in Django admin.** Name, seller, price, stock, and creation time are displayed, with category/condition filters and search. Detail fields can be edited in the admin.
 
-- [x] **7. Create and validate `ListingForm`.** An explicit editable-field list excludes seller/timestamps. It supports the new detail fields, Indonesian-formatted prices, nonnegative stock, category/condition choices, and HTTPS photo URLs. Creation assigns the seller from `request.user`.
+- [x] **7. Create and validate `ListingForm`.** An explicit editable-field list excludes seller/timestamps. New seller-created listings require price, category, size, and condition in addition to name; existing edit behavior and database compatibility are preserved. It supports Indonesian-formatted prices, nonnegative stock, category/condition choices, and HTTPS photo URLs. Creation assigns the seller from `request.user`. See [listing validation](listing-validation.md).
 
 - [x] **8. Add named routes.** The `listings` namespace includes `index`, `create`, `detail`, `update`, `delete`, and `mine` under `/listings/`. The homepage catalog remains a separate route.
 
@@ -31,7 +31,7 @@ Work through these steps in order. Add tests alongside each behavior as you impl
 
 - [ ] **12. Prepare at least 50 sample listings.** This count comes from `README.md`. Use synthetic data with valid categories, sizes, conditions, prices, and seller relationships. A repeatable management command or fixture will make setup easier for teammates. Document how to load it; keep credentials and the local database out of Git.
 
-- [ ] **13. Extend verification as the remaining module work is implemented.** All 76 current tests pass, including ownership, detail viewer states, seller inventory isolation/availability, unchanged edit values, localized prices, validation, missing objects, and homepage catalog integration. Add coverage for sample-data loading and any future file uploads; use temporary storage for upload tests. Run:
+- [ ] **13. Extend verification as the remaining module work is implemented.** All 81 current tests pass, including required-field creation validation, legacy edit compatibility, ownership, detail viewer states, seller inventory isolation/availability, unchanged edit values, localized prices, missing objects, and homepage catalog integration. Add coverage for sample-data loading and any future file uploads; use temporary storage for upload tests. Run:
 
   ```powershell
   .\env\Scripts\python.exe manage.py check
