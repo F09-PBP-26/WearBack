@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from listings.models import Listing
-from main.models import TransactionHistory
+from main.models import CartItem, TransactionHistory
 from reviews.models import Review
 
 
@@ -18,7 +18,7 @@ class ReviewModelTests(TestCase):
         cls.other = user.objects.create_user(username='review-other')
         cls.listing = Listing.objects.create(seller=cls.seller, name='Denim jacket', price=100000)
         cls.order = TransactionHistory.objects.create(
-            buyer=cls.buyer, item_name='Denim jacket', price=100000, status='completed',
+            buyer=cls.buyer, listing=cls.listing, item_name='Denim jacket', price=100000, status='completed',
         )
 
     def make_review(self, **changes):
@@ -49,6 +49,19 @@ class ReviewModelTests(TestCase):
         self.make_review(comment='a' * 500).full_clean()
         with self.assertRaises(ValidationError):
             self.make_review(comment='a' * 501).full_clean()
+
+    def test_unpurchased_product_is_rejected_even_with_same_name(self):
+        other_listing = Listing.objects.create(seller=self.seller, name=self.listing.name, price=100000)
+        with self.assertRaises(ValidationError) as error:
+            self.make_review(listing=other_listing).full_clean()
+        self.assertIn('listing', error.exception.message_dict)
+
+    def test_historical_order_without_link_cannot_be_reviewed(self):
+        self.order.listing = None
+        self.order.save()
+        with self.assertRaises(ValidationError) as error:
+            self.make_review().full_clean()
+        self.assertIn('transaction', error.exception.message_dict)
 
     def test_only_transaction_buyer_can_review(self):
         with self.assertRaises(ValidationError) as error:
@@ -150,3 +163,52 @@ class TransactionReviewPageTests(TestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, 'delivered')
         self.assertFalse(Review.objects.exists())
+
+
+class CheckoutReviewLinkTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        user = get_user_model()
+        cls.buyer = user.objects.create_user(username='checkout-review-buyer')
+        cls.seller = user.objects.create_user(username='checkout-review-seller', first_name='Test', last_name='Seller')
+        cls.listing = Listing.objects.create(seller=cls.seller, name='Purchased jacket', price=150000, stock=3)
+
+    def test_checkout_links_each_order_and_keeps_snapshot(self):
+        second_listing = Listing.objects.create(seller=self.seller, name='Scarf', price=50000, stock=2)
+        first = CartItem.objects.create(buyer=self.buyer, listing=self.listing, quantity=2)
+        second = CartItem.objects.create(buyer=self.buyer, listing=second_listing, quantity=1)
+        self.client.force_login(self.buyer)
+        response = self.client.post(reverse('main:checkout_cart'), {
+            'selected_cart_ids': f'{first.pk},{second.pk}',
+        })
+        self.assertRedirects(response, reverse('main:transaction_history'), fetch_redirect_response=False)
+        orders = TransactionHistory.objects.filter(buyer=self.buyer)
+        self.assertEqual(orders.count(), 2)
+        order = orders.get(listing=self.listing)
+        self.assertEqual(order.price, 300000)
+        self.assertEqual(order.item_count, 2)
+        self.assertEqual(order.seller_name, 'Test Seller')
+        self.assertEqual(orders.get(listing=second_listing).price, 50000)
+        self.assertFalse(CartItem.objects.filter(pk__in=[first.pk, second.pk]).exists())
+        # Later product edits must not overwrite the purchased name or total.
+        self.listing.name = 'Renamed jacket'
+        self.listing.price = 999999
+        self.listing.save()
+        order.refresh_from_db()
+        self.assertEqual(order.item_name, 'Purchased jacket')
+        self.assertEqual(order.price, 300000)
+        order.status = 'completed'
+        order.save()
+        Review(transaction=order, listing=self.listing, reviewer=self.buyer, rating=5).full_clean()
+
+    def test_deleting_product_preserves_order_but_blocks_new_reviews(self):
+        order = TransactionHistory.objects.create(
+            buyer=self.buyer, listing=self.listing, item_name='Purchased jacket', price=150000, status='completed',
+        )
+        self.listing.delete()
+        order.refresh_from_db()
+        self.assertIsNone(order.listing_id)
+        self.assertEqual(order.item_name, 'Purchased jacket')
+        replacement = Listing.objects.create(seller=self.seller, name='Purchased jacket', price=150000)
+        with self.assertRaises(ValidationError):
+            Review(transaction=order, listing=replacement, reviewer=self.buyer, rating=5).full_clean()

@@ -54,6 +54,11 @@ class TransactionHistory(models.Model):
     ]
 
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="transaction_histories")
+    # Nullable for historical orders; keep their snapshot if a listing is deleted.
+    listing = models.ForeignKey(
+        'listings.Listing', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='transactions',
+    )
     item_name = models.CharField(max_length=255)
     item_image_url = models.URLField(blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=0)

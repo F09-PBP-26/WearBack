@@ -7,8 +7,8 @@ from django.db import models
 class Review(models.Model):
     """Review foundation; no public submission endpoint is enabled yet.
 
-    Before enabling submissions, verify listing membership against persisted
-    transaction items. TransactionHistory currently has no such relation.
+    Listing membership is checked against the product saved during checkout.
+    Historical transactions without that relation cannot be reviewed.
     Call full_clean() in the submission service (or use a ModelForm); ordinary
     Django save() does not run model validation.
     """
@@ -52,6 +52,10 @@ class Review(models.Model):
             pk=self.listing_id,
         ).first() if self.listing_id else None
         if order:
+            if not order.listing_id:
+                errors['transaction'] = 'This transaction has no linked product and cannot be reviewed.'
+            elif self.listing_id != order.listing_id:
+                errors['listing'] = 'You can only review the product purchased in this transaction.'
             if order.status != 'completed':
                 errors['transaction'] = 'Only completed transactions can be reviewed.'
             if self.reviewer_id and order.buyer_id != self.reviewer_id:
