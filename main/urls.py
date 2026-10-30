@@ -2,6 +2,7 @@ from django.urls import path
 
 from main import views
 from main.review_views import review_preview
+from reviews.views import transaction_review
 
 app_name = 'main'
 
@@ -16,6 +17,7 @@ urlpatterns = [
 
     # Transaction
     path("transactions/", views.transaction_history, name="transaction_history"),
+    path('transactions/<int:transaction_id>/review/', transaction_review, name='transaction_review'),
 
     # Cart
     path("cart/", views.cart, name="cart"),
