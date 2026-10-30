@@ -206,6 +206,12 @@
     margin-bottom: 0px;
 }
 
+.transaction-empty h2 {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 400;
+}
+
 .transaction-empty p {
     color: var(--color-listing-muted);
 }
