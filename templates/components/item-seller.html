@@ -2,7 +2,11 @@
   <h2 id="item-seller-title">About the seller</h2>
   <p class="item-seller-name">{{ listing.seller.get_full_name|default:'a WearBack member' }}</p>
   <div class="item-store-facts">
+    {% if seller_rating_count %}
+    <span>★ {{ seller_rating_average|floatformat:1 }} / 5 · {{ seller_rating_count }} review{{ seller_rating_count|pluralize }}</span>
+    {% else %}
     <span>No ratings yet</span>
+    {% endif %}
     <span>{{ seller_listing_count }} listing{{ seller_listing_count|pluralize }}</span>
   </div>
   <p class="item-muted">{{ listing.location|default:'Location not provided' }}</p>
