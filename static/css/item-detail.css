@@ -169,7 +169,12 @@
 }
 
 .item-purchase-actions form[data-add-to-cart-form] .item-primary-action {
-  width: 100%;
+    width: 100%;
+}
+
+.item-purchase-actions form[data-add-to-cart-form] .item-primary-action:hover {
+    background: var(--color-button);
+    border-color: var(--color-button);
 }
 
 .item-quantity-row,
