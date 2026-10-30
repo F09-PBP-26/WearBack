@@ -140,3 +140,7 @@ Hudzaifah - 2506622840
 
 "Saya menggunakan AI untuk membantu saya dalam mengerjakan Proyek Tengah Semester ini. AI yang saya pakai adalah Gemini 3.6 Flash dan Copilot. Saya juga menggunakan AI untuk membantu menemukan bug yang susah saya cari. Berikut link percakapan saya dengan Gemini
 https://share.gemini.google/PdlA97Xb0Z0h "
+
+Fathir Azka Dillafah - 2506539523
+
+"Saya menggunakan AI untuk membantu saya dalam mengerjakan Proyek Tengah Semester ini. AI yang saya pakai adalah ChatGPT dan Claude. Saya menggunakan ChatGPT untuk membantu dalam membentuk struktur html, css, js dan debugging pada bagian 'transactions' dan 'carts'. Sedangkan, penggunaan Claude membantu dalam membentuk struktur csv dan perubahan link drive thumbnail untuk data dummy."
