@@ -90,3 +90,40 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.item_name} - {self.buyer}"
+
+
+class Bid(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending seller approval'
+        APPROVED = 'approved', 'Approved'
+        REJECTED = 'rejected', 'Rejected'
+
+    listing = models.ForeignKey(
+        'listings.Listing', on_delete=models.CASCADE, related_name='bids',
+    )
+    bidder = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='bids',
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-amount', 'created_at', 'pk']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gt=0), name='bid_amount_positive'),
+            models.UniqueConstraint(
+                fields=['listing'],
+                condition=models.Q(status='pending'),
+                name='one_pending_bid_per_listing',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.listing} — {self.amount}'
+
+    @property
+    def amount_display(self):
+        formatted = f'{self.amount:,.2f}'.replace(',', '_').replace('.', ',').replace('_', '.')
+        return 'Rp' + (formatted[:-3] if formatted.endswith(',00') else formatted)

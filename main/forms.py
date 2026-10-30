@@ -4,6 +4,8 @@ from django import forms
 from django.contrib.auth import authenticate, get_user_model, password_validation
 from django.core.exceptions import ValidationError
 
+from listings.forms import RupiahField
+
 User = get_user_model()
 
 
@@ -69,3 +71,16 @@ class LoginForm(forms.Form):
             if self.user is None:
                 raise ValidationError('Email or password is incorrect.')
         return cleaned
+
+
+class BidForm(forms.Form):
+    amount = RupiahField(
+        label='Your bid (Rp)',
+        max_digits=12,
+        decimal_places=2,
+        min_value=0.01,
+        widget=forms.TextInput(attrs={
+            'inputmode': 'decimal',
+            'autocomplete': 'off',
+        }),
+    )

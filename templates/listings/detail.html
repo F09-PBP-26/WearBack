@@ -8,7 +8,7 @@
 {% block page_css %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'css/style.css' %}?v=46">
-  <link rel="stylesheet" href="{% static 'css/item-detail.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'css/item-detail.css' %}?v=4">
 {% endblock page_css %}
 
 {% block content %}
@@ -27,15 +27,22 @@
       <div class="item-purchase-actions">
         {% if can_manage %}
           <p class="item-availability">{% if listing.stock == 0 %}Sold out{% elif not listing.price %}Add a price to make this item available.{% else %}{{ listing.stock }} available{% endif %}</p>
-          <nav class="item-owner-actions" aria-label="Manage this listing">
-            <a class="item-primary-action" href="{% url 'listings:update' listing.pk %}">Edit listing</a>
-            <a class="item-secondary-action item-delete-link" href="{% url 'listings:delete' listing.pk %}" data-dialog-open="delete-listing-dialog">Delete listing</a>
-          </nav>
-          <p class="item-purchase-help">Keep your item details up to date for its next owner.</p>
+          {% if auction_bid_count or auction_has_pending_bid %}
+            <p class="item-purchase-help">{% if auction_has_pending_bid %}A buyer offer is waiting for your approval.{% else %}This listing is locked because bidding has started.{% endif %}</p>
+          {% else %}
+            <nav class="item-owner-actions" aria-label="Manage this listing">
+              <a class="item-primary-action" href="{% url 'listings:update' listing.pk %}">Edit listing</a>
+              <a class="item-secondary-action item-delete-link" href="{% url 'listings:delete' listing.pk %}" data-dialog-open="delete-listing-dialog">Delete listing</a>
+            </nav>
+            <p class="item-purchase-help">Keep your item details up to date for its next owner.</p>
+          {% endif %}
         {% elif not listing.is_available %}
           <p class="item-availability" role="status">{% if listing.stock == 0 %}This item is sold out.{% else %}This item isn’t ready to buy yet.{% endif %}</p>
           <button class="item-primary-action" type="button" disabled>{% if listing.stock == 0 %}Sold out{% else %}Currently unavailable{% endif %}</button>
           <p class="item-purchase-help">Browse other items to find your next preloved piece.</p>
+        {% elif auction_bid_count or auction_has_pending_bid %}
+          <p class="item-availability" role="status">{% if auction_has_pending_bid %}A bid is awaiting seller approval.{% else %}Bidding has started for this item.{% endif %}</p>
+          <p class="item-purchase-help">Checkout through the cart is paused while an offer is under review or the auction is active.</p>
         {% else %}
           <div class="item-quantity-row">
             <div><label for="item-quantity">Quantity</label><p class="item-muted">{{ listing.stock }} available</p></div>
@@ -61,6 +68,103 @@
       </div>
     </section>
   </div>
+  <section class="item-panel auction-bidding-panel" aria-labelledby="auction-bidding-title">
+    <div class="auction-bidding-heading">
+      <div>
+        <p class="auction-bidding-kicker">WearBack auction</p>
+        <h2 id="auction-bidding-title">{% if auction_ended %}Auction ended{% elif auction_bid_count %}Place your bid{% elif auction_has_pending_bid %}Seller approval pending{% else %}Make an offer{% endif %}</h2>
+      </div>
+      {% if auction_end_at %}
+        <p class="auction-bidding-countdown" data-auction-countdown data-auction-ends="{{ auction_end_at|date:'c' }}">
+          Ends <time datetime="{{ auction_end_at|date:'c' }}">{{ auction_end_at|date:'M j, Y H:i' }}</time>
+        </p>
+      {% elif auction_is_open %}
+        <p class="auction-bidding-countdown">{% if auction_has_pending_bid %}Starts after seller approval{% else %}Starts after seller approves the first bid{% endif %}</p>
+      {% endif %}
+    </div>
+    <div class="auction-bidding-summary">
+      <div>
+        <span>{% if auction_bid_count %}Highest bid{% else %}Listing price{% endif %}</span>
+        <strong>{{ auction_current_bid_display|default:listing.price_display }}</strong>
+      </div>
+      <span>{{ auction_bid_count }} bid{{ auction_bid_count|pluralize }}</span>
+    </div>
+    {% if can_manage and auction_pending_bids %}
+      <div class="auction-pending-bids">
+        <h3>Offers awaiting your approval</h3>
+        {% for bid in auction_pending_bids %}
+          <article class="auction-pending-bid">
+            <div>
+              <strong>{{ bid.amount_display }}</strong>
+              <span>Offer from {{ bid.bidder.get_full_name|default:bid.bidder.username }}</span>
+            </div>
+            <div class="auction-bid-decision-actions">
+              <form method="post" action="{% url 'main:decide_bid' listing.pk bid.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="decision" value="approve">
+                <button class="item-primary-action" type="submit">Approve and start auction</button>
+              </form>
+              <form method="post" action="{% url 'main:decide_bid' listing.pk bid.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="decision" value="reject">
+                <button class="item-secondary-action" type="submit">Reject offer</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if auction_ended %}
+      {% if auction_winner %}
+        {% if auction_is_highest_bidder %}
+          <p class="auction-bidding-notice" role="status">You won with a bid of {{ auction_winner.amount_display }}. Contact the seller to arrange the next steps.</p>
+          {% if contact_email %}<a class="item-primary-action auction-sign-in" href="mailto:{{ contact_email }}">Contact seller</a>{% endif %}
+        {% else %}
+          <p class="auction-bidding-notice" role="status">Bidding has closed. The winning bid was {{ auction_winner.amount_display }}.</p>
+        {% endif %}
+      {% else %}
+        <p class="auction-bidding-notice" role="status">Bidding for this item has ended.</p>
+      {% endif %}
+    {% elif not listing.is_available %}
+      <p class="auction-bidding-notice" role="status">This item is currently unavailable for bidding.</p>
+    {% elif can_manage %}
+      <p class="auction-bidding-notice">You cannot bid on your own listing.</p>
+    {% elif auction_has_pending_bid %}
+      {% if auction_own_pending_bid %}
+        <p class="auction-bidding-notice" role="status">Your offer is waiting for the seller’s approval. The auction will start if it is approved.</p>
+      {% else %}
+        <p class="auction-bidding-notice" role="status">The seller is reviewing an offer. New bids are paused until they decide.</p>
+      {% endif %}
+    {% elif request.user.is_authenticated %}
+      {% if auction_is_highest_bidder %}<p class="auction-bidding-notice" role="status">You are currently the highest bidder.</p>{% endif %}
+      <form class="auction-bid-form" method="post" action="{% url 'main:place_bid' listing.pk %}">
+        {% csrf_token %}
+        <label for="auction-bid-amount">Your bid (Rp)</label>
+        <div class="auction-bid-controls">
+          <input id="auction-bid-amount" name="amount" type="text" inputmode="decimal" autocomplete="off" required placeholder="e.g. 50.000">
+          <button class="item-primary-action" type="submit">Place bid</button>
+        </div>
+        <p class="item-purchase-help">{% if auction_bid_count %}Your bid must be higher than the current highest bid. There is no fixed increment; each valid new bid adds 30 minutes to the auction.{% else %}Enter your offer amount. The seller must approve it before the auction starts; after approval, bidding runs for 24 hours.{% endif %}</p>
+      </form>
+    {% else %}
+      <a class="item-primary-action auction-sign-in" href="{% url 'main:login' %}?next={{ request.get_full_path|urlencode }}">Sign in to bid</a>
+      <p class="item-purchase-help">Sign in to place an offer. The seller must approve the first offer before bidding starts.</p>
+    {% endif %}
+    {% if auction_bids %}
+      <div class="auction-bid-history">
+        <h3>Recent bids</h3>
+        <ol>
+          {% for bid in auction_bids %}
+            <li>
+              <span>Bidder</span>
+              <strong>{{ bid.amount_display }}</strong>
+              <time datetime="{{ bid.created_at|date:'c' }}">{{ bid.created_at|date:'M j, H:i' }}</time>
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+    {% endif %}
+  </section>
   <div class="item-details-grid">
     {% include 'components/item-specifications.html' %}
     {% include 'components/item-seller.html' %}
@@ -68,3 +172,5 @@
   {% if can_manage %}{% include 'components/item-delete-dialog.html' %}{% endif %}
 </main>
 {% endblock content %}
+
+{% block page_js %}{{ block.super }}<script src="{% static 'js/auction.js' %}?v=1"></script>{% endblock page_js %}

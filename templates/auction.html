@@ -6,19 +6,201 @@
 {% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
 {% block page_css %}
 <link rel="stylesheet" href="{% static 'css/style.css' %}?v=46">
-<link rel="stylesheet" href="{% static 'css/auction.css' %}">
+<link rel="stylesheet" href="{% static 'css/auction.css' %}?v=3">
 {% endblock page_css %}
 {% block nav_links %}
 {% include 'components/guest-nav.html' with active_page='auction' %}
 {% endblock nav_links %}
+{% block page_js %}<script src="{% static 'js/auction.js' %}?v=1"></script>{% endblock page_js %}
 
 {% block content %}
 <main class="auction-main">
-  <section class="auction" aria-labelledby="auction-title">
-    <p class="auction-status">Coming soon</p>
-    <h1 class="auction-title" id="auction-title">A second life.<br>A special find.</h1>
-    <p class="auction-description">WearBack auctions are on their way. Check back soon to discover unique secondhand pieces and place your bids.</p>
-    <a class="auction-button" href="{% url 'main:show_main' %}#catalog">Explore the catalog</a>
+  <div class="auction-news" aria-label="WearBack highlights">
+    <span>{{ auction_items|length }} auctions open</span>
+    <span>No fixed bid increment</span>
+    <span>{{ auction_category_count }} categories</span>
+    <span>30 extra minutes for each bid</span>
+  </div>
+
+  <section class="auction-hero" aria-labelledby="auction-title">
+    <img class="auction-hero-image" src="{% static 'img/hero.jpg' %}" alt="" aria-hidden="true">
+    <div class="auction-hero-content">
+      <p class="auction-eyebrow">Auction preview · WearBack</p>
+      <h1 class="auction-title" id="auction-title">Going once. Going twice.<br>Make it yours.</h1>
+      <p class="auction-description">Discover pre-loved pieces and make an offer. The seller approves the first offer to start an auction, and every new bid gives the auction 30 extra minutes.</p>
+      <div class="auction-actions">
+        <a class="auction-button" href="#closing-soon">Explore the finds</a>
+        <a class="auction-button auction-button-outline" href="#auction-info">How it works</a>
+      </div>
+    </div>
+    {% if auction_items %}
+      {% with item=auction_items.0 %}
+      <article class="auction-featured">
+        <a class="auction-featured-image" href="{% url 'listings:detail' item.pk %}" aria-label="View {{ item.name }}">
+          {% if item.image_url %}
+            <img src="{{ item.image_url }}" alt="{{ item.name }}" referrerpolicy="no-referrer">
+          {% else %}
+            <img src="{% static 'img/item-photo-placeholder.png' %}" alt="No product photo available">
+          {% endif %}
+          <span class="auction-lot-tag">Featured</span>
+        </a>
+        <div class="auction-featured-details">
+          <p class="auction-category">{{ item.get_category_display|default:"Community pick" }}</p>
+          <h2>{{ item.name }}</h2>
+          <div class="auction-price-row">
+            <span><small>Current bid</small><strong>{{ item.auction_current_bid_display }}</strong></span>
+            <span class="auction-stock">{{ item.stock }} available</span>
+          </div>
+          <p class="auction-card-countdown" data-auction-countdown data-auction-ends="{{ item.auction_end_at|date:'c' }}">
+            Ends <time datetime="{{ item.auction_end_at|date:'c' }}">{{ item.auction_end_at|date:'M j, Y H:i' }}</time>
+          </p>
+          <a class="auction-card-button" href="{% url 'listings:detail' item.pk %}">Place bid</a>
+        </div>
+      </article>
+      {% endwith %}
+    {% else %}
+      <div class="auction-featured auction-featured-empty">
+        <p>New finds are on their way.</p>
+        <a class="auction-card-button" href="{% url 'main:show_main' %}#catalog">Browse catalog</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="auction-stats" aria-label="Marketplace highlights">
+    <div><strong>{{ auction_items|length }}</strong><span>open auctions</span></div>
+    <div><strong>{{ auction_category_count }}</strong><span>categories to explore</span></div>
+    <div><strong>WearBack</strong><span>community finds</span></div>
+    <div><strong>30m</strong><span>added for each new bid</span></div>
+  </section>
+
+  <section class="auction-section auction-closing" id="closing-soon" aria-labelledby="closing-title">
+    <div class="auction-section-heading">
+      <div>
+        <p class="auction-section-kicker">Fresh from the community</p>
+        <h2 id="closing-title">Live auctions</h2>
+      </div>
+      <a href="{% url 'main:show_main' %}#catalog">View the catalog <span aria-hidden="true">→</span></a>
+    </div>
+    <p class="auction-section-description">The seller approves the first offer before bidding begins. After the auction starts, bids must beat the current highest bid, with no fixed increment.</p>
+    {% if auction_items %}
+      <ul class="auction-closing-grid">
+        {% for item in auction_items|slice:":4" %}
+          <li class="auction-closing-card">
+            <a class="auction-product-image" href="{% url 'listings:detail' item.pk %}">
+              {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy" referrerpolicy="no-referrer">
+              {% else %}
+                <img src="{% static 'img/item-photo-placeholder.png' %}" alt="No product photo available" loading="lazy">
+              {% endif %}
+              <span class="auction-lot-tag">LOT {{ forloop.counter|stringformat:"02d" }}</span>
+            </a>
+            <div class="auction-product-details">
+              <p class="auction-category">{{ item.get_category_display|default:"Pre-loved" }}</p>
+              <h3><a href="{% url 'listings:detail' item.pk %}">{{ item.name }}</a></h3>
+              <div class="auction-price-row">
+                <span><small>Current bid</small><strong>{{ item.auction_current_bid_display }}</strong></span>
+                <span class="auction-stock">{{ item.auction_bid_count }} bid{{ item.auction_bid_count|pluralize }}</span>
+              </div>
+              <p class="auction-card-countdown" data-auction-countdown data-auction-ends="{{ item.auction_end_at|date:'c' }}">
+                Ends <time datetime="{{ item.auction_end_at|date:'c' }}">{{ item.auction_end_at|date:'M j, Y H:i' }}</time>
+              </p>
+              <p class="auction-minimum-bid">Each new bid adds 30 minutes</p>
+              <a class="auction-card-button" href="{% url 'listings:detail' item.pk %}">Place bid</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="auction-empty">
+        <h3>No items available just yet</h3>
+        <p>Check back soon or browse the catalog for the latest listings.</p>
+        <a class="auction-card-button" href="{% url 'main:show_main' %}#catalog">Explore catalog</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="auction-section auction-lots" id="live-lots" aria-labelledby="lots-title">
+    <div class="auction-section-heading">
+      <div>
+        <p class="auction-section-kicker">A second life starts here</p>
+        <h2 id="lots-title">Explore the collection</h2>
+      </div>
+      <span class="auction-coming-soon">First offer needs seller approval</span>
+    </div>
+    {% if auction_items|length > 4 %}
+      <ul class="auction-lots-grid">
+        {% for item in auction_items|slice:"4:" %}
+          <li class="auction-lot-card">
+            <a class="auction-product-image" href="{% url 'listings:detail' item.pk %}">
+              {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy" referrerpolicy="no-referrer">
+              {% else %}
+                <img src="{% static 'img/item-photo-placeholder.png' %}" alt="No product photo available" loading="lazy">
+              {% endif %}
+              <span class="auction-lot-tag">LOT {{ forloop.counter|add:4|stringformat:"02d" }}</span>
+            </a>
+            <div class="auction-product-details">
+              <p class="auction-category">{{ item.get_category_display|default:"Pre-loved" }}</p>
+              <h3><a href="{% url 'listings:detail' item.pk %}">{{ item.name }}</a></h3>
+              <div class="auction-price-row">
+                <span><small>Current bid</small><strong>{{ item.auction_current_bid_display }}</strong></span>
+                <span class="auction-stock">{{ item.auction_bid_count }} bid{{ item.auction_bid_count|pluralize }}</span>
+              </div>
+              <p class="auction-card-countdown" data-auction-countdown data-auction-ends="{{ item.auction_end_at|date:'c' }}">
+                Ends <time datetime="{{ item.auction_end_at|date:'c' }}">{{ item.auction_end_at|date:'M j, Y H:i' }}</time>
+              </p>
+              <p class="auction-minimum-bid">Each new bid adds 30 minutes</p>
+              <a class="auction-card-button" href="{% url 'listings:detail' item.pk %}">Place bid</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="auction-lots-note">More community finds will appear here as they are listed.</p>
+    {% endif %}
+  </section>
+
+  {% if ended_auction_items %}
+    <section class="auction-section auction-ended" aria-labelledby="ended-title">
+      <div class="auction-section-heading">
+        <div>
+          <p class="auction-section-kicker">Bidding has closed</p>
+          <h2 id="ended-title">Auction results</h2>
+        </div>
+      </div>
+      <ul class="auction-lots-grid">
+        {% for item in ended_auction_items %}
+          <li class="auction-lot-card auction-ended-card">
+            <a class="auction-product-image" href="{% url 'listings:detail' item.pk %}">
+              {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy" referrerpolicy="no-referrer">
+              {% else %}
+                <img src="{% static 'img/item-photo-placeholder.png' %}" alt="No product photo available" loading="lazy">
+              {% endif %}
+              <span class="auction-lot-tag">Ended</span>
+            </a>
+            <div class="auction-product-details">
+              <p class="auction-category">{{ item.get_category_display|default:"Pre-loved" }}</p>
+              <h3><a href="{% url 'listings:detail' item.pk %}">{{ item.name }}</a></h3>
+              <div class="auction-price-row">
+                <span><small>Winning bid</small><strong>{{ item.auction_current_bid_display }}</strong></span>
+                <span class="auction-stock">{{ item.auction_bid_count }} bid{{ item.auction_bid_count|pluralize }}</span>
+              </div>
+              <a class="auction-card-button" href="{% url 'listings:detail' item.pk %}">View result</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <section class="auction-info" id="auction-info" aria-labelledby="auction-info-title">
+    <div>
+      <p class="auction-section-kicker">How bidding works</p>
+      <h2 id="auction-info-title">Every bid counts.</h2>
+    </div>
+    <p>Buyers can submit an offer at any positive amount. The seller must approve the first offer before bidding starts. During the auction, each bid must be higher than the current highest bid; there is no fixed increment. The auction starts with 24 hours and each new bid adds 30 minutes.</p>
+    <a href="{% url 'main:show_main' %}#catalog">Browse catalog <span aria-hidden="true">→</span></a>
   </section>
 </main>
 {% endblock content %}
