@@ -1,3 +1,4 @@
+from datetime import timedelta
 import secrets
 import time
 from urllib.parse import urlencode, urlparse
@@ -5,12 +6,15 @@ from xml.etree.ElementTree import ParseError
 
 from cas import CASError
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import IntegrityError, transaction
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.crypto import constant_time_compare
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
@@ -18,10 +22,13 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from requests import RequestException
 
+from listings.models import Listing
 from main.auth_utils import throttled
 from main.forms import LoginForm, ProfileForm, RegisterForm
+from main.models import CartItem, TransactionHistory
 from main.sso import cas_client, resolve_identity
 
+from listings.models import Listing
 
 def safe_next(request, value):
     if value and url_has_allowed_host_and_scheme(value, {request.get_host()}, require_https=request.is_secure()):
@@ -32,7 +39,11 @@ def safe_next(request, value):
 def page_context(request):
     context = {'sso_enabled': settings.SSO_ENABLED,
                'auth_notice': request.session.pop('auth_notice', ''),
-               'auth_initial_mode': request.session.pop('auth_mode', '')}
+               'auth_initial_mode': request.session.pop('auth_mode', ''),
+               'auth_next': ''}
+    if request.GET.get('login') == '1' or request.GET.get('register') == '1':
+        if request.GET.get('next'):
+            context['auth_next'] = safe_next(request, request.GET['next'])
     if request.user.is_authenticated:
         context['sso_linked'] = request.user.sso_identities.filter(provider='ui').exists()
         context['profile_complete'] = bool(
@@ -47,7 +58,9 @@ def page_context(request):
 
 @never_cache
 def show_main(request):
-    return render(request, 'index.html', page_context(request))
+    context = page_context(request)
+    context['catalog_items'] = Listing.objects.all()
+    return render(request, 'index.html', context)
 
 
 @never_cache
@@ -65,12 +78,19 @@ def too_many():
     return response
 
 
+def auth_redirect(request, mode):
+    query = {mode: '1'}
+    if request.GET.get('next'):
+        query['next'] = safe_next(request, request.GET['next'])
+    return redirect(reverse('main:show_main') + '?' + urlencode(query))
+
+
 @never_cache
 @sensitive_post_parameters('password')
 @require_http_methods(['GET', 'POST'])
 def login(request):
     if request.method == 'GET':
-        return redirect(reverse('main:show_main') + '?login=1')
+        return auth_redirect(request, 'login')
     if throttled(request, 'login', request.POST.get('email', '')):
         return too_many()
     form = LoginForm(request.POST, request=request)
@@ -85,7 +105,7 @@ def login(request):
 @require_http_methods(['GET', 'POST'])
 def register(request):
     if request.method == 'GET':
-        return redirect(reverse('main:show_main') + '?register=1')
+        return auth_redirect(request, 'register')
     if throttled(request, 'register'):
         return too_many()
     form = RegisterForm(request.POST)
@@ -198,3 +218,122 @@ def sso_callback(request):
     if not link_user:
         auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
     return redirect(safe_next(request, destination))
+
+# Transaction 
+@login_required
+@never_cache
+def transaction_history(request):
+    now = timezone.now()
+    TransactionHistory.objects.filter(buyer=request.user, status="ongoing", payment_deadline__isnull=False, payment_deadline__lte=now).update(
+            status="cancelled",
+            status_message="Payment time expired",
+            updated_at=now,
+    )
+    transactions = TransactionHistory.objects.filter(buyer=request.user).order_by("-created_at")
+    return render(request, "transactions.html", {**page_context(request), "transactions": transactions})
+
+# Carts
+@login_required
+@never_cache
+def cart(request):
+    cart_items = CartItem.objects.filter(buyer=request.user).order_by("-created_at")
+    return render(request, "carts.html", {**page_context(request), "cart_items": cart_items})
+
+@login_required
+@require_POST
+def remove_cart_item(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id, buyer=request.user)
+    item.delete()
+
+    return JsonResponse({
+        "success": True,
+        "message": "Item removed successfully."
+    })
+
+# Logic
+@login_required
+@require_POST
+def checkout_cart(request):
+    selected_ids = request.POST.get("selected_cart_ids", "")
+
+    if not selected_ids:
+        return redirect("main:cart")
+
+    item_ids = list({int(item_id) for item_id in selected_ids.split(",") if item_id.strip()})
+
+    if not item_ids:
+        return redirect("main:cart")
+
+    deadline = timezone.now() + timedelta(minutes=10)
+
+    with transaction.atomic():
+        cart_items = list(CartItem.objects
+            .filter(buyer=request.user, id__in=item_ids, selected=True) 
+            .select_related("listing", "listing__seller")
+            .select_for_update()
+        )
+
+        if not cart_items:
+            return redirect("main:cart")
+
+        for item in cart_items:
+            listing = item.listing
+
+            if listing is None:
+                return redirect("main:cart")
+            if listing.price is None or listing.price <= 0:
+                return redirect("main:cart")
+            if item.quantity < 1 or item.quantity > listing.stock:
+                return redirect("main:cart")
+
+        for item in cart_items:
+            listing = item.listing
+
+            TransactionHistory.objects.create(
+                buyer=request.user,
+                listing=listing,
+                item_name=listing.name,
+                item_image_url=listing.image_url or "",
+                price=listing.price * item.quantity,
+                status="ongoing",
+                item_count=item.quantity,
+                seller_name=listing.seller.get_full_name().strip(),
+                payment_deadline=deadline,
+            )
+        CartItem.objects.filter(buyer=request.user, id__in=[item.id for item in cart_items]).delete()
+    return redirect("main:transaction_history")
+
+@login_required
+@require_POST
+def add_to_cart(request, listing_id):
+    listing = get_object_or_404(Listing, pk=listing_id)
+
+    if listing.stock <= 0:
+        return redirect("listings:detail", pk=listing.pk)
+    
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 0
+
+    if quantity < 1 or quantity > listing.stock:
+        return redirect("listings:detail", pk=listing.pk)
+
+    cart_item, created = CartItem.objects.get_or_create(
+        buyer=request.user,
+        listing=listing,
+        defaults={
+            "quantity": quantity,
+            "selected": True,
+        },
+    )
+
+    if not created:
+        new_quantity = cart_item.quantity + quantity
+        if new_quantity <= listing.stock:
+            cart_item.quantity = new_quantity
+            cart_item.save(update_fields=["quantity"])
+        else:
+            return redirect("listings:detail", pk=listing.pk)
+
+    return redirect("main:cart")

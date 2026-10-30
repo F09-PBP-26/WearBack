@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}WearBack – Transaction Detail Buyer{% endblock %}
+{% block body_class %}catalog-page review-page{% endblock %}
+{% block search_placeholder %}Search in WearBack{% endblock %}
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}?v=45">
+<link rel="stylesheet" href="{% static 'css/reviews.css' %}">
+{% endblock %}
+{% block nav_links %}
+{% include 'components/guest-nav.html' %}
+{% endblock %}
+
+{% block content %}
+<main class="review-main">
+  <a class="review-back" href="{% url 'main:transaction_history' %}">← Back to transactions</a>
+  <p class="review-preview-note">Design preview · Sample order. Reviews are not saved yet.</p>
+  <header class="review-heading">
+    <div>
+      <h1>Order #67420</h1>
+      <p>Placed 1 October 2026 · 3 items · Delivered 4 October 2026</p>
+    </div>
+    <span class="review-status">✓ Delivered</span>
+  </header>
+
+  <div class="review-order-grid">
+    <section class="review-panel review-order" aria-labelledby="order-items-title">
+      <div class="review-section-heading">
+        <h2 id="order-items-title">Items in this order</h2><span>3 items</span>
+      </div>
+      <p class="review-seller">Sold by Toko Thrift Terbaik Indonesia <span>★ 4.8</span></p>
+      <ul class="review-order-items">
+        {% for item in items %}
+        <li class="review-order-item">
+          <img src="{% static item.image %}" alt="{{ item.name }}" width="84" height="84">
+          <div><h3>{{ item.name }}</h3><p>{{ item.details }}</p><p>Qty 1</p></div>
+          <strong>{{ item.price }}</strong>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <aside class="review-panel review-summary" aria-labelledby="summary-title">
+      <h2 id="summary-title">Order summary</h2>
+      <dl class="review-costs">
+        <div><dt>Subtotal</dt><dd>Rp1.695.000</dd></div>
+        <div><dt>Shipping</dt><dd>Free</dd></div>
+        <div><dt>Service fee</dt><dd>Rp0</dd></div>
+        <div class="review-total"><dt>Total</dt><dd>Rp1.695.000</dd></div>
+      </dl>
+      <dl class="review-delivery">
+        <dt>Delivery</dt><dd>J&amp;T Express · Reguler<small>WB-67420-ID · Delivered 4 October 2026</small></dd>
+        <dt>Payment</dt><dd>Bank transfer · BCA<small>Paid 1 October 2026</small></dd>
+        <dt>Sold by</dt><dd>Toko Thrift Terbaik Indonesia<small>★ 4.8 / 5 · Depok, Indonesia</small></dd>
+      </dl>
+      <button class="review-contact" type="button" disabled title="Available after transaction integration">Contact seller</button>
+    </aside>
+  </div>
+
+  <section class="review-rating-section" aria-labelledby="rating-title">
+    <h2 id="rating-title">Rate your items</h2>
+    <p>Share how each piece worked out. Your feedback helps the next owner.</p>
+    <div class="review-cards">
+      {% for item in items %}
+        {% include 'reviews/components/rating_card.html' %}
+      {% endfor %}
+    </div>
+  </section>
+</main>
+<script src="{% static 'js/reviews.js' %}" defer></script>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Your Cart | WearBack{% endblock title %}
+{% block body_class %}catalog-page cart-page{% endblock body_class %}
+{% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/carts.css' %}">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+{% endblock page_css %}
+
+{% block nav_links %}
+{% include 'components/guest-nav.html' with active_page='cart' %}
+{% endblock nav_links %}
+
+{% block content %}
+<main class="cart-main">
+    <a class="browse-link" href="{% url 'main:show_main' %}"> ← Continue shopping </a>
+
+    <header class="cart-header">
+        <h1>Your cart</h1>
+        <span class="cart-product-count">
+            <span id="cart-total-products">{{ cart_items|length }}</span> products
+        </span>
+    </header>
+
+    <div class="cart-selection-bar">
+        <label class="select-all-label">
+            <input type="checkbox" id="select-all-cart">
+            <span>Select all</span>
+        </label>
+
+        <p id="cart-selection-count"> 0 of {{ cart_items|length }} products selected </p>
+    </div>
+
+
+    <div class="cart-layout">
+        <section class="cart-items-section" aria-label="Shopping cart items">
+            <div class="cart-items">
+                {% for item in cart_items %}
+                {% with listing=item.listing %}
+                {% if listing %}
+                <article class="cart-item" data-cart-id="{{ item.id }}" data-price="{{ listing.price }}" data-quantity="{{ item.quantity }}" data-stock="{{ listing.stock }}" data-delete-url="{% url 'main:remove_cart_item' item.id %}">
+                    <label class="cart-item-checkbox">
+                        <input type="checkbox" class="cart-select-item" {% if item.selected %}checked{% endif %}>
+                    </label>
+
+                    <div class="cart-item-image">
+                        {% if listing.image_url %}
+                        <img src="{{ listing.image_url }}" alt="{{ listing.name }}">
+                        {% else %}
+                        <span aria-hidden="true">◇</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="cart-item-details">
+                        <h2>{{ listing.name }}</h2>
+                        <p>Stok tersedia: {{ listing.stock }}</p>
+                        <p>Size {{ listing.size|default:"Not specified" }} · {{ listing.get_condition_display|default:"Not specified" }}</p>
+                        <p>Rp{{ listing.price|floatformat:0|intcomma }}</p>
+                        <strong class="cart-item-total" data-item-total>Rp{{ listing.price|intcomma }}</strong>
+                    </div>
+
+                    <button class="cart-remove" type="button">
+                        <img src="{% static 'img/cart-remove.svg' %}" alt="" aria-hidden="true">
+                    </button>
+
+                    <div class="cart-quantity">
+                        <button type="button" class="quantity-decrease">−</button>
+                        <span class="quantity-value">{{ item.quantity }}</span>
+                        <button type="button" class="quantity-increase">+</button>
+                    </div>
+                </article>
+                {% endif %}
+                {% endwith %}
+                {% endfor %}
+                <div class="cart-empty" id="cart-empty" {% if cart_items %}hidden{% endif %}>
+                    <h2>Your cart is empty</h2>
+                    <p>Add some items to get started.</p>
+                    <a class="browse-link" href="{% url 'main:show_main' %}"> ← Browse items </a>
+                </div>
+                <p class="cart-search-empty" hidden>
+                    No matching items found.
+                </p>
+            </div>
+        </section>
+
+        <aside class="order-summary">
+            <h2 id="order-summary-title">Order summary</h2>
+
+            <div class="summary-row">
+                <span>Selected items</span>
+                <strong id="summary-item-count">0 items</strong>
+            </div>
+
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <strong id="summary-subtotal">Rp0</strong>
+            </div>
+
+            <div class="summary-row">
+                <span>Delivery</span>
+                <strong>At checkout</strong>
+            </div>
+
+            <hr>
+
+            <div class="summary-total">
+                <span>Total</span>
+                <strong id="summary-total">Rp0</strong>
+            </div>
+
+            <p class="summary-description">
+                Shipping and applicable taxes are calculated at checkout.
+            </p>
+
+            <form id="cart-checkout" method="post" action="{% url 'main:checkout_cart' %}">
+                {% csrf_token %}
+                <input type="hidden" id="selected-cart-ids" name="selected_cart_ids">
+                <button class="cart-buy-button" id="cart-buy-button" type="submit" disabled>
+                    Buy (0 items)
+                </button>
+            </form>
+            <a href="{% url 'main:transaction_history' %}" class="browse-link check-transactions-link"> Check your transactions → </a>
+            <p class="cart-checkout-message" id="cart-checkout-message" role="status" hidden>
+            </p>
+        </aside>
+    </div>
+
+    <div class="cart-confirm" id="cart-confirm-modal" hidden>
+        <div
+            class="cart-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cart-confirm-title"
+            aria-describedby="cart-confirm-description">
+            <h2 id="cart-confirm-title">Remove item?</h2>
+
+            <p id="cart-confirm-description">
+                Apakah Anda ingin menghapus item bernama "<span id="cart-confirm-item-name"></span>"?
+            </p>
+
+            <div class="cart-confirm-actions">
+                <button type="button" id="cart-cancel-remove"> Cancel </button>
+                <button type="button" id="cart-confirm-remove"> Remove item </button>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock content %}
+
+{% block page_js %} <script src="{% static 'js/carts.js' %}?v=2"></script> {% endblock page_js %}

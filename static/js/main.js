@@ -74,6 +74,7 @@
   var menu = document.getElementById("navbar-menu");
   var profileButton = document.querySelector(".nav-profile");
   var profileMenu = document.getElementById("profile-menu");
+
   function positionProfileMenu() {
     if (!profileMenu || !profileMenu.matches(":popover-open")) return;
     var bounds = profileButton.getBoundingClientRect();
@@ -94,6 +95,7 @@
         ),
       ) + "px";
   }
+
   if (profileButton && profileMenu) {
     profileMenu.addEventListener("toggle", positionProfileMenu);
     window.addEventListener("resize", positionProfileMenu);
@@ -102,16 +104,22 @@
   function setOpen(open) {
     if (!open && profileMenu && profileMenu.matches(":popover-open"))
       profileMenu.hidePopover();
-    toggle.setAttribute("aria-expanded", String(open));
-    menu.classList.toggle("is-open", open);
+    if (toggle) toggle.setAttribute("aria-expanded", String(open));
+    if (menu) menu.classList.toggle("is-open", open);
   }
 
-  toggle.addEventListener("click", function () {
-    setOpen(toggle.getAttribute("aria-expanded") !== "true");
-  });
+  if (toggle) {
+    toggle.addEventListener("click", function () {
+      setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    });
+  }
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+    if (
+      toggle &&
+      e.key === "Escape" &&
+      toggle.getAttribute("aria-expanded") === "true"
+    ) {
       setOpen(false);
       toggle.focus();
     }
@@ -121,7 +129,6 @@
     if (window.innerWidth > 768) setOpen(false);
   });
 
-  var loginDialog = document.getElementById("login-dialog");
   function bindNavbarPopup(dialogId, openSelector, closeSelector) {
     var listItemDialog = document.getElementById(dialogId);
     var listItemTrigger = document.querySelector(openSelector);
@@ -131,11 +138,12 @@
       listItemDialog.showModal();
       document.documentElement.classList.add("login-open");
     });
-    listItemDialog
-      .querySelector(closeSelector)
-      .addEventListener("click", function () {
+    var closeBtn = listItemDialog.querySelector(closeSelector);
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
         listItemDialog.close();
       });
+    }
     listItemDialog.addEventListener("click", function (event) {
       var bounds = listItemDialog.getBoundingClientRect();
       if (
@@ -154,103 +162,124 @@
         getComputedStyle(listItemTrigger).visibility !== "hidden"
       ) {
         listItemTrigger.focus();
-      } else {
+      } else if (toggle) {
         toggle.focus();
       }
     });
   }
+
   bindNavbarPopup(
     "list-item-dialog",
     "[data-list-item-open]",
     "[data-list-item-close]",
   );
   bindNavbarPopup("cart-dialog", "[data-cart-open]", "[data-cart-close]");
-  if (loginDialog) {
-    var loginTrigger = null;
-    var authPanels = loginDialog.querySelectorAll("[data-auth-panel]");
-    var authForms = loginDialog.querySelectorAll(".login-form");
 
-    function clearErrors(form) {
-      form.querySelectorAll(".field-error").forEach(function (error) {
-        error.remove();
-      });
-      form.querySelectorAll("[aria-invalid]").forEach(function (input) {
-        input.removeAttribute("aria-invalid");
-        input.removeAttribute("aria-describedby");
-      });
-      var status = form.querySelector(".login-status");
+  // --- MODUL AUTHENTICATION & DIALOG ---
+  var loginDialog = document.getElementById("login-dialog");
+  var loginTrigger = null;
+  var authPanels = loginDialog
+    ? loginDialog.querySelectorAll("[data-auth-panel]")
+    : [];
+  var authForms = loginDialog
+    ? loginDialog.querySelectorAll(".login-form")
+    : [];
+
+  function authNext() {
+    if (loginDialog && loginDialog.dataset.next)
+      return loginDialog.dataset.next;
+    var destination = new URL(window.location.href);
+    destination.searchParams.delete("login");
+    destination.searchParams.delete("register");
+    destination.searchParams.delete("next");
+    return destination.pathname + destination.search + destination.hash;
+  }
+
+  function clearErrors(form) {
+    if (!form) return;
+    form.querySelectorAll(".field-error").forEach(function (error) {
+      error.remove();
+    });
+    form.querySelectorAll("[aria-invalid]").forEach(function (input) {
+      input.removeAttribute("aria-invalid");
+      input.removeAttribute("aria-describedby");
+    });
+    var status = form.querySelector(".login-status");
+    if (status) {
       status.textContent = "";
       status.hidden = true;
     }
+  }
 
-    function showErrors(form, errors) {
-      var messages = [];
-      var firstInput = null;
-      Object.keys(errors).forEach(function (name) {
-        var input = form.elements.namedItem(name);
-        if (input && input.closest(".field")) {
-          var error = document.createElement("p");
-          error.className = "field-error";
-          error.id = input.id + "-error";
-          error.textContent = errors[name].join(" ");
-          input.closest(".field").appendChild(error);
-          input.setAttribute("aria-invalid", "true");
-          input.setAttribute("aria-describedby", error.id);
-          if (!firstInput) firstInput = input;
-        } else {
-          messages = messages.concat(errors[name]);
+  function showErrors(form, errors) {
+    var firstInput = null;
+    Object.keys(errors).forEach(function (name) {
+      var input = form.elements.namedItem(name);
+      if (input && input.closest(".field")) {
+        var error = document.createElement("p");
+        error.className = "field-error";
+        error.id = "error-" + name;
+        error.textContent = Array.isArray(errors[name])
+          ? errors[name].join(" ")
+          : errors[name];
+        input.closest(".field").appendChild(error);
+        input.setAttribute("aria-invalid", "true");
+        input.setAttribute("aria-describedby", error.id);
+        if (!firstInput) firstInput = input;
+      } else {
+        var status = form.querySelector(".login-status");
+        if (status) {
+          status.textContent = Array.isArray(errors[name])
+            ? errors[name].join(" ")
+            : errors[name];
+          status.hidden = false;
         }
-      });
-      var status = form.querySelector(".login-status");
-      status.textContent =
-        messages.join(" ") || "Please check the highlighted fields.";
-      status.hidden = false;
-      if (firstInput) firstInput.focus();
-    }
-
-    function openLogin(trigger, mode) {
-      mode = mode || "login";
-      var selectedPanel = loginDialog.querySelector(
-        '[data-auth-panel="' + mode + '"]',
-      );
-      if (!selectedPanel) return;
-      authPanels.forEach(function (panel) {
-        panel.hidden = panel.getAttribute("data-auth-panel") !== mode;
-        clearErrors(panel.querySelector(".login-form"));
-      });
-      loginDialog.setAttribute("aria-labelledby", mode + "-title");
-      loginDialog.setAttribute("aria-describedby", mode + "-description");
-      if (!loginDialog.open) {
-        loginTrigger = trigger;
-        loginDialog.showModal();
       }
-      setOpen(false);
-      document.documentElement.classList.add("login-open");
-      loginDialog
-        .querySelector('[data-auth-panel="' + mode + '"] input')
-        .focus();
-      loginDialog.scrollTop = 0;
-    }
-
-    document.querySelectorAll("[data-login-open]").forEach(function (trigger) {
-      trigger.addEventListener("click", function () {
-        openLogin(trigger);
-      });
     });
-    document
-      .querySelectorAll("[data-register-open]")
-      .forEach(function (trigger) {
-        trigger.addEventListener("click", function () {
-          openLogin(trigger, "register");
-        });
-      });
-    document
-      .querySelectorAll("[data-profile-open]")
-      .forEach(function (trigger) {
-        trigger.addEventListener("click", function () {
-          openLogin(trigger, "profile");
-        });
-      });
+    if (firstInput) firstInput.focus();
+  }
+
+  function openLogin(trigger, mode) {
+    if (!loginDialog) return;
+    mode = mode || "login";
+    authPanels.forEach(function (panel) {
+      panel.hidden = panel.getAttribute("data-auth-panel") !== mode;
+      clearErrors(panel.querySelector(".login-form"));
+    });
+    loginDialog.setAttribute("aria-labelledby", mode + "-title");
+    loginDialog.setAttribute("aria-describedby", mode + "-description");
+    if (!loginDialog.open) {
+      loginTrigger = trigger;
+      loginDialog.showModal();
+    }
+    setOpen(false);
+    document.documentElement.classList.add("login-open");
+    var firstInput = loginDialog.querySelector(
+      "[data-auth-panel='" + mode + "'] input",
+    );
+    if (firstInput) firstInput.focus();
+    loginDialog.scrollTop = 0;
+  }
+
+  document.querySelectorAll("[data-login-open]").forEach(function (trigger) {
+    trigger.addEventListener("click", function () {
+      openLogin(trigger, "login");
+    });
+  });
+
+  document.querySelectorAll("[data-register-open]").forEach(function (trigger) {
+    trigger.addEventListener("click", function () {
+      openLogin(trigger, "register");
+    });
+  });
+
+  document.querySelectorAll("[data-profile-open]").forEach(function (trigger) {
+    trigger.addEventListener("click", function () {
+      openLogin(trigger, "profile");
+    });
+  });
+
+  if (loginDialog) {
     loginDialog
       .querySelectorAll("[data-login-close]")
       .forEach(function (button) {
@@ -258,6 +287,7 @@
           loginDialog.close();
         });
       });
+
     loginDialog.addEventListener("click", function (event) {
       var bounds = loginDialog.getBoundingClientRect();
       if (
@@ -270,114 +300,111 @@
         loginDialog.close();
       }
     });
+
     loginDialog.addEventListener("close", function () {
       document.documentElement.classList.remove("login-open");
       authForms.forEach(function (form) {
         form.reset();
         clearErrors(form);
       });
-      if (loginTrigger) {
-        if (
-          loginTrigger.getClientRects().length &&
-          window.getComputedStyle(loginTrigger).visibility !== "hidden"
-        ) {
-          loginTrigger.focus();
-        } else {
-          toggle.focus();
-        }
+      if (
+        loginTrigger &&
+        loginTrigger.getClientRects().length &&
+        window.getComputedStyle(loginTrigger).visibility !== "hidden"
+      ) {
+        loginTrigger.focus();
       }
     });
-    authForms.forEach(function (form) {
-      form.addEventListener("submit", async function (event) {
-        event.preventDefault();
-        if (form.dataset.submitting === "true") return;
-        clearErrors(form);
-        form.dataset.submitting = "true";
-        var submit = form.querySelector('[type="submit"]');
-        var originalLabel = submit.textContent;
+  }
+
+  authForms.forEach(function (form) {
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+      if (form.dataset.submitting === "true") return;
+      clearErrors(form);
+      form.dataset.submitting = "true";
+      var submit = form.querySelector('[type="submit"]');
+      var originalLabel = submit ? submit.textContent : "";
+      if (submit) {
         submit.disabled = true;
-        submit.textContent = "Please wait…";
-        var body = new FormData(form);
-        body.set(
-          "next",
-          window.location.pathname +
-            window.location.search +
-            window.location.hash,
-        );
+        submit.textContent = "Please wait...";
+      }
+      var body = new FormData(form);
+      body.set("next", authNext());
+      try {
+        var response = await fetch(form.action, {
+          method: "POST",
+          body: body,
+          credentials: "same-origin",
+          headers: {
+            Accept: "application/json",
+            "X-CSRFToken": body.get("csrfmiddlewaretoken"),
+          },
+        });
+        var data;
         try {
-          var response = await fetch(form.action, {
-            method: "POST",
-            body: body,
-            credentials: "same-origin",
-            headers: {
-              Accept: "application/json",
-              "X-CSRFToken": body.get("csrfmiddlewaretoken"),
-            },
-          });
-          var data;
-          try {
-            data = await response.json();
-          } catch (error) {
-            throw new Error(
-              response.status === 403
-                ? "Your session expired. Refresh the page and try again."
-                : "Something went wrong. Please try again.",
-            );
-          }
-          if (response.ok && data.redirect) {
-            window.location.assign(data.redirect);
-          } else {
-            showErrors(form, data.errors || { __all__: ["Please try again."] });
-            form
-              .querySelectorAll('[type="password"]')
-              .forEach(function (input) {
-                input.value = "";
-              });
-          }
+          data = await response.json();
         } catch (error) {
-          showErrors(form, {
-            __all__: [error.message || "Unable to connect. Please try again."],
+          throw new Error(
+            response.status === 401
+              ? "Your session expired. Refresh the page and try again."
+              : "Something went wrong. Please try again.",
+          );
+        }
+        if (response.ok && data.redirect) {
+          window.location.assign(data.redirect);
+        } else {
+          showErrors(form, data.errors || { __all__: ["Please try again."] });
+          form.querySelectorAll('[type="password"]').forEach(function (input) {
+            input.value = "";
           });
-        } finally {
-          form.dataset.submitting = "false";
+        }
+      } catch (err) {
+        var status = form.querySelector(".login-status");
+        if (status) {
+          status.textContent =
+            err.message || "Something went wrong. Please try again.";
+          status.hidden = false;
+        }
+      } finally {
+        form.dataset.submitting = "false";
+        if (submit) {
           submit.disabled = false;
           submit.textContent = originalLabel;
         }
-      });
+      }
     });
+  });
 
-    document.querySelectorAll("[data-sso-login]").forEach(function (link) {
-      var url = new URL(link.href);
-      url.searchParams.set(
-        "next",
-        window.location.pathname +
-          window.location.search +
-          window.location.hash,
-      );
-      link.href = url.pathname + url.search;
-    });
+  document.querySelectorAll("[data-sso-login]").forEach(function (link) {
+    var url = new URL(link.href);
+    url.searchParams.set("next", authNext());
+    link.href = url.pathname + url.search;
+  });
 
-    var pageUrl = new URL(window.location.href);
-    if (
-      loginDialog.dataset.initialMode ||
+  var pageUrl = new URL(window.location.href);
+  if (
+    loginDialog &&
+    (loginDialog.dataset.initialMode ||
       pageUrl.searchParams.get("login") === "1" ||
-      pageUrl.searchParams.get("register") === "1"
-    ) {
-      var initialMode =
-        loginDialog.dataset.initialMode ||
-        (pageUrl.searchParams.get("register") === "1" ? "register" : "login");
-      openLogin(document.querySelector(".nav-login"), initialMode);
-      pageUrl.searchParams.delete("login");
-      pageUrl.searchParams.delete("register");
-      window.history.replaceState(
-        null,
-        "",
-        pageUrl.pathname + pageUrl.search + pageUrl.hash,
+      pageUrl.searchParams.get("register") === "1")
+  ) {
+    var initialMode =
+      loginDialog.dataset.initialMode ||
+      (pageUrl.searchParams.get("register") === "1" ? "register" : "login");
+    openLogin(document.querySelector(".nav-login"), initialMode);
+    pageUrl.searchParams.delete("login");
+    pageUrl.searchParams.delete("register");
+    window.history.replaceState(
+      null,
+      "",
+      pageUrl.pathname + pageUrl.search + pageUrl.hash,
+    );
+    if (loginDialog.dataset.authNotice) {
+      var notice = loginDialog.querySelector(
+        "[data-auth-panel='" + initialMode + "'] .login-status",
       );
-      if (loginDialog.dataset.authNotice) {
-        var notice = loginDialog.querySelector(
-          '[data-auth-panel="' + initialMode + '"] .login-status',
-        );
+      if (notice) {
         notice.textContent = loginDialog.dataset.authNotice;
         notice.hidden = false;
       }
@@ -439,7 +466,7 @@
       var returnTarget =
         window.innerWidth <= 768 ? toggle : navbar.querySelector(".nav-brand");
       requestAnimationFrame(function () {
-        returnTarget.focus({ preventScroll: true });
+        if (returnTarget) returnTarget.focus({ preventScroll: true });
       });
     }
     search.addEventListener("focus", function () {
@@ -483,7 +510,7 @@
             item.dataset.category !== selectedCategory);
         if (!item.hidden) visible += 1;
       });
-      empty.hidden = visible > 0;
+      if (empty) empty.hidden = visible > 0;
     }
     categoryFilters.forEach(function (button) {
       button.addEventListener("click", function () {

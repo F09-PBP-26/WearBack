@@ -1,0 +1,120 @@
+.listing-page {
+    width: min(100%, 64rem);
+    flex: 1;
+    margin: 0 auto;
+    padding: var(--space-32) var(--gutter);
+    overflow-wrap: anywhere;
+}
+
+.listing-page h1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--fs-title-lg);
+}
+
+.listing-page a {
+    color: var(--color-primary);
+    text-underline-offset: 0.2em;
+}
+
+.listing-page h1,
+.listing-page h2,
+.listing-page p,
+.listing-page .listing-description {
+    margin-bottom: var(--space-16);
+}
+
+.listing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-16);
+    margin: var(--space-16) 0;
+}
+
+.listing-grid {
+    display: grid;
+    gap: var(--space-20);
+    list-style: none;
+}
+
+.listing-card {
+    border-radius: var(--radius-card);
+    padding: var(--space-20);
+    background: var(--color-white);
+}
+
+.listing-page .listing-button {
+    display: inline-block;
+    border: 0;
+    border-radius: var(--radius-control);
+    padding: var(--space-12) var(--space-20);
+    background: var(--color-primary);
+    color: var(--color-white);
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.listing-field {
+    margin-bottom: var(--space-20);
+}
+
+.listing-field label {
+    display: block;
+    margin-bottom: var(--space-8);
+}
+
+.listing-field input,
+.listing-field textarea {
+    width: 100%;
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-control);
+    padding: var(--space-12);
+    font: inherit;
+}
+
+.listing-help,
+.listing-field .errorlist {
+    margin-top: var(--space-8);
+}
+
+.listing-field .errorlist {
+    padding-left: var(--space-20);
+}
+
+.listing-page :focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 3px;
+}
+
+.listing-notices {
+    display: grid;
+    gap: var(--space-8);
+    margin-bottom: var(--space-20);
+}
+
+.listing-notice {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-16);
+    padding: var(--space-12) var(--space-16);
+    border: 1px solid var(--color-listing-border);
+    border-radius: var(--radius-control);
+    background: var(--color-listing-notice);
+    color: var(--color-listing-ink);
+}
+
+.listing-notice p {
+    margin: 0;
+}
+
+.listing-notice button {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 1.5rem;
+    cursor: pointer;
+}

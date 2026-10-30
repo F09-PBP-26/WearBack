@@ -1,0 +1,9 @@
+{% load static %}
+<div class="seller-field{% if field.errors %} seller-field-invalid{% endif %}">
+  <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="seller-required" aria-hidden="true">*</span>{% endif %}</label>
+  {% if select %}<div class="seller-select">{% endif %}
+  {{ field }}
+  {% if select %}<img src="{% static 'img/listing-chevron.svg' %}" width="18" height="18" alt="" aria-hidden="true"></div>{% endif %}
+  {% if field.help_text %}<p class="seller-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+  {{ field.errors }}
+</div>

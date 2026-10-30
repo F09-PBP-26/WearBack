@@ -1,0 +1,70 @@
+{% extends 'listings/base.html' %}
+{% load static %}
+
+{% block title %}{{ listing.name }} – WearBack{% endblock title %}
+{% block body_class %}catalog-page item-detail-page{% endblock body_class %}
+{% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
+{% block nav_links %}{% include 'components/guest-nav.html' with active_page='' %}{% endblock nav_links %}
+{% block page_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=46">
+  <link rel="stylesheet" href="{% static 'css/item-detail.css' %}?v=2">
+{% endblock page_css %}
+
+{% block content %}
+<main class="item-detail" aria-labelledby="item-title">
+  <a class="item-back" href="{% url 'main:show_main' %}#catalog"><span aria-hidden="true">←</span> Browse items</a>
+  {% include 'components/listing-notices.html' %}
+  <div class="item-overview">
+    {% include 'components/item-photo.html' %}
+    <section class="item-panel item-purchase" aria-labelledby="item-title">
+      <div class="item-heading">
+        {% if can_manage %}<p class="item-owner-badge">Your listing</p>{% endif %}
+        <h1 id="item-title">{{ listing.name }}</h1>
+        <p class="item-price{% if not listing.price %} item-price-unset{% endif %}">{{ listing.price_display }}</p>
+      </div>
+      <div class="item-description">{{ listing.description|default:'The seller hasn’t added a description yet.'|linebreaks }}</div>
+      <div class="item-purchase-actions">
+        {% if can_manage %}
+          <p class="item-availability">{% if listing.stock == 0 %}Sold out{% elif not listing.price %}Add a price to make this item available.{% else %}{{ listing.stock }} available{% endif %}</p>
+          <nav class="item-owner-actions" aria-label="Manage this listing">
+            <a class="item-primary-action" href="{% url 'listings:update' listing.pk %}">Edit listing</a>
+            <a class="item-secondary-action item-delete-link" href="{% url 'listings:delete' listing.pk %}" data-dialog-open="delete-listing-dialog">Delete listing</a>
+          </nav>
+          <p class="item-purchase-help">Keep your item details up to date for its next owner.</p>
+        {% elif not listing.is_available %}
+          <p class="item-availability" role="status">{% if listing.stock == 0 %}This item is sold out.{% else %}This item isn’t ready to buy yet.{% endif %}</p>
+          <button class="item-primary-action" type="button" disabled>{% if listing.stock == 0 %}Sold out{% else %}Currently unavailable{% endif %}</button>
+          <p class="item-purchase-help">Browse other items to find your next preloved piece.</p>
+        {% else %}
+          <div class="item-quantity-row">
+            <div><label for="item-quantity">Quantity</label><p class="item-muted">{{ listing.stock }} available</p></div>
+            <div class="item-quantity" data-quantity-control>
+              <button type="button" aria-label="Decrease quantity" data-quantity-decrease disabled>−</button>
+              <input id="item-quantity" type="number" min="1" max="{{ listing.stock }}" value="1" inputmode="numeric" aria-describedby="quantity-status" data-quantity-input>
+              <button type="button" aria-label="Increase quantity" data-quantity-increase{% if listing.stock == 1 %} disabled{% endif %}>+</button>
+            </div>
+          </div>
+          <span class="item-sr-only" id="quantity-status" role="status" data-quantity-status>Quantity: 1</span>
+          {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'main:add_to_cart' listing.pk %}" data-add-to-cart-form>
+              {% csrf_token %}
+              <input type="hidden" name="quantity" value="1" data-cart-quantity>
+              <button class="item-primary-action" type="submit">Add to cart</button>
+            </form>
+            <p class="item-purchase-help">Add this item to your shopping cart.</p>
+            {% else %}
+            <a class="item-primary-action" href="{% url 'main:login' %}?next={{ request.get_full_path|urlencode }}">Sign in to shop</a>
+            <p class="item-purchase-help">Sign in to contact the seller. Checkout is coming soon.</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    </section>
+  </div>
+  <div class="item-details-grid">
+    {% include 'components/item-specifications.html' %}
+    {% include 'components/item-seller.html' %}
+  </div>
+  {% if can_manage %}{% include 'components/item-delete-dialog.html' %}{% endif %}
+</main>
+{% endblock content %}
