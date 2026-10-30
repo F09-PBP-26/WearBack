@@ -29,7 +29,8 @@
           <span class="review-image-placeholder" role="img" aria-label="Product image unavailable">◇</span>
           {% endif %}
           <div>
-            <h3>{{ order.item_summary|default:order.item_name }}</h3>
+            <h3>{{ order.item_name }}</h3>
+            <p>{{ order.item_summary }}</p>
             <p>{{ order.item_count }} item{{ order.item_count|pluralize }}</p>
           </div>
           <strong>{{ order_total }}</strong>
