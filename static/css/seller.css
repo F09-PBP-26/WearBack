@@ -550,6 +550,78 @@
     font-size: 14px;
 }
 
+.seller-shipping-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+    list-style: none;
+}
+
+.seller-order-card {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--color-listing-border);
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+}
+
+.seller-order-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.seller-order-card h3 {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 24px;
+}
+
+.seller-order-card > p,
+.seller-order-address {
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--color-listing-muted);
+}
+
+.seller-order-address dt {
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: var(--color-listing-ink);
+}
+
+.seller-order-address dd {
+    margin: 0;
+}
+
+.seller-order-card > form .item-primary-action {
+    width: 100%;
+}
+
+.seller-shipped-heading {
+    margin-top: 28px;
+    font: 400 26px/36px var(--font-serif);
+}
+
+.seller-shipping-destination {
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--seller-sage);
+}
+
+.seller-shipping-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 20px;
+}
+
 @media (max-width: 1250px) {
     .seller-dashboard-grid {
         grid-template-columns: minmax(0, 1fr) 320px;

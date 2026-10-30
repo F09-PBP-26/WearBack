@@ -77,8 +77,15 @@
     font-weight: 600;
 }
 
-.status-ongoing, .status-completed, .status-delivered{
+.status-ongoing, .status-completed, .status-delivered, .status-paid, .status-shipping {
     color: var(--color-primary);
+    background: var(--color-field);
+}
+
+.transaction-notice {
+    margin-bottom: 18px;
+    padding: 14px;
+    border-radius: 8px;
     background: var(--color-field);
 }
 

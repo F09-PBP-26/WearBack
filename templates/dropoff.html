@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize tz %}
 
 {% block title %}Drop-off Location | WearBack{% endblock title %}
 
 {% block body_class %}checkout-body{% endblock body_class %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/dropoff.css' %}?v=8">
+<link rel="stylesheet" href="{% static 'css/dropoff.css' %}?v=9">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 {% endblock page_css %}
 
@@ -27,9 +27,9 @@
     <section class="checkout-heading">
         <div>
             <h1>Drop-off location</h1>
-            <p>Choose a point on the map and save the drop-off address for this order.</p>
+            <p>{% if transaction.status == 'ongoing' %}Save your drop-off address, then pay so the seller can prepare your shipment.{% else %}View the drop-off address and payment status for this order.{% endif %}</p>
         </div>
-        <span class="location-status">{% if dropoff_location %}Location saved{% else %}Choose a location{% endif %}</span>
+        <span class="location-status">{% if transaction.status != 'ongoing' %}{{ transaction.get_status_display }}{% elif dropoff_location %}Location saved{% else %}Choose a location{% endif %}</span>
     </section>
 
     <div class="checkout-layout">
@@ -81,7 +81,7 @@
             <section class="checkout-card address-card">
                 <div class="card-heading">
                     <h3>Drop-off address</h3>
-                    <button id="change-location-button" class="change-button" type="button">
+                    <button id="change-location-button" class="change-button" type="button" {% if transaction.status != 'ongoing' %}disabled{% endif %}>
                         Select location 
                     </button>
                 </div>
@@ -114,8 +114,8 @@
         <aside class="checkout-right">
 
             <section class="checkout-card location-form-card">
-                <h2>Save your address</h2>
-                <p class="location-instruction">Select a map point, then add the street address and any drop-off instructions.</p>
+                <h2>{% if transaction.status == 'ongoing' %}Save your address{% else %}Delivery address{% endif %}</h2>
+                <p class="location-instruction">{% if transaction.status == 'ongoing' %}Select a map point, then add the street address and any drop-off instructions.{% else %}This is the address saved for this order.{% endif %}</p>
                 <form id="dropoff-form" method="post" action="{% url 'main:dropoff' transaction.pk %}">
                     {% csrf_token %}
                     {{ form.latitude }}
@@ -126,8 +126,43 @@
                     {% if form.latitude.errors or form.longitude.errors %}
                         <p class="location-error" role="alert">Choose a valid point on the map before saving.</p>
                     {% endif %}
-                    <button class="save-location" type="submit">Save drop-off location</button>
+                    {% if transaction.status == 'ongoing' %}
+                        <button class="save-location" type="submit">Save drop-off location</button>
+                    {% endif %}
                 </form>
+            </section>
+
+            <section class="checkout-card payment-card" aria-labelledby="payment-title">
+                <div class="card-heading">
+                    <h2 id="payment-title">{% if transaction.status == 'paid' or transaction.status == 'shipping' or transaction.status == 'delivered' or transaction.status == 'completed' %}Payment confirmed{% else %}Payment{% endif %}</h2>
+                    <span class="item-count">Demo payment</span>
+                </div>
+                <div class="payment-total">
+                    <span>Total payment</span>
+                    <strong>Rp{{ transaction.price|intcomma }}</strong>
+                </div>
+                {% if transaction.status == 'ongoing' %}
+                    <p class="location-instruction">Demo payment. No money is charged. After payment, the seller confirms shipment from their dashboard.</p>
+                    {% if transaction.payment_deadline %}
+                        <p class="payment-deadline">Pay within <span class="payment-countdown" data-deadline="{{ transaction.payment_deadline|date:'c' }}">the payment window</span>.</p>
+                    {% endif %}
+                    <form id="payment-form" method="post" action="{% url 'main:pay_transaction' transaction.pk %}">
+                        {% csrf_token %}
+                        <button id="pay-now-button" class="pay-now" type="submit" aria-describedby="payment-help" {% if not payment_ready %}disabled{% endif %}>Pay now</button>
+                    </form>
+                    <p id="payment-help" class="payment-help" aria-live="polite">{% if payment_ready %}Your address is saved. Ready for payment.{% else %}Save your drop-off location to enable payment.{% endif %}</p>
+                {% elif transaction.status == 'paid' %}
+                    <p class="payment-confirmation" role="status">Awaiting shipment</p>
+                    <p class="location-instruction">Your payment is confirmed. The seller will use Insta ship to confirm shipment from their dashboard.</p>
+                {% elif transaction.status == 'shipping' %}
+                    <p class="payment-confirmation" role="status">Your order is shipping.</p>
+                    <p class="location-instruction">The seller confirmed shipment via Insta ship{% if transaction.shipped_at %} on {{ transaction.shipped_at|timezone:'Asia/Jakarta'|date:'j F Y, H:i' }} WIB{% endif %}.</p>
+                {% elif transaction.status == 'cancelled' %}
+                    <p class="location-instruction">{{ transaction.status_message|default:'This order was cancelled' }}. Payment is unavailable.</p>
+                {% else %}
+                    <p class="location-instruction">This order is {{ transaction.get_status_display|lower }}.</p>
+                {% endif %}
+                <a class="payment-transactions-link" href="{% url 'main:transaction_history' %}">View transactions &rarr;</a>
             </section>
 
         </aside>
@@ -195,7 +230,8 @@
 
 
 
-<script src="{% static 'js/dropoff.js' %}?v=4"></script>
+<script src="{% static 'js/dropoff.js' %}?v=5"></script>
+<script src="{% static 'js/transactions.js' %}?v=3"></script>
 
 {% endblock content %}
 

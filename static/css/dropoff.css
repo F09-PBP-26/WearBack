@@ -326,6 +326,84 @@
     font-size: 12px;
 }
 
+/* ---------- Payment ---------- */
+
+.payment-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e8eae4;
+}
+
+.payment-total span,
+.payment-help,
+.payment-deadline {
+    color: #657365;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.payment-total strong {
+    font-size: 24px;
+    overflow-wrap: anywhere;
+}
+
+.pay-now {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: white;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pay-now:hover:not(:disabled) {
+    background: #405244;
+}
+
+.pay-now:focus-visible,
+.payment-transactions-link:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 3px;
+}
+
+.pay-now:disabled,
+.change-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.payment-help {
+    margin-top: 10px;
+}
+
+.payment-confirmation {
+    margin-top: 16px;
+    font-weight: 600;
+}
+
+.payment-countdown {
+    font-variant-numeric: tabular-nums;
+}
+
+.payment-expired {
+    color: #a23d32;
+}
+
+.payment-transactions-link {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 12px;
+    text-decoration: underline;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 850px) {

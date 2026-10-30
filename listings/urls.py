@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('create/', views.create, name='create'),
     path('mine/', views.mine, name='mine'),
+    path('orders/<int:transaction_id>/ship/', views.ship_order, name='ship_order'),
     path('<int:pk>/', views.detail, name='detail'),
     path('<int:pk>/edit/', views.update, name='update'),
     path('<int:pk>/delete/', views.delete, name='delete'),

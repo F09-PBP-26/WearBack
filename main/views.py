@@ -372,18 +372,73 @@ def sso_callback(request):
 @never_cache
 @require_http_methods(['GET', 'POST'])
 def dropoff_locations(request, transaction_id):
-    order = get_object_or_404(TransactionHistory, pk=transaction_id, buyer=request.user)
-    location = DropoffLocation.objects.filter(transaction=order).first()
-    initial = ({'address': location.address, 'latitude': location.latitude, 'longitude': location.longitude}
-               if location else {})
-    form = DropoffLocationForm(request.POST if request.method == 'POST' else None, initial=initial)
-    if request.method == 'POST' and form.is_valid():
-        DropoffLocation.objects.update_or_create(transaction=order, defaults=form.cleaned_data)
-        messages.success(request, 'Drop-off location saved.')
-        return redirect('main:dropoff', transaction_id=order.pk)
+    with transaction.atomic():
+        # Address edits and payment share this lock so shipping uses the saved address.
+        order = get_object_or_404(
+            TransactionHistory.objects.select_for_update(), pk=transaction_id, buyer=request.user,
+        )
+        _expire_payment(order)
+        location = DropoffLocation.objects.filter(transaction=order).first()
+        initial = ({'address': location.address, 'latitude': location.latitude, 'longitude': location.longitude}
+                   if location else {})
+        form = DropoffLocationForm(request.POST if request.method == 'POST' else None, initial=initial)
+        if order.status != 'ongoing':
+            if request.method == 'POST':
+                messages.error(request, 'The drop-off address can only be changed while awaiting payment.')
+                return redirect('main:dropoff', transaction_id=order.pk)
+            for field in form.fields.values():
+                field.disabled = True
+        elif request.method == 'POST' and form.is_valid():
+            DropoffLocation.objects.update_or_create(transaction=order, defaults=form.cleaned_data)
+            messages.success(request, 'Drop-off location saved. You can now continue to payment.')
+            return redirect('main:dropoff', transaction_id=order.pk)
     context = page_context(request)
-    context.update(transaction=order, form=form, dropoff_location=location)
+    context.update(
+        transaction=order, form=form, dropoff_location=location,
+        payment_ready=bool(location and order.status == 'ongoing' and not form.is_bound),
+    )
     return render(request, 'dropoff.html', context, status=400 if request.method == 'POST' else 200)
+
+
+def _expire_payment(order):
+    now = timezone.now()
+    if order.status == 'ongoing' and order.payment_deadline and order.payment_deadline <= now:
+        order.status = 'cancelled'
+        order.status_message = 'Payment time expired'
+        order.save(update_fields=['status', 'status_message', 'updated_at'])
+
+
+@login_required
+@never_cache
+@require_POST
+def pay_transaction(request, transaction_id):
+    """Confirm a demo payment; the seller must confirm shipment separately."""
+    with transaction.atomic():
+        order = get_object_or_404(
+            TransactionHistory.objects.select_for_update(), pk=transaction_id, buyer=request.user,
+        )
+        _expire_payment(order)
+        if order.status != 'ongoing':
+            messages.info(request, 'This order is no longer awaiting payment.')
+        elif not DropoffLocation.objects.filter(transaction=order).exists():
+            messages.error(request, 'Save your drop-off location before paying.')
+        else:
+            listing = Listing.objects.select_for_update().filter(pk=order.listing_id).first()
+            if listing is None or order.item_count < 1 or listing.stock < order.item_count:
+                messages.error(request, 'This item is no longer available in the requested quantity.')
+            elif order.price <= 0:
+                messages.error(request, 'This order does not have a valid payment total.')
+            elif listing.bids.filter(status__in=[Bid.Status.PENDING, Bid.Status.APPROVED]).exists():
+                messages.error(request, 'This item is now in an auction and cannot be purchased here.')
+            else:
+                listing.stock -= order.item_count
+                listing.save(update_fields=['stock', 'updated_at'])
+                order.status = 'paid'
+                order.status_message = 'Demo payment confirmed. Awaiting seller shipment.'
+                order.payment_deadline = None
+                order.save(update_fields=['status', 'status_message', 'payment_deadline', 'updated_at'])
+                messages.success(request, 'Demo payment confirmed. Waiting for the seller to ship your order.')
+    return redirect('main:dropoff', transaction_id=order.pk)
 
 
 # Transaction 
@@ -396,7 +451,7 @@ def transaction_history(request):
             status_message="Payment time expired",
             updated_at=now,
     )
-    transactions = TransactionHistory.objects.filter(buyer=request.user).order_by("-created_at")
+    transactions = TransactionHistory.objects.filter(buyer=request.user).select_related('dropoff_location').order_by("-created_at")
     return render(request, "transactions.html", {**page_context(request), "transactions": transactions})
 
 # Carts

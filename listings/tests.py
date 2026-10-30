@@ -161,7 +161,7 @@ class SellerScreenTests(TestCase):
         response = self.client.get(reverse('listings:mine'))
         self.assertTemplateUsed(response, 'listings/dashboard.html')
         for text in ('Vintage coat', '3 items', 'Listed', 'Needs details', 'Sold out',
-                     '0 orders', 'Orders will appear here when checkout is available.'):
+                     '0 orders', 'Paid orders appear here after buyers complete payment.'):
             self.assertContains(response, text)
         self.assertNotContains(response, 'Private dashboard item')
         self.assertNotContains(response, 'Awaiting shipment')
