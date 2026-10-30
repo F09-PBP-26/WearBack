@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -68,7 +69,13 @@ def detail(request, pk):
 @require_GET
 def mine(request):
     context = page_context(request)
-    context.update(listings=Listing.objects.filter(seller=request.user), own_listings=True)
+    listings = Listing.objects.filter(seller=request.user).annotate(
+        auction_locked=Exists(Bid.objects.filter(
+            listing_id=OuterRef('pk'),
+            status__in=[Bid.Status.PENDING, Bid.Status.APPROVED],
+        )),
+    )
+    context.update(listings=listings, own_listings=True)
     return render(request, 'listings/dashboard.html', context)
 
 

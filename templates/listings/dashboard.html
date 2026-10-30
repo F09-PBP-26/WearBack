@@ -27,8 +27,12 @@
                 <span class="seller-list-description"><strong>{{ listing.name }}</strong><span>{{ listing.get_category_display|default:'Category not set' }}{% if listing.condition %} / {{ listing.get_condition_display }}{% endif %}{% if listing.size %} · {{ listing.size }}{% endif %}</span></span>
               </a>
               <p class="seller-list-price">{{ listing.price_display }}</p>
-              <div class="seller-list-status">{% include 'components/seller-status.html' %}</div>
-              <a class="seller-edit-link" href="{% url 'listings:update' listing.pk %}" aria-label="Edit {{ listing.name }}"><img src="{% static 'img/listing-edit.svg' %}" width="20" height="20" alt=""></a>
+              <div class="seller-list-status">{% if listing.auction_locked %}<span class="seller-badge seller-badge-muted">Locked</span>{% else %}{% include 'components/seller-status.html' %}{% endif %}</div>
+              {% if listing.auction_locked %}
+                <span aria-hidden="true">—</span>
+              {% else %}
+                <a class="seller-edit-link" href="{% url 'listings:update' listing.pk %}" aria-label="Edit {{ listing.name }}"><img src="{% static 'img/listing-edit.svg' %}" width="20" height="20" alt=""></a>
+              {% endif %}
             </li>
           {% endfor %}
         </ul>

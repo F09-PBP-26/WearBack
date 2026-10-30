@@ -28,7 +28,7 @@
         {% if can_manage %}
           <p class="item-availability">{% if listing.stock == 0 %}Sold out{% elif not listing.price %}Add a price to make this item available.{% else %}{{ listing.stock }} available{% endif %}</p>
           {% if auction_bid_count or auction_has_pending_bid %}
-            <p class="item-purchase-help">{% if auction_has_pending_bid %}A buyer offer is waiting for your approval.{% else %}This listing is locked because bidding has started.{% endif %}</p>
+            <p class="item-purchase-help">{% if auction_ended %}This auction has ended. The listing remains locked to preserve the auction result.{% elif auction_has_pending_bid %}A buyer offer is waiting for your approval.{% else %}This listing is locked because bidding has started.{% endif %}</p>
           {% else %}
             <nav class="item-owner-actions" aria-label="Manage this listing">
               <a class="item-primary-action" href="{% url 'listings:update' listing.pk %}">Edit listing</a>
@@ -36,6 +36,9 @@
             </nav>
             <p class="item-purchase-help">Keep your item details up to date for its next owner.</p>
           {% endif %}
+        {% elif auction_ended %}
+          <p class="item-availability" role="status">This auction has ended.</p>
+          <p class="item-purchase-help">This item cannot be purchased through the cart. See the auction result below.</p>
         {% elif not listing.is_available %}
           <p class="item-availability" role="status">{% if listing.stock == 0 %}This item is sold out.{% else %}This item isn’t ready to buy yet.{% endif %}</p>
           <button class="item-primary-action" type="button" disabled>{% if listing.stock == 0 %}Sold out{% else %}Currently unavailable{% endif %}</button>
