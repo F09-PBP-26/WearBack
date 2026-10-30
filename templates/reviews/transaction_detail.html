@@ -1,0 +1,60 @@
+{% extends 'reviews/layout.html' %}
+
+{% block title %}Order #{{ order.order_number|default:order.pk }} | WearBack{% endblock %}
+
+{% block content %}
+<main class="review-main">
+  <a class="review-back" href="{% url 'main:transaction_history' %}">← Back to transactions</a>
+  <a class="review-back" href="{% url 'reviews:list' %}">My reviews →</a>
+  <header class="review-heading">
+    <div>
+      <h1>Order #{{ order.order_number|default:order.pk }}</h1>
+      <p>Placed {{ order.created_at|date:'j F Y' }} · {{ order.item_count }} item{{ order.item_count|pluralize }}</p>
+    </div>
+    <span class="review-status">✓ {{ order.get_status_display }}</span>
+  </header>
+
+  <div class="review-order-grid">
+    <section class="review-panel review-order" aria-labelledby="order-items-title">
+      <div class="review-section-heading">
+        <h2 id="order-items-title">Items in this order</h2>
+        <span>{{ order.item_count }} item{{ order.item_count|pluralize }}</span>
+      </div>
+      <p class="review-seller">Sold by {{ order.seller_name|default:'Seller information unavailable' }}</p>
+      <ul class="review-order-items">
+        <li class="review-order-item">
+          {% if order.item_image_url %}
+          <img src="{{ order.item_image_url }}" alt="{{ order.item_name }}" width="84" height="84">
+          {% else %}
+          <span class="review-image-placeholder" role="img" aria-label="Product image unavailable">◇</span>
+          {% endif %}
+          <div>
+            <h3>{{ order.item_summary|default:order.item_name }}</h3>
+            <p>{{ order.item_count }} item{{ order.item_count|pluralize }}</p>
+          </div>
+          <strong>{{ order_total }}</strong>
+        </li>
+      </ul>
+    </section>
+
+    <aside class="review-panel review-summary" aria-labelledby="summary-title">
+      <h2 id="summary-title">Order summary</h2>
+      <dl class="review-costs">
+        <div class="review-total"><dt>Total purchase</dt><dd>{{ order_total }}</dd></div>
+      </dl>
+      <dl class="review-delivery">
+        <dt>Status</dt><dd>{{ order.get_status_display }}</dd>
+        {% if order.status_message %}<dt>Order update</dt><dd>{{ order.status_message }}</dd>{% endif %}
+        <dt>Sold by</dt><dd>{{ order.seller_name|default:'Seller information unavailable' }}</dd>
+      </dl>
+    </aside>
+  </div>
+
+  <section class="review-rating-section" aria-labelledby="rating-title">
+    <h2 id="rating-title">Rate your items</h2>
+    <p>Share how your purchase worked out. Your feedback helps the next owner.</p>
+    <p data-review-message role="status" aria-live="polite"></p>
+    <div id="review-editor">{% include 'reviews/components/editor.html' %}</div>
+  </section>
+</main>
+{% endblock %}

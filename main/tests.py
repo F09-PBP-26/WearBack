@@ -1,3 +1,5 @@
+from datetime import timedelta
+from decimal import Decimal
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 from xml.etree.ElementTree import ParseError
@@ -8,10 +10,11 @@ from django.db import IntegrityError, transaction
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils.html import escape
+from django.utils import timezone
 from requests import Response, Timeout
 
 from listings.models import Listing
-from main.models import SSOIdentity
+from main.models import Bid, CartItem, SSOIdentity, TransactionHistory
 from main.sso import cas_client
 
 User = get_user_model()
@@ -121,6 +124,287 @@ class CatalogTests(TestCase):
         self.assertContains(response, 'No items listed yet')
 
 
+class AuctionPageTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.seller = User.objects.create_user(username='auction-seller', email='auction@example.test')
+
+    def test_auction_page_shows_empty_state_without_inventing_lots(self):
+        response = self.client.get(reverse('main:auction'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'auction.html')
+        self.assertQuerySetEqual(response.context['auction_items'], [])
+        self.assertContains(response, 'No fixed bid increment')
+        self.assertContains(response, 'No items available just yet')
+        self.assertNotContains(response, 'Place bid')
+
+    def test_auction_page_uses_only_available_listings_and_links_to_details(self):
+        available = Listing.objects.create(
+            seller=self.seller, name='Vintage knit scarf', price=95000,
+            category='accessories', stock=2,
+            image_url='https://example.com/scarf.jpg',
+        )
+        Listing.objects.create(seller=self.seller, name='Sold jacket', price=210000, stock=0)
+        Listing.objects.create(seller=self.seller, name='Unpriced coat', stock=1)
+        Bid.objects.create(
+            listing=available, bidder=self.seller, amount=95000,
+            status=Bid.Status.APPROVED, approved_at=timezone.now(),
+        )
+
+        response = self.client.get(reverse('main:auction'))
+
+        self.assertQuerySetEqual(response.context['auction_items'], [available])
+        self.assertEqual(response.context['auction_category_count'], 1)
+        self.assertContains(response, available.name)
+        self.assertContains(response, available.image_url)
+        self.assertContains(response, available.price_display)
+        self.assertContains(response, reverse('listings:detail', args=[available.pk]))
+        self.assertNotContains(response, 'Sold jacket')
+        self.assertNotContains(response, 'Unpriced coat')
+
+    def test_auction_page_does_not_show_listings_before_seller_approval(self):
+        Listing.objects.create(
+            seller=self.seller, name='Not approved yet', price=95000, stock=1,
+        )
+        response = self.client.get(reverse('main:auction'))
+
+        self.assertQuerySetEqual(response.context['auction_items'], [])
+        self.assertNotContains(response, 'Not approved yet')
+
+
+class AuctionBiddingTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.seller = User.objects.create_user(username='bid-seller')
+        cls.bidder = User.objects.create_user(username='bidder', email='private-bidder@example.test')
+        cls.other_bidder = User.objects.create_user(
+            username='other-bidder', email='private-other-bidder@example.test',
+        )
+        cls.listing = Listing.objects.create(
+            seller=cls.seller,
+            name='Auction scarf',
+            price='95000',
+            category='accessories',
+            stock=1,
+        )
+
+    def test_guest_must_sign_in_to_bid(self):
+        response = self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]),
+            {'amount': '95000'},
+        )
+
+        self.assertRedirects(
+            response,
+            f'{reverse("main:login")}?next={reverse("main:place_bid", args=[self.listing.pk])}',
+            fetch_redirect_response=False,
+        )
+        self.assertFalse(Bid.objects.exists())
+
+    def test_first_bid_can_be_any_positive_amount_and_waits_for_seller(self):
+        self.client.force_login(self.bidder)
+        response = self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]),
+            {'amount': '1'},
+        )
+
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        first_bid = Bid.objects.get()
+        self.assertEqual(first_bid.amount, 1)
+        self.assertEqual(first_bid.bidder, self.bidder)
+        self.assertEqual(first_bid.status, Bid.Status.PENDING)
+        self.assertIsNone(first_bid.approved_at)
+
+        detail = self.client.get(reverse('listings:detail', args=[self.listing.pk]))
+        self.assertContains(detail, 'Your offer is waiting for the seller’s approval.')
+        self.assertContains(detail, '0 bids')
+        self.assertNotContains(detail, 'Rp1</strong>')
+        self.assertNotContains(self.client.get(reverse('main:auction')), self.listing.name)
+        self.assertNotContains(detail, 'Add to cart')
+
+        self.client.force_login(self.seller)
+        seller_detail = self.client.get(reverse('listings:detail', args=[self.listing.pk]))
+        self.assertContains(seller_detail, 'Offers awaiting your approval')
+        self.assertContains(seller_detail, 'Rp1')
+        self.assertContains(seller_detail, 'Approve and start auction')
+
+        response = self.client.post(
+            reverse('main:decide_bid', args=[self.listing.pk, first_bid.pk]),
+            {'decision': 'approve'},
+        )
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        first_bid.refresh_from_db()
+        self.assertEqual(first_bid.status, Bid.Status.APPROVED)
+        self.assertIsNotNone(first_bid.approved_at)
+        self.assertContains(self.client.get(reverse('main:auction')), self.listing.name)
+
+    def test_active_auction_has_no_fixed_increment_but_requires_higher_bid(self):
+        self.client.force_login(self.bidder)
+        url = reverse('main:place_bid', args=[self.listing.pk])
+        self.client.post(url, {'amount': '1'})
+        bid = Bid.objects.get()
+        self.client.force_login(self.seller)
+        self.client.post(
+            reverse('main:decide_bid', args=[self.listing.pk, bid.pk]),
+            {'decision': 'approve'},
+        )
+
+        self.client.force_login(self.other_bidder)
+        response = self.client.post(url, {'amount': '1.01'})
+        self.assertEqual(Bid.objects.count(), 2)
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        self.assertEqual(Bid.objects.order_by('-amount').first().amount, Decimal('1.01'))
+
+        response = self.client.post(url, {'amount': '1.01'}, follow=True)
+        self.assertEqual(Bid.objects.count(), 2)
+        self.assertContains(response, 'Your bid must be higher than the current bid of Rp1,01.')
+
+    def test_seller_can_reject_an_offer_and_bidder_can_submit_another(self):
+        self.client.force_login(self.bidder)
+        self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]), {'amount': '0,50'},
+        )
+        first_bid = Bid.objects.get()
+        self.client.force_login(self.seller)
+        response = self.client.post(
+            reverse('main:decide_bid', args=[self.listing.pk, first_bid.pk]),
+            {'decision': 'reject'},
+        )
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        first_bid.refresh_from_db()
+        self.assertEqual(first_bid.status, Bid.Status.REJECTED)
+
+        self.client.force_login(self.bidder)
+        response = self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]), {'amount': '0,75'},
+        )
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        self.assertEqual(Bid.objects.filter(status=Bid.Status.PENDING).count(), 1)
+
+    def test_seller_cannot_bid_on_own_listing_or_decide_another_sellers_bid(self):
+        self.client.force_login(self.seller)
+        response = self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]),
+            {'amount': '1'},
+            follow=True,
+        )
+        self.assertContains(response, 'You cannot bid on your own listing.')
+        self.assertFalse(Bid.objects.exists())
+
+        self.client.force_login(self.bidder)
+        self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]), {'amount': '1'},
+        )
+        bid = Bid.objects.get()
+        response = self.client.post(
+            reverse('main:decide_bid', args=[self.listing.pk, bid.pk]),
+            {'decision': 'approve'},
+        )
+        self.assertEqual(response.status_code, 404)
+        bid.refresh_from_db()
+        self.assertEqual(bid.status, Bid.Status.PENDING)
+
+    def test_valid_bid_extends_the_auction_by_30_minutes(self):
+        self.client.force_login(self.bidder)
+        url = reverse('main:place_bid', args=[self.listing.pk])
+        self.client.post(url, {'amount': '95.000'})
+        first_bid = Bid.objects.get()
+        self.client.force_login(self.seller)
+        self.client.post(
+            reverse('main:decide_bid', args=[self.listing.pk, first_bid.pk]),
+            {'decision': 'approve'},
+        )
+        first_bid.refresh_from_db()
+        original_end = first_bid.approved_at + timedelta(hours=24)
+
+        self.client.force_login(self.other_bidder)
+        response = self.client.post(url, {'amount': '95.000,01'})
+
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        self.assertEqual(Bid.objects.count(), 2)
+        next_bid = Bid.objects.exclude(pk=first_bid.pk).get()
+        self.assertEqual(next_bid.status, Bid.Status.APPROVED)
+        detail = self.client.get(reverse('listings:detail', args=[self.listing.pk]))
+        self.assertEqual(
+            detail.context['auction_end_at'],
+            original_end + timedelta(minutes=30),
+        )
+        page = self.client.get(reverse('main:auction'))
+        self.assertContains(page, 'Rp95.000,01')
+        self.assertContains(page, '2 bids')
+
+    def test_bidding_ends_after_24_hours_plus_extensions(self):
+        self.client.force_login(self.bidder)
+        self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]),
+            {'amount': '95000'},
+        )
+        bid = Bid.objects.get()
+        self.client.force_login(self.seller)
+        self.client.post(
+            reverse('main:decide_bid', args=[self.listing.pk, bid.pk]),
+            {'decision': 'approve'},
+        )
+        Bid.objects.filter(pk=bid.pk).update(
+            approved_at=timezone.now() - timedelta(hours=25),
+        )
+
+        self.client.force_login(self.bidder)
+        response = self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]),
+            {'amount': '100000'},
+            follow=True,
+        )
+
+        self.assertEqual(Bid.objects.filter(status=Bid.Status.APPROVED).count(), 1)
+        self.assertContains(response, 'Bidding for this item has ended.')
+        self.assertContains(self.client.get(reverse('main:auction')), 'Auction results')
+
+    def test_bid_listing_cannot_be_bought_changed_or_deleted(self):
+        self.client.force_login(self.bidder)
+        self.client.post(
+            reverse('main:place_bid', args=[self.listing.pk]),
+            {'amount': '95000'},
+        )
+        bid = Bid.objects.get()
+        self.client.force_login(self.seller)
+        self.client.post(
+            reverse('main:decide_bid', args=[self.listing.pk, bid.pk]),
+            {'decision': 'approve'},
+        )
+
+        self.client.force_login(self.other_bidder)
+        response = self.client.post(
+            reverse('main:add_to_cart', args=[self.listing.pk]),
+            {'quantity': '1'},
+        )
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        self.assertFalse(CartItem.objects.exists())
+
+        cart_item = CartItem.objects.create(buyer=self.other_bidder, listing=self.listing)
+        response = self.client.post(
+            reverse('main:checkout_cart'),
+            {'selected_cart_ids': str(cart_item.pk)},
+            follow=True,
+        )
+        self.assertContains(response, 'is in an auction and cannot be purchased through the cart.')
+        self.assertFalse(TransactionHistory.objects.exists())
+
+        self.client.force_login(self.seller)
+        response = self.client.post(
+            reverse('listings:update', args=[self.listing.pk]),
+            {'name': 'Changed scarf', 'price': '1'},
+        )
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        self.listing.refresh_from_db()
+        self.assertEqual(self.listing.name, 'Auction scarf')
+
+        response = self.client.post(reverse('listings:delete', args=[self.listing.pk]))
+        self.assertRedirects(response, reverse('listings:detail', args=[self.listing.pk]))
+        self.assertTrue(Listing.objects.filter(pk=self.listing.pk).exists())
+
+
 @override_settings(SSO_SERVER_URL='https://sso.ui.ac.id/cas2/', SSO_CAS_VERSION='2', SSO_TIMEOUT=8)
 class CASClientTests(TestCase):
     @patch('requests.Session.request')
@@ -161,6 +445,7 @@ class CASClientTests(TestCase):
 class PasswordAuthTests(TestCase):
     def payload(self, **changes):
         return dict(first_name='Demo', last_name='User', email='demo@example.com',
+                    location='Depok, Indonesia',
                     password=PASSWORD, password_confirm=PASSWORD, **changes)
 
     def test_registration_hashes_password_and_starts_session(self):
@@ -171,6 +456,7 @@ class PasswordAuthTests(TestCase):
         user = User.objects.get(email='demo@example.com')
         self.assertTrue(user.check_password(PASSWORD))
         self.assertNotEqual(user.password, PASSWORD)
+        self.assertEqual(user.location, 'Depok, Indonesia')
         self.assertEqual(int(self.client.session['_auth_user_id']), user.pk)
         page = self.client.get(reverse('main:auction'))
         self.assertContains(page, 'Log out')
@@ -198,6 +484,37 @@ class PasswordAuthTests(TestCase):
         self.assertIn('password', response.json()['errors'])
         self.assertIn('password_confirm', response.json()['errors'])
         self.assertFalse(User.objects.exists())
+
+    def test_registration_requires_location(self):
+        data = self.payload()
+        del data['location']
+
+        response = self.client.post(reverse('main:register'), data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('location', response.json()['errors'])
+        self.assertFalse(User.objects.exists())
+
+    def test_registration_accepts_compound_and_unicode_names(self):
+        names = [
+            ('Muhammad Rizky', 'Pratama'),
+            ('Demo', "O'Connor"),
+            ('Demo', 'Smith-Jones'),
+            ('José', 'García'),
+            ('Jose\u0301', 'O’Connor'),
+        ]
+        for index, (first_name, last_name) in enumerate(names):
+            with self.subTest(first_name=first_name, last_name=last_name):
+                data = self.payload()
+                data.update(first_name=first_name, last_name=last_name,
+                            email=f'name-{index}@example.test')
+
+                response = self.client.post(reverse('main:register'), data)
+
+                self.assertEqual(response.status_code, 201, response.content)
+                user = User.objects.get(email=data['email'])
+                self.assertEqual(user.first_name, first_name)
+                self.assertEqual(user.last_name, last_name)
 
     def test_email_login_and_logout(self):
         user = User.objects.create_user(username='internal', email='demo@example.com', password=PASSWORD)
@@ -247,8 +564,57 @@ class PasswordAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
         user.refresh_from_db()
         self.assertEqual(user.email, 'demo@example.com')
+        self.assertEqual(user.location, 'Depok, Indonesia')
         self.assertEqual(user.username, 'internal')
         self.assertFalse(user.has_usable_password())
+
+    def test_profile_requires_location(self):
+        user = User.objects.create_user(username='internal')
+        self.client.force_login(user)
+        data = self.payload()
+        del data['location']
+
+        response = self.client.post(reverse('main:profile'), data)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('location', response.json()['errors'])
+        user.refresh_from_db()
+        self.assertEqual(user.location, '')
+
+    def test_profile_location_update_preserves_existing_compound_and_unicode_names(self):
+        user = User.objects.create_user(
+            username='existing-member', email='demo@example.com',
+            first_name='Muhammad Rizky', last_name='García O’Connor',
+        )
+        self.client.force_login(user)
+        data = self.payload()
+        data.update(first_name=user.first_name, last_name=user.last_name,
+                    location='Bandung, Indonesia')
+
+        response = self.client.post(reverse('main:profile'), data)
+
+        self.assertEqual(response.status_code, 200, response.content)
+        user.refresh_from_db()
+        self.assertEqual(user.first_name, 'Muhammad Rizky')
+        self.assertEqual(user.last_name, 'García O’Connor')
+        self.assertEqual(user.location, 'Bandung, Indonesia')
+
+    def test_authenticated_user_can_access_saved_profile_from_account_menu(self):
+        user = User.objects.create_user(
+            username='internal', email='demo@example.com', location='Depok, Indonesia',
+            first_name='Demo', last_name='User', password=PASSWORD,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('main:show_main'))
+
+        self.assertContains(response, 'data-profile-open')
+        self.assertContains(response, '/static/js/main.js?v=21')
+        self.assertContains(response, 'Edit your profile')
+        self.assertContains(response, 'value="Demo"')
+        self.assertContains(response, 'value="User"')
+        self.assertContains(response, 'value="demo@example.com"')
+        self.assertContains(response, 'value="Depok, Indonesia"')
 
     def test_existing_username_admin_login_remains_supported(self):
         user = User.objects.create_superuser(username='admin', email='admin@example.com', password=PASSWORD)
@@ -494,6 +860,7 @@ class AuthReturnTests(TestCase):
         page = self.client.get(reverse('main:register'), {'next': destination}, follow=True)
         response = self.client.post(reverse('main:register'), {
             'first_name': 'New', 'last_name': 'Member', 'email': 'new-return@example.com',
+            'location': 'Depok, Indonesia',
             'password': PASSWORD, 'password_confirm': PASSWORD, 'next': page.context['auth_next'],
         })
         self.assertEqual(response.status_code, 201)
@@ -503,6 +870,7 @@ class AuthReturnTests(TestCase):
     def test_registration_rejects_an_external_return_destination(self):
         response = self.client.post(reverse('main:register'), {
             'first_name': 'New', 'last_name': 'Member', 'email': 'unsafe-return@example.com',
+            'location': 'Depok, Indonesia',
             'password': PASSWORD, 'password_confirm': PASSWORD, 'next': 'https://evil.example/',
         })
         self.assertEqual(response.status_code, 201)

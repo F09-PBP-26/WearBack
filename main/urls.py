@@ -2,12 +2,15 @@ from django.urls import path
 
 from main import views
 from main.review_views import review_preview
+from reviews.views import transaction_review
 
 app_name = 'main'
 
 urlpatterns = [
     path('', views.show_main, name='show_main'),
     path('auction/', views.auction, name='auction'),
+    path('auction/<int:listing_id>/bid/', views.place_bid, name='place_bid'),
+    path('auction/<int:listing_id>/bid/<int:bid_id>/decision/', views.decide_bid, name='decide_bid'),
     path('reviews/preview/', review_preview, name='review_preview'),
     path('login/', views.login, name='login'),
     path('register/', views.register, name='register'),
@@ -16,6 +19,7 @@ urlpatterns = [
 
     # Transaction
     path("transactions/", views.transaction_history, name="transaction_history"),
+    path('transactions/<int:transaction_id>/review/', transaction_review, name='transaction_review'),
 
     # Cart
     path("cart/", views.cart, name="cart"),

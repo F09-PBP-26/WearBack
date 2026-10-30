@@ -1,0 +1,11 @@
+[run]
+branch = True
+source = reviews
+omit =
+    reviews/migrations/*
+    reviews/tests.py
+    reviews/test_*.py
+
+[report]
+show_missing = True
+fail_under = 85

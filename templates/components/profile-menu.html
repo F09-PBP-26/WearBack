@@ -1,14 +1,34 @@
-<div class="profile-menu" id="profile-menu" popover aria-labelledby="profile-menu-name">
-  <p class="profile-menu-name" id="profile-menu-name">{{ request.user.get_full_name|default:'My account' }}</p>
-  <a class="profile-menu-action" href="{% url 'listings:mine' %}">My listings</a>
+<div
+  class="profile-menu"
+  id="profile-menu"
+  popover
+  aria-labelledby="profile-menu-name"
+>
+  <p class="profile-menu-name" id="profile-menu-name">
+    {{ request.user.get_full_name|default:request.user.username }}
+  </p>
+
+  <button class="profile-menu-action" type="button" data-profile-open>
+    Edit profile
+  </button>
+  <a class="profile-menu-action" href="{% url 'listings:mine' %}"
+    >My listings</a
+  >
+
+  <a class="profile-menu-action" href="{% url 'main:transaction_history' %}">Transactions</a>
+  <a class="profile-menu-action" href="{% url 'reviews:list' %}">My reviews</a>
+
   {% if sso_enabled and not sso_linked %}
   <form action="{% url 'main:sso_link' %}" method="post">
-    {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}" />
     <button class="profile-menu-action" type="submit">Link SSO UI</button>
   </form>
   {% endif %}
+
   <form action="{% url 'main:logout' %}" method="post">
-    {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}" />
     <button class="profile-menu-action" type="submit">Log out</button>
   </form>
 </div>

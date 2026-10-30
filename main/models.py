@@ -14,6 +14,7 @@ class User(AbstractUser):
 
     id = models.AutoField(primary_key=True)
     email = models.EmailField(blank=True, null=True)
+    location = models.CharField(max_length=255, blank=True, default='')
     groups = models.ManyToManyField(Group, blank=True, related_name='wearback_users', related_query_name='wearback_user')
     user_permissions = models.ManyToManyField(Permission, blank=True, related_name='wearback_users', related_query_name='wearback_user')
 
@@ -63,20 +64,12 @@ class TransactionHistory(models.Model):
         ("expired", "Expired"),
     ]
 
-    buyer = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="transaction_histories"
-    )
-
+    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="transaction_histories")
+    # Nullable for historical orders; keep their snapshot if a listing is deleted.
     listing = models.ForeignKey(
-        "listings.Listing",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="transaction_histories"
+        'listings.Listing', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='transactions',
     )
-
     item_name = models.CharField(max_length=255)
     item_image_url = models.URLField(blank=True)
     price = models.DecimalField(max_digits=12, decimal_places=0)
@@ -138,3 +131,40 @@ class CartItem(models.Model):
 
     def __str__(self):
         return f"{self.item_name} - {self.buyer}"
+
+
+class Bid(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending seller approval'
+        APPROVED = 'approved', 'Approved'
+        REJECTED = 'rejected', 'Rejected'
+
+    listing = models.ForeignKey(
+        'listings.Listing', on_delete=models.CASCADE, related_name='bids',
+    )
+    bidder = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='bids',
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-amount', 'created_at', 'pk']
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gt=0), name='bid_amount_positive'),
+            models.UniqueConstraint(
+                fields=['listing'],
+                condition=models.Q(status='pending'),
+                name='one_pending_bid_per_listing',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.listing} — {self.amount}'
+
+    @property
+    def amount_display(self):
+        formatted = f'{self.amount:,.2f}'.replace(',', '_').replace('.', ',').replace('_', '.')
+        return 'Rp' + (formatted[:-3] if formatted.endswith(',00') else formatted)

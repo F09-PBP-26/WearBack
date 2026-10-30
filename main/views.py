@@ -15,6 +15,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -28,11 +29,51 @@ from requests import RequestException
 
 from listings.models import Listing
 from main.auth_utils import throttled
-from main.forms import LoginForm, ProfileForm, RegisterForm
-from main.models import CartItem, TransactionHistory
+from main.forms import BidForm, LoginForm, ProfileForm, RegisterForm
+from main.models import Bid, CartItem, TransactionHistory
 from main.sso import cas_client, resolve_identity
 
-from listings.models import Listing
+
+AUCTION_DURATION = timedelta(hours=24)
+BID_EXTENSION = timedelta(minutes=30)
+
+
+def _format_rupiah(amount):
+    formatted = f'{amount:,.2f}'.replace(',', '_').replace('.', ',').replace('_', '.')
+    return 'Rp' + (formatted[:-3] if formatted.endswith(',00') else formatted)
+
+
+def _auction_listings():
+    highest_bid = Bid.objects.filter(
+        listing_id=OuterRef('pk'), status=Bid.Status.APPROVED,
+    ).order_by('-amount', 'approved_at', 'pk')
+    first_bid = Bid.objects.filter(
+        listing_id=OuterRef('pk'), status=Bid.Status.APPROVED,
+    ).order_by('approved_at', 'pk')
+    listings = Listing.objects.filter(price__isnull=False).annotate(
+        auction_highest_bid=Subquery(highest_bid.values('amount')[:1]),
+        auction_first_bid_at=Subquery(first_bid.values('approved_at')[:1]),
+        auction_bid_count=Count('bids', filter=Q(bids__status=Bid.Status.APPROVED)),
+    )
+    now = timezone.now()
+    active = []
+    ended = []
+    for listing in listings:
+        current_bid = listing.auction_highest_bid or listing.price
+        listing.auction_current_bid = current_bid
+        listing.auction_current_bid_display = _format_rupiah(current_bid)
+        listing.auction_end_at = (
+            listing.auction_first_bid_at + AUCTION_DURATION
+            + BID_EXTENSION * max(listing.auction_bid_count - 1, 0)
+            if listing.auction_first_bid_at else None
+        )
+        listing.auction_ended = bool(listing.auction_end_at and listing.auction_end_at <= now)
+        if listing.auction_ended:
+            ended.append(listing)
+        elif listing.auction_bid_count and listing.stock > 0:
+            active.append(listing)
+    return active, ended
+
 
 def safe_next(request, value):
     if value and url_has_allowed_host_and_scheme(value, {request.get_host()}, require_https=request.is_secure()):
@@ -50,8 +91,12 @@ def page_context(request):
             context['auth_next'] = safe_next(request, request.GET['next'])
     if request.user.is_authenticated:
         context['sso_linked'] = request.user.sso_identities.filter(provider='ui').exists()
+        context['profile_complete'] = bool(
+            request.user.email and request.user.first_name and request.user.last_name
+            and request.user.location
+        )
         if (not context['sso_linked']
-                and (not request.user.email or not request.user.first_name or not request.user.last_name)):
+                and not context['profile_complete']):
             context['auth_initial_mode'] = 'profile'
     return context
 
@@ -65,7 +110,114 @@ def show_main(request):
 
 @never_cache
 def auction(request):
-    return render(request, 'auction.html', page_context(request))
+    context = page_context(request)
+    context['auction_items'], context['ended_auction_items'] = _auction_listings()
+    context['auction_category_count'] = len({
+        item.category for item in context['auction_items'] if item.category
+    })
+    return render(request, 'auction.html', context)
+
+
+@login_required
+@never_cache
+@require_POST
+def place_bid(request, listing_id):
+    form = BidForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, 'Enter a valid bid amount in rupiah.')
+        return redirect('listings:detail', pk=listing_id)
+
+    amount = form.cleaned_data['amount']
+    with transaction.atomic():
+        listing = get_object_or_404(
+            Listing.objects.select_for_update(), pk=listing_id,
+        )
+        now = timezone.now()
+        if not listing.is_available:
+            messages.error(request, 'This item is not available for bidding.')
+            return redirect('listings:detail', pk=listing.pk)
+        if listing.seller_id == request.user.pk:
+            messages.error(request, 'You cannot bid on your own listing.')
+            return redirect('listings:detail', pk=listing.pk)
+
+        approved_bids = Bid.objects.filter(
+            listing=listing, status=Bid.Status.APPROVED,
+        )
+        first_bid = approved_bids.order_by('approved_at', 'pk').first()
+        if first_bid and first_bid.approved_at + AUCTION_DURATION + BID_EXTENSION * max(
+            approved_bids.count() - 1, 0
+        ) <= now:
+            messages.error(request, 'Bidding for this item has ended.')
+            return redirect('listings:detail', pk=listing.pk)
+
+        if not first_bid:
+            has_pending_bid = Bid.objects.filter(
+                listing=listing, status=Bid.Status.PENDING,
+            ).exists()
+            if has_pending_bid:
+                messages.error(request, 'A bid is already waiting for seller approval.')
+                return redirect('listings:detail', pk=listing.pk)
+            try:
+                with transaction.atomic():
+                    Bid.objects.create(
+                        listing=listing, bidder=request.user, amount=amount,
+                        status=Bid.Status.PENDING,
+                    )
+            except IntegrityError:
+                messages.error(request, 'A bid is already waiting for seller approval.')
+                return redirect('listings:detail', pk=listing.pk)
+            messages.success(request, 'Your bid is waiting for seller approval.')
+            return redirect('listings:detail', pk=listing.pk)
+
+        highest_bid = approved_bids.order_by('-amount', 'approved_at', 'pk').first()
+        if amount <= highest_bid.amount:
+            messages.error(
+                request,
+                f'Your bid must be higher than the current bid of {_format_rupiah(highest_bid.amount)}.',
+            )
+            return redirect('listings:detail', pk=listing.pk)
+
+        Bid.objects.create(
+            listing=listing, bidder=request.user, amount=amount,
+            status=Bid.Status.APPROVED, approved_at=now,
+        )
+
+    messages.success(request, 'Your bid has been placed.')
+    return redirect('listings:detail', pk=listing_id)
+
+
+@login_required
+@never_cache
+@require_POST
+def decide_bid(request, listing_id, bid_id):
+    with transaction.atomic():
+        listing = get_object_or_404(
+            Listing.objects.select_for_update(), pk=listing_id, seller=request.user,
+        )
+        bid = get_object_or_404(
+            Bid.objects.select_for_update(), pk=bid_id, listing=listing,
+            status=Bid.Status.PENDING,
+        )
+        if not listing.is_available:
+            messages.error(request, 'This listing is not available for bidding.')
+            return redirect('listings:detail', pk=listing.pk)
+
+        decision = request.POST.get('decision')
+        if decision == 'approve':
+            if Bid.objects.filter(listing=listing, status=Bid.Status.APPROVED).exists():
+                messages.error(request, 'An auction has already started for this listing.')
+                return redirect('listings:detail', pk=listing.pk)
+            bid.status = Bid.Status.APPROVED
+            bid.approved_at = timezone.now()
+            bid.save(update_fields=['status', 'approved_at'])
+            messages.success(request, 'Bid approved. The auction has started.')
+        elif decision == 'reject':
+            bid.status = Bid.Status.REJECTED
+            bid.save(update_fields=['status'])
+            messages.success(request, 'Bid rejected. The listing can receive a new offer.')
+        else:
+            messages.error(request, 'Choose whether to approve or reject this bid.')
+    return redirect('listings:detail', pk=listing_id)
 
 
 def form_errors(form):
@@ -423,6 +575,12 @@ def checkout_cart(request):
 
             if listing is None:
                 return redirect("main:cart")
+            if listing.bids.filter(status__in=[Bid.Status.PENDING, Bid.Status.APPROVED]).exists():
+                messages.error(
+                    request,
+                    f'{listing.name} is in an auction and cannot be purchased through the cart.',
+                )
+                return redirect("main:cart")
             if listing.price is None or listing.price <= 0:
                 return redirect("main:cart")
             if item.quantity < 1 or item.quantity > listing.stock:
@@ -433,6 +591,7 @@ def checkout_cart(request):
 
             TransactionHistory.objects.create(
                 buyer=request.user,
+                listing=listing,
                 item_name=listing.name,
                 item_image_url=listing.image_url or "",
                 price=listing.price * item.quantity,
@@ -440,7 +599,6 @@ def checkout_cart(request):
                 item_count=item.quantity,
                 seller_name=listing.seller.get_full_name().strip(),
                 payment_deadline=deadline,
-                listing =listing,
             )
         CartItem.objects.filter(buyer=request.user, id__in=[item.id for item in cart_items]).delete()
     return redirect("main:transaction_history")
@@ -450,6 +608,9 @@ def checkout_cart(request):
 def add_to_cart(request, listing_id):
     listing = get_object_or_404(Listing, pk=listing_id)
 
+    if listing.bids.filter(status__in=[Bid.Status.PENDING, Bid.Status.APPROVED]).exists():
+        messages.error(request, 'This item has received a bid and is available through the auction only.')
+        return redirect("listings:detail", pk=listing.pk)
     if listing.stock <= 0:
         return redirect("listings:detail", pk=listing.pk)
     

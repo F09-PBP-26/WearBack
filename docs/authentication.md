@@ -62,21 +62,21 @@ ALLOWED_HOSTS=hudzaifah51-wearback.pws.cs.ui.ac.id
 TRUST_PROXY_HTTPS=true
 ```
 
-Aktifkan `TRUST_PROXY_HTTPS` hanya jika reverse proxy terpercaya menghapus header HTTPS dari client dan menetapkannya sendiri. Produksi membutuhkan SECRET_KEY sendiri, memakai cookie session/CSRF Secure, dan redirect HTTPS. Jangan mengganti SECRET_KEY ketika session perlu dipertahankan. Isi konfigurasi PostgreSQL `DB_*` seperti yang dijelaskan README.
+Aktifkan `TRUST_PROXY_HTTPS` hanya jika reverse proxy terpercaya menghapus header HTTPS dari client dan menetapkannya sendiri. Produksi membutuhkan SECRET*KEY sendiri, memakai cookie session/CSRF Secure, dan redirect HTTPS. Jangan mengganti SECRET_KEY ketika session perlu dipertahankan. Isi konfigurasi PostgreSQL `DB*\*` seperti yang dijelaskan README.
 
 Pembatasan percobaan menggunakan tabel `AuthThrottle`, sehingga semua worker memakai batas yang sama: sepuluh percobaan per sepuluh menit per IP/jenis endpoint, dengan batas tambahan per email untuk login. Alamat IP berasal dari `REMOTE_ADDR`; konfigurasi proxy harus memastikan nilainya sesuai untuk deployment. Kunci throttle berupa HMAC, bukan email/IP mentah. Counter kedaluwarsa dibersihkan saat request autentikasi berikutnya.
 
 ## Endpoint dan pengujian
 
-- `POST /register/`: validasi profil/password/konfirmasi, membuat akun, langsung login.
+- `POST /register/`: validasi nama, email, lokasi, password/konfirmasi, membuat akun, langsung login. Lokasi berupa teks bebas (maksimal 255 karakter), misalnya `Depok, Indonesia`.
 - `POST /login/`: autentikasi email/password dan session Django.
 - `POST /logout/`: logout lokal, wajib CSRF.
-- `POST /profile/`: melengkapi profil pengguna yang sudah login.
+- `POST /profile/`: melengkapi atau memperbarui nama, email, dan lokasi pengguna yang sudah login.
 - `GET /sso/login/`: memulai CAS login.
 - `GET /sso/callback/`: memvalidasi state dan ticket CAS.
 - `POST /sso/link/`: memulai linking akun lokal yang sudah login.
 
-Form popup memakai CSRF dan menampilkan error per field tanpa meninggalkan halaman. Redirect setelah autentikasi hanya boleh ke host lokal aplikasi. Nama/email dipertahankan saat validasi gagal; password dibersihkan setelah error dari server. GET `/login/` dan `/register/` tetap membuka popup pada katalog.
+Form popup memakai CSRF dan menampilkan error per field tanpa meninggalkan halaman. Redirect setelah autentikasi hanya boleh ke host lokal aplikasi. Nama, email, dan lokasi dipertahankan saat validasi gagal; password dibersihkan setelah error dari server. GET `/login/` dan `/register/` tetap membuka popup pada katalog.
 
 ```powershell
 env\Scripts\python.exe manage.py check
