@@ -397,13 +397,14 @@ class ItemDetailTests(TestCase):
         self.assertNotContains(response, 'Add to cart')
         self.assertNotContains(response, 'delete-listing-dialog')
 
-    def test_buyer_has_quantity_control_cart_notice_and_published_contact(self):
+    def test_buyer_has_quantity_control_cart_form_and_published_contact(self):
         self.client.force_login(self.buyer)
         response = self.client.get(self.url)
         self.assertContains(response, 'id="item-quantity"')
         self.assertContains(response, 'max="3"')
         self.assertContains(response, 'Add to cart')
-        self.assertContains(response, 'Shopping cart is coming soon.')
+        self.assertContains(response, 'data-add-to-cart-form')
+        self.assertContains(response, 'action="' + reverse('main:add_to_cart', args=[self.listing.pk]) + '"')
         self.assertContains(response, self.listing.contact_email)
         self.assertNotContains(response, self.seller.email)
         self.assertNotContains(response, 'delete-listing-dialog')

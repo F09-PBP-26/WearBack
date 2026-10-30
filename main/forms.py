@@ -17,24 +17,6 @@ class ProfileForm(forms.ModelForm):
         model = User
         fields = ['first_name', 'last_name', 'email', 'location']
 
-    def clean(self):
-        cleaned = super().clean()
-        first_name = cleaned.get('first_name', '')
-        last_name = cleaned.get('last_name', '')
-
-        print(first_name)
-        for char in first_name:
-            if not ('a' <= char <= 'z' or 'A' <= char <= 'Z'):
-                self.add_error('first_name', "Hanya boleh berisi huruf")
-                break
-
-        for char in last_name:
-            if not ('a' <= char <= 'z' or 'A' <= char <= 'Z'):
-                self.add_error('last_name', "Hanya boleh berisi huruf")
-                break
-
-        return cleaned
-
     def clean_email(self):
         email = self.cleaned_data['email'].strip().lower()
         existing = User.objects.filter(email__iexact=email)
