@@ -4,13 +4,6 @@
     background: var(--color-white);
 }
 
-.auction-page .navbar {
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding-inline: clamp(1rem, 5.14vw, 4.625rem);
-    border-bottom: 1px solid #dfe4df;
-}
-
 .auction-main {
     flex: 1 0 auto;
     padding-bottom: clamp(2.5rem, 5vw, 5rem);
@@ -487,7 +480,6 @@
 }
 
 @media (max-width: 480px) {
-    .auction-page .navbar { gap: 0.75rem; padding-inline: 0.75rem; }
     .auction-news { font-size: 0.6875rem; }
     .auction-hero { padding: 2.25rem 1rem; }
     .auction-title { font-size: clamp(2.5rem, 12vw, 3.25rem); }
