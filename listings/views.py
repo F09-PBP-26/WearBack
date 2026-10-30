@@ -91,7 +91,7 @@ def mine(request):
     context.update(
         listings=listings, own_listings=True,
         ready_to_ship=orders.filter(status='paid').select_related('buyer', 'dropoff_location'),
-        recent_shipments=orders.filter(status='shipping').order_by('-shipped_at', '-pk')[:5],
+        recent_completions=orders.filter(status='completed').order_by('-updated_at', '-pk')[:5],
     )
     return render(request, 'listings/dashboard.html', context)
 
@@ -107,15 +107,15 @@ def ship_order(request, transaction_id):
             pk=transaction_id, listing__seller=request.user,
         )
         if order.status != 'paid':
-            messages.info(request, 'Only paid orders awaiting shipment can be shipped.')
+            messages.info(request, 'Only paid orders awaiting seller confirmation can be completed.')
         elif not DropoffLocation.objects.filter(transaction=order).exists():
-            messages.error(request, 'This order needs a saved drop-off address before shipping.')
+            messages.error(request, 'This order needs a saved drop-off address before completion.')
         else:
-            order.status = 'shipping'
-            order.status_message = 'Seller confirmed shipment via Insta ship.'
-            order.shipped_at = timezone.now()
-            order.save(update_fields=['status', 'status_message', 'shipped_at', 'updated_at'])
-            messages.success(request, f'Order #{order.order_number or order.pk} is now shipping. Insta ship confirmed!')
+            order.status = 'completed'
+            order.status_message = 'Order completed via Insta ship.'
+            order.completed_at = timezone.now()
+            order.save(update_fields=['status', 'status_message', 'completed_at', 'updated_at'])
+            messages.success(request, f'Order #{order.order_number or order.pk} is complete. Insta ship confirmed!')
     return redirect('listings:mine')
 
 
@@ -178,8 +178,8 @@ def delete(request, pk):
             if listing.reviews.exists():
                 messages.error(request, 'This listing has buyer reviews and cannot be deleted. Set its stock to 0 to stop selling it.')
                 return redirect('listings:detail', pk=listing.pk)
-            if listing.transactions.filter(status__in=['paid', 'shipping']).exists():
-                messages.error(request, 'This listing has paid orders awaiting delivery and cannot be deleted.')
+            if listing.transactions.filter(status='paid').exists():
+                messages.error(request, 'This listing has paid orders awaiting seller confirmation and cannot be deleted.')
                 return redirect('listings:mine')
             try:
                 with transaction.atomic():
@@ -191,8 +191,8 @@ def delete(request, pk):
             messages.success(request, 'Listing deleted.')
             return redirect('listings:mine')
     listing = get_object_or_404(Listing, pk=pk, seller=request.user)
-    if listing.transactions.filter(status__in=['paid', 'shipping']).exists():
-        messages.error(request, 'This listing has paid orders awaiting delivery and cannot be deleted.')
+    if listing.transactions.filter(status='paid').exists():
+        messages.error(request, 'This listing has paid orders awaiting seller confirmation and cannot be deleted.')
         return redirect('listings:mine')
     if listing.reviews.exists():
         messages.error(request, 'This listing has buyer reviews and cannot be deleted. Set its stock to 0 to stop selling it.')

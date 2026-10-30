@@ -27,7 +27,7 @@
     <section class="checkout-heading">
         <div>
             <h1>Drop-off location</h1>
-            <p>{% if transaction.status == 'ongoing' %}Save your drop-off address, then pay so the seller can prepare your shipment.{% else %}View the drop-off address and payment status for this order.{% endif %}</p>
+            <p>{% if transaction.status == 'ongoing' %}Save your drop-off address, then pay so the seller can complete your order.{% else %}View the drop-off address and payment status for this order.{% endif %}</p>
         </div>
         <span class="location-status">{% if transaction.status != 'ongoing' %}{{ transaction.get_status_display }}{% elif dropoff_location %}Location saved{% else %}Choose a location{% endif %}</span>
     </section>
@@ -134,7 +134,7 @@
 
             <section class="checkout-card payment-card" aria-labelledby="payment-title">
                 <div class="card-heading">
-                    <h2 id="payment-title">{% if transaction.status == 'paid' or transaction.status == 'shipping' or transaction.status == 'delivered' or transaction.status == 'completed' %}Payment confirmed{% else %}Payment{% endif %}</h2>
+                    <h2 id="payment-title">{% if transaction.status == 'paid' or transaction.status == 'delivered' or transaction.status == 'completed' %}Payment confirmed{% else %}Payment{% endif %}</h2>
                     <span class="item-count">Demo payment</span>
                 </div>
                 <div class="payment-total">
@@ -142,7 +142,7 @@
                     <strong>Rp{{ transaction.price|intcomma }}</strong>
                 </div>
                 {% if transaction.status == 'ongoing' %}
-                    <p class="location-instruction">Demo payment. No money is charged. After payment, the seller confirms shipment from their dashboard.</p>
+                    <p class="location-instruction">Demo payment. No money is charged. After payment, the seller completes the order with Insta ship.</p>
                     {% if transaction.payment_deadline %}
                         <p class="payment-deadline">Pay within <span class="payment-countdown" data-deadline="{{ transaction.payment_deadline|date:'c' }}">the payment window</span>.</p>
                     {% endif %}
@@ -152,11 +152,12 @@
                     </form>
                     <p id="payment-help" class="payment-help" aria-live="polite">{% if payment_ready %}Your address is saved. Ready for payment.{% else %}Save your drop-off location to enable payment.{% endif %}</p>
                 {% elif transaction.status == 'paid' %}
-                    <p class="payment-confirmation" role="status">Awaiting shipment</p>
-                    <p class="location-instruction">Your payment is confirmed. The seller will use Insta ship to confirm shipment from their dashboard.</p>
-                {% elif transaction.status == 'shipping' %}
-                    <p class="payment-confirmation" role="status">Your order is shipping.</p>
-                    <p class="location-instruction">The seller confirmed shipment via Insta ship{% if transaction.shipped_at %} on {{ transaction.shipped_at|timezone:'Asia/Jakarta'|date:'j F Y, H:i' }} WIB{% endif %}.</p>
+                    <p class="payment-confirmation" role="status">Awaiting seller</p>
+                    <p class="location-instruction">Your payment is confirmed. The seller will complete your order with Insta ship from their dashboard.</p>
+                {% elif transaction.status == 'completed' %}
+                    <p class="payment-confirmation" role="status">Your order is complete.</p>
+                    <p class="location-instruction">{{ transaction.status_message|default:'Order completed.' }}{% if transaction.completed_at %} Completed on {{ transaction.completed_at|timezone:'Asia/Jakarta'|date:'j F Y, H:i' }} WIB.{% endif %}</p>
+                    <a class="payment-transactions-link" href="{% url 'main:transaction_review' transaction.pk %}">Rate your purchase &rarr;</a>
                 {% elif transaction.status == 'cancelled' %}
                     <p class="location-instruction">{{ transaction.status_message|default:'This order was cancelled' }}. Payment is unavailable.</p>
                 {% else %}

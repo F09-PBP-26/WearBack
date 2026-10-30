@@ -7,7 +7,7 @@
 {% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
 
 {% block page_css %}
-<link rel="stylesheet" href="{% static 'css/transactions.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/transactions.css' %}?v=4">
 <link rel="stylesheet" href="{% static 'css/style.css' %}?v=47">
 {% endblock page_css %}
 
@@ -50,11 +50,7 @@
                     </span>
                 {% elif transaction.status == "paid" %}
                     <span class="transaction-status status-paid">
-                        Awaiting shipment
-                    </span>
-                {% elif transaction.status == "shipping" %}
-                    <span class="transaction-status status-shipping">
-                        Shipping
+                        Awaiting seller
                     </span>
                 {% else %}
                     <span class="transaction-status status-ongoing">
@@ -102,9 +98,7 @@
                     {% elif transaction.status == "delivered" %}
                         Item delivered
                     {% elif transaction.status == "paid" %}
-                        Payment confirmed · Waiting for the seller to ship
-                    {% elif transaction.status == "shipping" %}
-                        Seller confirmed shipment via Insta ship
+                        Payment confirmed · Waiting for the seller to complete the order
                     {% elif transaction.status == "cancelled" %}
                         {% if transaction.status_message == "Payment time expired" %}
                             Awaiting payment · <span class="payment-expired">Payment time expired</span>
@@ -120,9 +114,9 @@
                 <a class="set-dropoff-location" href="{% url 'main:dropoff' transaction.pk %}">
                     {% if transaction.dropoff_location %}Continue to payment{% else %}Set drop-off location{% endif %}
                 </a>
-                {% elif transaction.status == "paid" or transaction.status == "shipping" %}
+                {% elif transaction.status == "paid" %}
                 <a class="check-details" href="{% url 'main:dropoff' transaction.pk %}">
-                    View shipping details
+                    View order details
                 </a>
                 {% elif transaction.status == "delivered" or transaction.status == "completed" %}
                 <a class="check-details" href="{% url 'main:transaction_review' transaction.pk %}">

@@ -412,7 +412,7 @@ def _expire_payment(order):
 @never_cache
 @require_POST
 def pay_transaction(request, transaction_id):
-    """Confirm a demo payment; the seller must confirm shipment separately."""
+    """Confirm a demo payment; the seller completes the order with Insta ship."""
     with transaction.atomic():
         order = get_object_or_404(
             TransactionHistory.objects.select_for_update(), pk=transaction_id, buyer=request.user,
@@ -434,10 +434,10 @@ def pay_transaction(request, transaction_id):
                 listing.stock -= order.item_count
                 listing.save(update_fields=['stock', 'updated_at'])
                 order.status = 'paid'
-                order.status_message = 'Demo payment confirmed. Awaiting seller shipment.'
+                order.status_message = 'Demo payment confirmed. Awaiting seller confirmation.'
                 order.payment_deadline = None
                 order.save(update_fields=['status', 'status_message', 'payment_deadline', 'updated_at'])
-                messages.success(request, 'Demo payment confirmed. Waiting for the seller to ship your order.')
+                messages.success(request, 'Demo payment confirmed. Waiting for the seller to complete your order.')
     return redirect('main:dropoff', transaction_id=order.pk)
 
 

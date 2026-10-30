@@ -531,25 +531,6 @@
     background: var(--color-listing-body);
 }
 
-.seller-shipping-dialog {
-    border-radius: 20px;
-}
-
-.seller-shipping-dialog h2 {
-    margin-top: 16px;
-    font: 400 30px/42px var(--font-serif);
-}
-
-.seller-shipping-dialog p {
-    font-size: 15px;
-    line-height: 21px;
-}
-
-.seller-shipping-dialog > button {
-    min-height: 44px;
-    font-size: 14px;
-}
-
 .seller-shipping-list {
     display: grid;
     gap: 16px;
@@ -603,23 +584,9 @@
     width: 100%;
 }
 
-.seller-shipped-heading {
+.seller-completed-heading {
     margin-top: 28px;
     font: 400 26px/36px var(--font-serif);
-}
-
-.seller-shipping-destination {
-    padding: 14px;
-    border-radius: 8px;
-    background: var(--seller-sage);
-}
-
-.seller-shipping-actions {
-    display: flex;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 20px;
 }
 
 @media (max-width: 1250px) {

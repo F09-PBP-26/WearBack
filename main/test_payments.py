@@ -39,7 +39,7 @@ class PaymentTests(TestCase):
         self.assertEqual(self.order.status, 'ongoing')
         self.assertEqual(self.listing.stock, 3)
 
-    def test_checkout_address_payment_and_shipping_history(self):
+    def test_checkout_payment_seller_completion_and_review(self):
         cart_item = CartItem.objects.create(buyer=self.buyer, listing=self.listing, quantity=1)
         response = self.client.post(reverse('main:checkout_cart'), {'selected_cart_ids': str(cart_item.pk)})
         self.assertRedirects(response, self.history_url)
@@ -47,21 +47,23 @@ class PaymentTests(TestCase):
         dropoff_url = reverse('main:dropoff', args=[order.pk])
         self.assertRedirects(self.client.post(dropoff_url, self.location), dropoff_url)
         response = self.client.post(reverse('main:pay_transaction', args=[order.pk]), follow=True)
-        self.assertContains(response, 'Awaiting shipment')
+        self.assertContains(response, 'Awaiting seller')
         self.assertNotContains(response, 'Your order is shipping.')
         self.assertContains(response, 'Demo payment confirmed')
         self.assertNotContains(response, 'id="pay-now-button"')
         order.refresh_from_db()
         self.listing.refresh_from_db()
         self.assertEqual(order.status, 'paid')
-        self.assertIsNone(order.shipped_at)
+        self.assertIsNone(order.completed_at)
         self.assertEqual(order.price, 150000)
         self.assertIsNone(order.payment_deadline)
         self.assertEqual(self.listing.stock, 2)
         self.assertEqual(order.dropoff_location.address, self.location['address'])
         history = self.client.get(self.history_url)
-        self.assertContains(history, 'View shipping details')
-        self.assertContains(history, 'Payment confirmed · Waiting for the seller to ship')
+        self.assertContains(history, 'View order details')
+        self.assertContains(history, 'Payment confirmed · Waiting for the seller to complete the order')
+        review_url = reverse('reviews:create', args=[order.pk])
+        self.assertEqual(self.client.post(review_url, {'rating': 5}).status_code, 400)
         shipping_url = reverse('listings:ship_order', args=[order.pk])
         self.assertEqual(self.client.post(shipping_url).status_code, 404)
         self.client.force_login(self.seller)
@@ -71,11 +73,18 @@ class PaymentTests(TestCase):
         self.assertRedirects(self.client.post(shipping_url), reverse('listings:mine'))
         order.refresh_from_db()
         self.listing.refresh_from_db()
-        self.assertEqual(order.status, 'shipping')
-        self.assertIsNotNone(order.shipped_at)
+        self.assertEqual(order.status, 'completed')
+        self.assertIsNotNone(order.completed_at)
         self.assertEqual(self.listing.stock, 2)
         self.client.force_login(self.buyer)
-        self.assertContains(self.client.get(self.history_url), 'Seller confirmed shipment via Insta ship')
+        history = self.client.get(self.history_url)
+        self.assertContains(history, 'Completed')
+        self.assertNotContains(history, 'status-shipping')
+        self.assertContains(history, reverse('main:transaction_review', args=[order.pk]))
+        self.assertContains(self.client.get(dropoff_url), 'Your order is complete.')
+        response = self.client.post(review_url, {'rating': 5, 'comment': 'Great purchase!'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(order.reviews.get().reviewer, self.buyer)
 
     def test_payment_button_requires_a_saved_address(self):
         page = self.client.get(self.dropoff_url)
@@ -175,7 +184,7 @@ class PaymentTests(TestCase):
 
     def test_final_states_cannot_be_paid_or_have_address_changed(self):
         self.save_address()
-        for status in ('paid', 'shipping', 'delivered', 'completed', 'cancelled'):
+        for status in ('paid', 'delivered', 'completed', 'cancelled'):
             with self.subTest(status=status):
                 TransactionHistory.objects.filter(pk=self.order.pk).update(status=status)
                 self.client.post(self.url)
