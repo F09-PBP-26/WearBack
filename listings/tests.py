@@ -9,8 +9,56 @@ from django.urls import reverse
 from listings.models import Listing
 from listings.forms import ListingForm
 from main.models import SSOIdentity
+from main.models import TransactionHistory
+from reviews.models import Review
 
 User = get_user_model()
+
+
+class ListingReviewDisplayTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.seller = User.objects.create_user(username='review-display-seller', first_name='Demo', last_name='Seller')
+        cls.buyer = User.objects.create_user(username='review-display-buyer', first_name='Private', last_name='Buyer')
+        cls.other_buyer = User.objects.create_user(username='review-display-other')
+        cls.listing = Listing.objects.create(seller=cls.seller, name='Reviewed jacket', price=100000)
+        cls.other_listing = Listing.objects.create(seller=cls.seller, name='Other scarf', price=50000)
+
+    def add_review(self, listing, buyer, rating, comment='', tags=None):
+        order = TransactionHistory.objects.create(
+            buyer=buyer, listing=listing, item_name=listing.name,
+            price=listing.price, status='completed',
+        )
+        return Review.objects.create(
+            transaction=order, listing=listing, reviewer=buyer, rating=rating,
+            comment=comment, tags=tags or [],
+        )
+
+    def test_public_detail_shows_product_reviews_without_buyer_identity(self):
+        self.add_review(self.listing, self.buyer, 5, 'Excellent & <safe>.', ['Quality', 'Delivery'])
+        response = self.client.get(reverse('listings:detail', args=[self.listing.pk]))
+        self.assertContains(response, 'Reviews')
+        self.assertContains(response, '★ 5.0')
+        self.assertContains(response, 'Excellent &amp; &lt;safe&gt;.')
+        self.assertContains(response, 'Quality')
+        self.assertContains(response, 'Delivery')
+        self.assertContains(response, 'Verified buyer')
+        self.assertNotContains(response, self.buyer.username)
+        self.assertNotContains(response, self.buyer.get_full_name())
+
+    def test_product_and_seller_rating_aggregates_are_correct(self):
+        self.add_review(self.listing, self.buyer, 5)
+        self.add_review(self.other_listing, self.other_buyer, 3)
+        response = self.client.get(reverse('listings:detail', args=[self.listing.pk]))
+        # Product summary only includes this jacket; seller summary includes both listings.
+        self.assertContains(response, '★ 5.0')
+        self.assertContains(response, '★ 4.0 / 5 · 2 reviews')
+        self.assertContains(response, '1 review')
+
+    def test_product_without_reviews_keeps_empty_state(self):
+        response = self.client.get(reverse('listings:detail', args=[self.listing.pk]))
+        self.assertContains(response, 'No reviews yet. Be the first verified buyer')
+        self.assertContains(response, 'No ratings yet')
 
 
 class RequiredListingFieldsTests(TestCase):

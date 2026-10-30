@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Exists, OuterRef
+from django.db.models import Avg, Count, Exists, OuterRef
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -13,6 +13,7 @@ from listings.forms import ListingForm
 from listings.models import Listing
 from main.models import Bid
 from main.views import AUCTION_DURATION, BID_EXTENSION, _format_rupiah, page_context
+from reviews.models import Review
 
 
 @never_cache
@@ -25,6 +26,11 @@ def index(request):
 @require_GET
 def detail(request, pk):
     listing = get_object_or_404(Listing.objects.select_related('seller'), pk=pk)
+    listing_reviews = Review.objects.filter(listing=listing).select_related('reviewer').order_by('-created_at', '-pk')
+    product_rating = listing_reviews.aggregate(average=Avg('rating'), count=Count('pk'))
+    seller_rating = Review.objects.filter(listing__seller_id=listing.seller_id).aggregate(
+        average=Avg('rating'), count=Count('pk'),
+    )
     approved_bids = listing.bids.filter(status=Bid.Status.APPROVED)
     highest_bid = approved_bids.order_by('-amount', 'approved_at', 'pk').first()
     first_bid = approved_bids.order_by('approved_at', 'pk').first()
@@ -47,6 +53,11 @@ def detail(request, pk):
                    contact_email=listing.contact_email if request.user.is_authenticated else '',
                    can_manage=can_manage,
                    seller_listing_count=Listing.objects.filter(seller_id=listing.seller_id).count(),
+                   listing_reviews=listing_reviews,
+                   listing_rating_average=product_rating['average'],
+                   listing_rating_count=product_rating['count'],
+                   seller_rating_average=seller_rating['average'],
+                   seller_rating_count=seller_rating['count'],
                    auction_bids=approved_bids.select_related('bidder')[:10],
                    auction_bid_count=auction_bid_count,
                    auction_pending_bids=pending_bids.select_related('bidder') if can_manage else (),

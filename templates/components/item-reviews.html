@@ -1,0 +1,24 @@
+<section class="item-panel item-reviews" aria-labelledby="item-reviews-title">
+  <div class="item-reviews-heading">
+    <div>
+      <h2 id="item-reviews-title">Reviews</h2>
+      <p class="item-muted">Feedback from verified buyers.</p>
+    </div>
+    {% if listing_rating_count %}
+    <p class="item-review-summary" aria-label="Average rating {{ listing_rating_average|floatformat:1 }} out of 5 from {{ listing_rating_count }} reviews">★ {{ listing_rating_average|floatformat:1 }} <span>/ 5 · {{ listing_rating_count }} review{{ listing_rating_count|pluralize }}</span></p>
+    {% endif %}
+  </div>
+  {% for review in listing_reviews %}
+  <article class="item-review">
+    <div class="item-review-meta">
+      <strong>Verified buyer</strong>
+      <span aria-label="{{ review.rating }} out of 5 stars">{% for star in '12345' %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+      <time datetime="{{ review.created_at|date:'c' }}">{{ review.created_at|date:'j M Y' }}</time>
+    </div>
+    {% if review.comment %}<p>{{ review.comment|linebreaksbr }}</p>{% endif %}
+    {% if review.tags %}<div class="item-review-tags">{% for tag in review.tags %}<span>{{ tag }}</span>{% endfor %}</div>{% endif %}
+  </article>
+  {% empty %}
+  <p class="item-muted">No reviews yet. Be the first verified buyer to share feedback.</p>
+  {% endfor %}
+</section>
