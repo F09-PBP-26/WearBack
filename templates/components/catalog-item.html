@@ -1,35 +1,23 @@
-{% load static %}
-<li class="catalog-item" data-catalog-name="{{ item.name }}" data-category="{{ item.category }}">
-  <a class="catalog-item-link" href="{% url 'listings:detail' item.pk %}" aria-labelledby="catalog-item-{{ item.pk }}">
+{% load static l10n %}
+<li class="catalog-item" data-catalog-name="{{ item.name }}" data-category="{{ item.category }}" data-catalog-price="{{ item.price|default_if_none:''|unlocalize }}">
+  <a class="catalog-item-link" href="{% url 'listings:detail' item.pk %}" aria-labelledby="catalog-item-{{ card_group|default:'all' }}-{{ item.pk }}">
     <div class="catalog-image" data-listing-thumbnail>
       {% if item.image_url %}
-        <img src="{{ item.image_url }}" data-fallback-src="{% static 'img/item-photo-placeholder.png' %}" alt="{{ item.name }}" loading="lazy" referrerpolicy="no-referrer">
+        <img src="{{ item.image_url }}" data-fallback-src="{% static 'img/item-photo-placeholder.png' %}" alt="{{ item.name }}" {% if card_group != 'featured' %}loading="lazy"{% endif %} referrerpolicy="no-referrer">
       {% else %}
-        <img src="{% static 'img/item-photo-placeholder.png' %}" alt="No product photo available" loading="lazy">
+        <img src="{% static 'img/item-photo-placeholder.png' %}" alt="No product photo available" {% if card_group != 'featured' %}loading="lazy"{% endif %}>
       {% endif %}
     </div>
     <div class="catalog-details">
-      <h3 class="catalog-name" id="catalog-item-{{ item.pk }}" title="{{ item.name }}">{{ item.name }}</h3>
+      <p class="catalog-category">{{ item.get_category_display|default:'Not specified' }}</p>
+      <h3 class="catalog-name" id="catalog-item-{{ card_group|default:'all' }}-{{ item.pk }}" title="{{ item.name }}">{{ item.name }}</h3>
       <p class="catalog-price">{{ item.price_display }}</p>
-      {% if not item.is_available %}<p class="catalog-availability">{% if item.stock == 0 %}Sold out{% else %}Currently unavailable{% endif %}</p>{% endif %}
       <div class="catalog-meta">
-        <p class="catalog-size">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="1"/><path d="M7 7h5M7 11h3M7 15h5M7 19h3"/></svg>
-          <span title="Size: {{ item.size|default:'Not specified' }}">{{ item.size|default:'Not specified' }}</span>
-        </p>
-        <p class="catalog-condition">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m7 12 3 3 7-7"/></svg>
-          <span title="Condition: {{ item.get_condition_display|default:'Not specified' }}">{{ item.get_condition_display|default:'Not specified' }}</span>
-        </p>
-        <p class="catalog-category">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3h8l10 10-8 8L3 11Z"/><circle cx="7.5" cy="7.5" r="1"/></svg>
-          <span title="Category: {{ item.get_category_display|default:'Not specified' }}">{{ item.get_category_display|default:'Not specified' }}</span>
-        </p>
-        <p class="catalog-location">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/></svg>
-          <span title="{{ item.location|default:'Location not provided' }}">{{ item.location|default:'Location not provided' }}</span>
-        </p>
+        <p class="catalog-size" title="Size: {{ item.size|default:'Not specified' }}">Size: {{ item.size|default:'Not specified' }}</p>
+        <p class="catalog-condition">{{ item.get_condition_display|default:'Not specified' }}</p>
       </div>
+      {% if not item.is_available %}<p class="catalog-availability">{% if item.stock == 0 %}Sold out{% else %}Currently unavailable{% endif %}</p>{% endif %}
+      <span class="catalog-sr-only">{{ item.location|default:'Location not provided' }}</span>
     </div>
   </a>
 </li>

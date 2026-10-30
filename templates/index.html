@@ -3,24 +3,74 @@
 
 {% block body_class %}catalog-page{% endblock body_class %}
 {% block search_placeholder %}Search in WearBack{% endblock search_placeholder %}
-{% block page_css %}<link rel="stylesheet" href="{% static 'css/style.css' %}?v=47">{% endblock page_css %}
+{% block page_css %}<link rel="stylesheet" href="{% static 'css/style.css' %}?v=48">{% endblock page_css %}
 {% block nav_links %}
 {% include 'components/guest-nav.html' with active_page='catalog' %}
 {% endblock nav_links %}
 
 {% block content %}
 <main class="main">
+  <div class="catalog-intro" aria-label="WearBack highlights">
+    <span>Pre-loved clothing &amp; accessories</span>
+    <span>Fresh finds for your everyday wardrobe</span>
+    <span>Wear it. Give it back.</span>
+  </div>
+
   <section class="hero" aria-labelledby="hero-title">
-    <img class="hero-image" src="{% static 'img/hero.jpg' %}" alt="Neutral knitwear hanging on a clothing rack">
+    <img class="hero-image" src="{% static 'img/catalog-hero.png' %}" alt="" aria-hidden="true">
     <div class="hero-content">
       <h1 class="hero-title" id="hero-title">Sustainable Living.<br>On WearBack.</h1>
+      <p class="hero-description">Good pieces deserve another chapter. Discover pre-loved clothing and everyday essentials, ready for their next home.</p>
+      <a class="hero-button" href="#catalog">Shop the catalog</a>
       <p class="hero-subtitle">Wear it. Give it back.</p>
     </div>
+    {% if catalog_items %}
+      <ul class="catalog-featured" aria-label="Featured catalog item">
+        {% include 'components/catalog-item.html' with item=catalog_items.0 card_group='featured' %}
+      </ul>
+    {% endif %}
   </section>
 
+  <section class="catalog-values" aria-label="Why rewear with WearBack">
+    <div><strong>Pre-loved</strong><span>Pieces with a past</span></div>
+    <div><strong>Everyday</strong><span>Clothing &amp; accessories</span></div>
+    <div><strong>Your fit</strong><span>Size and condition</span></div>
+    <div><strong>Rewear</strong><span>A new chapter starts</span></div>
+  </section>
+
+  {% if catalog_items %}
+    <section class="catalog-fresh" aria-labelledby="fresh-title">
+      <div class="catalog-section-heading">
+        <div>
+          <h2 id="fresh-title">Fresh finds</h2>
+          <p>A few pieces worth a closer look.</p>
+        </div>
+        <a href="#catalog">Browse all pieces</a>
+      </div>
+      <ul class="catalog-fresh-grid">
+        {% for item in catalog_items|slice:':4' %}
+          {% include 'components/catalog-item.html' with card_group='fresh' %}
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
   <section class="catalog" id="catalog" aria-labelledby="catalog-title">
-    <h2 class="catalog-title" id="catalog-title">Catalog</h2>
-    {% include 'components/catalog-filters.html' %}
+    <div class="catalog-toolbar">
+      <div class="catalog-heading-filters">
+        <h2 class="catalog-title" id="catalog-title">All pieces</h2>
+        {% include 'components/catalog-filters.html' %}
+      </div>
+      <div class="catalog-sort">
+        <label class="catalog-sr-only" for="catalog-sort">Sort catalog</label>
+        <select id="catalog-sort" data-catalog-sort>
+          <option value="newest">Newest first</option>
+          <option value="price-asc">Price: low to high</option>
+          <option value="price-desc">Price: high to low</option>
+        </select>
+        <img src="{% static 'img/catalog-sort-chevron.svg' %}" alt="" width="18" height="18">
+      </div>
+    </div>
     <ul class="catalog-grid">
       {% for item in catalog_items %}
         {% include 'components/catalog-item.html' %}
