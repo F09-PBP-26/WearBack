@@ -222,6 +222,50 @@ class ListingAdminImportTests(TestCase):
                 self.assertNotContains(response, 'value="Confirm import"')
                 self.assertFalse(Listing.objects.exists())
 
+    def test_reused_seller_username_cannot_transfer_import_ownership(self):
+        for source in ('csv', 'default'):
+            with self.subTest(source=source):
+                username = f'preview-{source}'
+                seller = User.objects.create_user(username=username)
+                if source == 'csv':
+                    response = self.upload([self.item(), self.item(seller=username)])
+                else:
+                    response = self.upload(
+                        [self.item(seller=self.other_seller.username), self.item()],
+                        default_seller=seller.pk,
+                    )
+                self.assertEqual(response.status_code, 302)
+                url = response.url
+                batch = ListingImportBatch.objects.latest('created_at')
+                seller.username = f'{username}-renamed'
+                seller.save(update_fields=['username'])
+                User.objects.create_user(username=username)
+
+                for method in ('get', 'post'):
+                    page = getattr(self.client, method)(url)
+                    self.assertContains(page, 'Upload the CSV again.')
+                    self.assertNotContains(page, 'value="Confirm import"')
+                    self.assertFalse(Listing.objects.exists())
+                batch.refresh_from_db()
+                self.assertIsNone(batch.completed_at)
+                self.assertFalse(LogEntry.objects.exists())
+
+    def test_legacy_preview_without_seller_ids_requires_new_upload(self):
+        url = self.preview()
+        batch = ListingImportBatch.objects.get()
+        for row in batch.rows:
+            row.pop('seller_id')
+        batch.save(update_fields=['rows'])
+
+        for method in ('get', 'post'):
+            response = getattr(self.client, method)(url)
+            self.assertContains(response, 'Upload the CSV again.')
+            self.assertNotContains(response, 'value="Confirm import"')
+            self.assertFalse(Listing.objects.exists())
+        batch.refresh_from_db()
+        self.assertIsNone(batch.completed_at)
+        self.assertFalse(LogEntry.objects.exists())
+
     def test_preview_is_private_to_its_creator(self):
         url = self.preview()
         self.client.force_login(self.other_admin)

@@ -68,12 +68,18 @@ def read_listing_csv(upload):
     return rows
 
 
-def validate_listing_rows(rows):
+def validate_listing_rows(rows, *, require_seller_ids=False):
     """Recheck current sellers and the same item rules used by the listing form."""
-    usernames = {row['values'].get('seller', '') for row in rows}
-    sellers = {
-        user.username: user for user in get_user_model().objects.filter(username__in=usernames, is_active=True)
-    }
+    if require_seller_ids:
+        seller_ids = {row.get('seller_id') for row in rows if row.get('seller_id') is not None}
+        sellers = {
+            user.pk: user for user in get_user_model().objects.filter(pk__in=seller_ids, is_active=True)
+        }
+    else:
+        usernames = {row['values'].get('seller', '') for row in rows}
+        sellers = {
+            user.username: user for user in get_user_model().objects.filter(username__in=usernames, is_active=True)
+        }
     listings, row_errors = [], []
     for row in rows:
         data = row['values']
@@ -84,9 +90,16 @@ def validate_listing_rows(rows):
                 'field': (form.fields[field].label or field) if field in form.fields else 'Item',
                 'messages': list(messages),
             } for field, messages in form.errors.items())
-        seller = sellers.get(data.get('seller', ''))
+        if require_seller_ids:
+            seller = sellers.get(row.get('seller_id'))
+            if seller is not None and seller.username != data.get('seller', ''):
+                seller = None
+        else:
+            seller = sellers.get(data.get('seller', ''))
         if seller is None:
-            errors.append({'field': 'Seller', 'messages': ['Enter an existing active seller username or choose a default seller.']})
+            message = ('The preview seller is no longer valid. Upload the CSV again.' if require_seller_ids
+                       else 'Enter an existing active seller username or choose a default seller.')
+            errors.append({'field': 'Seller', 'messages': [message]})
         if errors:
             row_errors.append({'line': row['line'], 'errors': errors})
         else:
@@ -125,9 +138,13 @@ class ListingCSVImportForm(forms.Form):
         for row in rows:
             if not row['values'].get('seller'):
                 row['values']['seller'] = default_seller.username if default_seller else ''
-        _, self.row_errors = validate_listing_rows(rows)
+        listings, self.row_errors = validate_listing_rows(rows)
         if self.row_errors:
             self.add_error(None, 'No items have been added. Fix the CSV errors below and upload the file again.')
         else:
+            # Keep seller identity outside the uploaded values so a reused username
+            # cannot transfer ownership between preview and confirmation.
+            for row, listing in zip(rows, listings):
+                row['seller_id'] = listing.seller_id
             self.rows = rows
         return cleaned

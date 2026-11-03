@@ -51,7 +51,8 @@ Denim jacket,,"125.000,50",outerwear,Large,great,1,,Lightly worn
 
 - Unggahan hanya membuat preview, belum membuat listing. Preview hanya dapat dibuka atau dikonfirmasi oleh admin yang mengunggahnya dan berlaku selama 30 menit.
 - Jika ada baris tidak valid, halaman menampilkan nomor baris CSV, kolom, dan pesan kesalahan. Seluruh file ditolak; perbaiki file dan unggah ulang.
-- Seller dan detail item diperiksa kembali saat konfirmasi. Seller yang dihapus, dinonaktifkan, atau berganti username setelah preview akan memblokir impor.
+- Preview menyimpan ID akun seller di server, terpisah dari kolom CSV. Seller dan detail item diperiksa kembali saat konfirmasi. Seller yang dihapus, dinonaktifkan, atau berganti username setelah preview akan memblokir impor, termasuk jika username lama dipakai akun lain.
+- Preview lama yang belum menyimpan ID seller harus dibuat ulang dengan mengunggah CSV lagi. Perubahan ini tidak membutuhkan migrasi database baru.
 - Semua listing, log penambahan Django admin, dan status konfirmasi disimpan dalam satu transaksi. Kegagalan penyimpanan membatalkan semuanya.
 - Pada PostgreSQL PWS, preview dikunci selama konfirmasi. Mengirim ulang konfirmasi yang sama tidak membuat item duplikat. Setelah berhasil, isi preview dikosongkan dan penanda konfirmasi disimpan.
 - Mengunggah file yang sama sebagai **impor baru** tetap membuat listing baru. Fitur ini tidak memperbarui listing lama dan tidak mencocokkan item berdasarkan nama.

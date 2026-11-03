@@ -102,7 +102,7 @@ class ListingAdmin(admin.ModelAdmin):
                 if batch.created_at < timezone.now() - PREVIEW_LIFETIME:
                     self.message_user(request, 'This preview expired. Upload the CSV again.', messages.ERROR)
                     return redirect('admin:listings_listing_import_csv')
-                listings, row_errors = validate_listing_rows(batch.rows)
+                listings, row_errors = validate_listing_rows(batch.rows, require_seller_ids=True)
                 if request.method == 'POST' and not row_errors:
                     Listing.objects.bulk_create(listings)
                     for listing in listings:

@@ -6,7 +6,7 @@ The page at `/listings/<pk>/` implements [Item details / Buyer in Figma](https:/
 
 - Responsive photo/purchase and specification/seller cards follow the Figma layout.
 - Guests see public information and sign-in actions. Published contact email appears only after login.
-- Customers can adjust quantity from one to the available stock. Add to cart opens the existing coming-soon dialog; it does not create a cart item or order.
+- Customers can adjust quantity from one to the available stock. Button clicks, typed values, and input normalization keep the submitted quantity in sync with the displayed value. Add to cart submits this quantity to the cart endpoint.
 - Owners see Edit/Delete controls. The delete dialog requires confirmation and posts with CSRF to the existing ownership-protected endpoint. Without JavaScript, its link opens the existing confirmation page.
 - Zero stock shows a sold-out state. An absent price shows an unavailable state. Older listings display clear missing-field values without fabricated prices or specifications.
 - Photos use an HTTPS URL entered by the seller. Missing or failed images display the local placeholder downloaded from Figma. User photos remain dynamic; the design screenshot is not used as a page asset.
@@ -29,6 +29,8 @@ No new dependency or environment variable is required. The [homepage catalog](ca
 
 ## Validation
 
-The full Django suite passes 81 tests, including seller-screen, required-field creation, and homepage catalog regressions. Detail coverage checks fields and viewer states, contact privacy, real seller counts, unavailable/legacy listings, localized prices, new-field validation, and the positive-price database constraint. Django checks, migration drift checks, and JavaScript syntax checks pass. See [listing validation](listing-validation.md) for creation requirements and legacy editing compatibility.
+Run `node --test listings/test_quantity.cjs` with Node.js 18 or newer for quantity interaction regressions. These dependency-free tests execute the listing script with DOM event stubs and cover plus/minus buttons, stock limits, typed and cleared values, and guest controls without a purchase form.
+
+Django detail coverage checks fields and viewer states, contact privacy, real seller counts, unavailable/legacy listings, localized prices, new-field validation, and the positive-price database constraint. Run `python manage.py test listings` for the listing module and `python manage.py check` for configuration checks. See [listing validation](listing-validation.md) for creation requirements and legacy editing compatibility.
 
 Browser checks used an isolated preview database: desktop and 390px mobile layouts; guest-to-buyer login; bounded quantity input; cart cancellation/focus; failed and valid photos; sold-out items; long text without horizontal overflow; owner-only delete confirmation/cancellation; and saving localized prices with dismissible success messages. The preview uses test accounts and does not seed the development database.
