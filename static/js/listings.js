@@ -123,10 +123,13 @@
     var increase = control.querySelector('[data-quantity-increase]');
     var status = document.querySelector('[data-quantity-status]');
     var maximum = Number(input.max);
+    var cartForm = document.querySelector('[data-add-to-cart-form]');
+    var cartQuantity = cartForm ? cartForm.querySelector('[data-cart-quantity]') : null;
     function updateQuantity(value) {
       value = Number.isFinite(value) ? Math.floor(value) : 1;
       value = Math.max(1, Math.min(maximum, value));
       input.value = value;
+      if (cartQuantity) cartQuantity.value = input.value;
       decrease.disabled = value <= 1;
       increase.disabled = value >= maximum;
       if (status) status.textContent = 'Quantity: ' + value;
@@ -139,19 +142,6 @@
     input.addEventListener('change', function () { updateQuantity(input.valueAsNumber); });
     input.addEventListener('blur', function () { updateQuantity(input.valueAsNumber); });
     updateQuantity(Number(input.value));
-
-    var cartForm = document.querySelector('[data-add-to-cart-form]');
-    var cartQuantity = cartForm ? cartForm.querySelector('[data-cart-quantity]') : null;
-
-    if (cartQuantity) {
-      function syncCartQuantity() {
-        cartQuantity.value = input.value;
-      }
-
-      input.addEventListener('input', syncCartQuantity);
-      input.addEventListener('change', syncCartQuantity);
-      syncCartQuantity();
-    }
   });
 
   document.querySelectorAll('[data-listing-dialog]').forEach(function (dialog) {
